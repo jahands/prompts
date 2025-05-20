@@ -10,6 +10,8 @@ Before running the prompt, add this file to your repo:
 
 ## Prompt
 
+Note: This is a large prompt with many steps. Cursor and similar editors will likely require saying "continue" multiple times.
+
 ```
 You are an expert AI programmer tasked with migrating a monorepo from ESLint 8 to ESLint 9. Your primary reference for this task is the "LLM-Guided ESLint 8 to ESLint 9 Monorepo Migration" guide, the content of which will be provided to you.
 
