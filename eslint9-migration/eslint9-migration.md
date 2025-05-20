@@ -66,15 +66,21 @@
             - For `eslint`: Target the latest ESLint v9.x.x.
             - For all other ESLint plugins (`eslint-plugin-*`), shared configs (`eslint-config-*`), parsers (e.g., `@typescript-eslint/parser`), and related tools: Target their `latest` available version. The primary goal is to get the newest code, and compatibility with flat config will be addressed in Phase 5, using `FlatCompat` if necessary.
             - *Rationale*: Attempting to update to the absolute latest version first simplifies the process. If a plugin is not compatible with ESLint 9 even with `FlatCompat`, or if it causes significant issues, it can be flagged for manual review and potentially pinned to an older version or replaced later.
-        - **4.2. Update `package.json` files:**
-            - **LLM Action:** For every `package.json` file (monorepo root and each package) that lists an ESLint-related dependency:
-                - Update the version string to the determined target version (e.g., `eslint@^9.0.0`, `some-plugin@latest`).
-                - *Example command (conceptual, LLM would need to generate per package manager and dependency)*: `pnpm add -D eslint@^9.0.0 @typescript-eslint/eslint-plugin@latest @typescript-eslint/parser@latest some-other-plugin@latest --filter <package-name>` or modify `package.json` directly.
-        - **4.3. Install Updated Dependencies:**
-            - **LLM Action:** After all relevant `package.json` files have been updated, run the package manager's install command from the monorepo root to install all new versions and update the lock file.
-                - `pnpm install`
-                - `yarn install`
-                - `npm install`
+        - **4.2. Update Dependencies via Package Manager:**
+            - **LLM Action:** For each package identified in Phase 1 (including the monorepo root) and for each ESLint-related dependency within that package that needs updating (as determined in 4.1):
+                - Construct and execute the appropriate command for the detected package manager to update the dependency to its target version/tag (e.g., `eslint@^9.0.0`, `some-plugin@latest`).
+                - These commands will modify the respective `package.json` files by resolving tags like `@latest` to specific semantic versions.
+                - **Important:** The package manager, not the LLM directly editing the `package.json` text, must be responsible for resolving version tags (like `@latest`) and writing the final semantic version to the `package.json` file.
+                - *Example commands (LLM to adapt for detected package manager, specific packages, and dependencies to be updated):*
+                    - To update `eslint` to `^9.0.0` and `some-plugin` to its latest version in a specific package `my-app`:
+                        - `pnpm add -D eslint@^9.0.0 some-plugin@latest --filter my-app`
+                        - `yarn workspace my-app add -D eslint@^9.0.0 some-plugin@latest`
+                        - (For npm, navigate to the package directory: `cd packages/my-app && npm install -D eslint@^9.0.0 some-plugin@latest && cd -`)
+                    - If updating many dependencies within one package, they can often be grouped into a single command:
+                        - `pnpm add -D plugin1@latest plugin2@latest another-dep@^specific.version --filter my-app`
+                - **LLM Task:** Ensure these package manager commands are executed for all packages and all dependencies that require updates according to the plan from step 4.1.
+        - **4.3. Install Updated Dependencies (Consolidate & Update Lockfile):**
+            - **LLM Action:** After all individual dependencies have been updated in their respective `package.json` files using the package manager commands in step 4.2, run a general install command from the monorepo root. This ensures the lockfile (`pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`) is fully updated and all dependencies are correctly installed according to the modified `package.json` files.
         - **4.4. Initial Verification (Optional but Recommended):**
             - **LLM Action:** After installation, try running `eslint --version` in a few key packages or the root to ensure the core ESLint version has been updated as expected.
 
