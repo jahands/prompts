@@ -24,14 +24,12 @@ In Zod v4, string format validations are **standalone functions**, not chained m
 z.string().email()
 z.string().url()
 z.string().uuid()
-z.string().datetime()
 z.string().ip()
 
 // ✅ CORRECT (Zod v4 style) - ALWAYS USE
 z.email()
 z.url()
 z.uuid()
-z.datetime()
 z.ip()
 z.ipv4()
 z.ipv6()
@@ -132,16 +130,32 @@ z.string().check(
 )
 ```
 
-### 6. Error Formatting
+### 6. Error Handling
 
-In Zod v4, error formatting methods have been updated:
+Zod v4 provides improved error handling and formatting:
 
 ```typescript
-// ✅ CORRECT (Zod v4)
-const result = schema.safeParse(data)
-if (!result.success) {
+// Basic error handling with try/catch
+const schema = z.email()
+
+try {
+  const result = schema.parse("invalid-email")
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    console.log(error.issues) // Access issues
+    console.log(error.issues[0]?.message) // Get first error message
+  }
+}
+
+// Safe parsing (recommended)
+const result = schema.safeParse("test@example.com")
+if (result.success) {
+  console.log(result.data)
+} else {
+  // ✅ NEW error formatting methods
   const pretty = z.prettifyError(result.error) // Human-readable format
   const tree = z.treeifyError(result.error) // Clean tree structure
+  console.log(result.error.issues) // Access raw issues
 }
 
 // ❌ WRONG (Zod v3 style) - DO NOT USE
@@ -255,12 +269,6 @@ const schema = z.pipe(
 ### 13. Common Patterns in Zod v4
 
 ```typescript
-// Email validation with custom error
-z.email({ error: "Please enter a valid email address" })
-
-// URL validation with constraints
-z.url().startsWith("https://", { error: "URL must use HTTPS" })
-
 // Optional fields
 z.email().optional()
 z.url().nullable()
@@ -279,14 +287,6 @@ z.union([z.string(), z.int()])
 
 // Enums
 z.enum(["option1", "option2", "option3"])
-
-// Object with mixed validation
-z.strictObject({
-  email: z.email(),
-  age: z.int().min(0).max(120),
-  website: z.url().optional(),
-  role: z.enum(["admin", "user", "guest"]),
-})
 ```
 
 ### 14. New Features in Zod v4
@@ -308,30 +308,7 @@ const myRegistry = z.registry()
 const schema = z.string().register(myRegistry, { name: "username" })
 ```
 
-### 15. Error Handling
 
-```typescript
-const schema = z.email()
-
-try {
-  const result = schema.parse("invalid-email")
-} catch (error) {
-  if (error instanceof z.ZodError) {
-    // Access issues
-    console.log(error.issues)
-    // Get first error message
-    console.log(error.issues[0]?.message)
-  }
-}
-
-// Safe parsing
-const result = schema.safeParse("test@example.com")
-if (result.success) {
-  console.log(result.data)
-} else {
-  console.log(result.error.issues)
-}
-```
 
 ## Summary of Critical Rules
 
