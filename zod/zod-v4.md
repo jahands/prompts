@@ -57,13 +57,30 @@ Use the `error` parameter instead of `message`, `errorMap`, `invalid_type_error`
 z.string({ message: "Invalid string" })
 z.string({ invalid_type_error: "Expected string", required_error: "Required" })
 
-// ✅ CORRECT (Zod v4 style)
+// ✅ CORRECT (Zod v4 style) - but use sparingly!
 z.string({ error: "Invalid string" })
 z.email({ error: "Invalid email address" })
 
-// For complex error handling:
-z.string().check((val) => val.length > 0, {
-  error: "String cannot be empty",
+// IMPORTANT: Zod already provides excellent default error messages!
+// Only add custom errors when the default is genuinely unhelpful.
+
+// ❌ BAD - Redundant custom errors (Zod already says this!)
+z.string({ error: "Must be a string" })
+z.email({ error: "Invalid email" })
+z.int({ error: "Must be an integer" })
+
+// ✅ GOOD - Custom errors only when adding context
+z.string()
+  .min(8)
+  .check((val) => /[A-Z]/.test(val) && /[0-9]/.test(val), {
+    error: "Password must contain uppercase letter and number",
+  })
+
+// ✅ GOOD - Let Zod handle the basics
+const schema = z.object({
+  email: z.email(), // Zod says: "Invalid email"
+  age: z.int().min(18), // Zod says: "Too small: expected number to be >=18"
+  role: z.enum(["admin", "user"]), // Zod says: 'Invalid option: expected one of "admin"|"user"'
 })
 ```
 
@@ -297,7 +314,48 @@ z.union([z.string(), z.int()])
 z.enum(["option1", "option2", "option3"])
 ```
 
-### 14. New Features in Zod v4
+### 14. Best Practices for Error Messages
+
+**IMPORTANT: Zod provides excellent default error messages. Only add custom errors when they add genuine value.**
+
+```typescript
+// ❌ BAD - Redundant custom error messages
+const badSchema = z.object({
+  email: z.email({ error: "Invalid email" }), // Zod already says this!
+  age: z.int({ error: "Must be an integer" }), // Redundant!
+  name: z.string({ error: "Name is required" }), // Zod says "Invalid input: expected string"
+})
+
+// ✅ GOOD - Rely on Zod's defaults
+const goodSchema = z.object({
+  email: z.email(),
+  age: z.int().min(18),
+  name: z.string().min(1),
+})
+
+// ✅ GOOD - Custom errors only for business logic
+const businessSchema = z.object({
+  password: z
+    .string()
+    .min(8)
+    .check((pwd) => /[A-Z]/.test(pwd) && /[0-9]/.test(pwd), {
+      error: "Password must contain uppercase and number for security",
+    }),
+  couponCode: z.string().check(async (code) => await validateCoupon(code), {
+    error: "This coupon has expired or is invalid",
+  }),
+})
+
+// Zod's default error messages are clear and helpful:
+// - "Invalid input: expected string, received number"
+// - "Too small: expected string to contain at least 8 character(s)"
+// - "Invalid email"
+// - "Invalid url"
+// - "Invalid uuid"
+// - "Invalid option: expected one of 'admin'|'user'|'guest'"
+```
+
+### 15. New Features in Zod v4
 
 ```typescript
 // JSON Schema Generation
@@ -320,18 +378,19 @@ const schema = z.string().register(myRegistry, { name: "username" })
 
 1. **ALWAYS** import from `'zod/v4'`, never from `'zod'`
 2. Use standalone functions for string formats (e.g., `z.email()` not `z.string().email()`)
-3. Use `error` parameter for custom messages, not `message` or `errorMap`
-4. Use `z.int()` for integers, not `z.number().int()`
-5. `z.object()` is still the standard way to create objects (strips unknown properties)
+3. Use `error` parameter for custom messages, not `message` or `errorMap` - **but only when needed!**
+4. **Avoid redundant custom error messages** - Zod's defaults are excellent
+5. Use `z.int()` for integers, not `z.number().int()`
+6. `z.object()` is still the standard way to create objects (strips unknown properties)
    - Use `z.strictObject()` when you need to reject extra properties
    - Use `z.looseObject()` when you need to pass through extra properties
-6. Use `.check()` for custom validation, not `.superRefine()`
-7. Numbers are finite by default - no need for `.finite()`
-8. Use `z.prettifyError()` or `z.treeifyError()` for error formatting, not `.format()` or `.flatten()`
-9. Function schemas use new `{ input: [...], output: ... }` syntax
-10. Record schemas must specify both key and value types
-11. `.default()` applies to output type; use `.prefault()` for old v3 behavior
-12. Use ISO date/time functions like `z.iso.datetime()` instead of `z.string().datetime()`
+7. Use `.check()` for custom validation, not `.superRefine()`
+8. Numbers are finite by default - no need for `.finite()`
+9. Use `z.prettifyError()` or `z.treeifyError()` for error formatting, not `.format()` or `.flatten()`
+10. Function schemas use new `{ input: [...], output: ... }` syntax
+11. Record schemas must specify both key and value types
+12. `.default()` applies to output type; use `.prefault()` for old v3 behavior
+13. Use ISO date/time functions like `z.iso.datetime()` instead of `z.string().datetime()`
 
 ## Example: Form Validation Schema
 
@@ -339,20 +398,20 @@ const schema = z.string().register(myRegistry, { name: "username" })
 import { z } from "zod/v4"
 
 const userRegistrationSchema = z.object({
-  email: z.email({ error: "Please enter a valid email address" }),
+  email: z.email(), // Zod says: "Invalid email"
   password: z
     .string()
-    .min(8, { error: "Password must be at least 8 characters" })
-    .check((pwd) => /[A-Z]/.test(pwd), {
-      error: "Password must contain at least one uppercase letter",
+    .min(8) // Zod says: "Too small: expected string to contain at least 8 character(s)"
+    .check((pwd) => /[A-Z]/.test(pwd) && /[0-9]/.test(pwd), {
+      error: "Password must contain at least one uppercase letter and number",
     }),
   age: z
     .int()
-    .min(18, { error: "Must be at least 18 years old" })
-    .max(120, { error: "Invalid age" }),
+    .min(18) // Zod says: "Too small: expected number to be >=18"
+    .max(120), // Zod says: "Too big: expected number to be <=120"
   website: z.url().optional(),
   acceptTerms: z.literal(true, {
-    error: "You must accept the terms and conditions",
+    error: "You must accept the terms and conditions", // This one is useful context!
   }),
 })
 
