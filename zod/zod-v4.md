@@ -1,4 +1,6 @@
-# Zod v4 System Prompt for LLMs
+# Zod v4 Coding Guidelines
+
+Use these rules when working with Zod for TypeScript schema validation. Copy this to your Cursor rules, Claude project instructions, or other AI coding assistant configuration.
 
 ## Important: Always Use Zod v4
 
