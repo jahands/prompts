@@ -35,6 +35,13 @@ z.datetime()
 z.ip()
 z.ipv4()
 z.ipv6()
+z.base64()
+z.nanoid()
+z.cuid()
+z.cuid2()
+z.ulid()
+z.cidrv4()
+z.cidrv6()
 
 // For strings with additional constraints, compose them:
 z.email().min(5).max(255)
@@ -125,7 +132,127 @@ z.string().check(
 )
 ```
 
-### 6. Common Patterns in Zod v4
+### 6. Error Formatting
+
+In Zod v4, error formatting methods have been updated:
+
+```typescript
+// ✅ CORRECT (Zod v4)
+const result = schema.safeParse(data)
+if (!result.success) {
+  const pretty = z.prettifyError(result.error) // Human-readable format
+  const tree = z.treeifyError(result.error) // Clean tree structure
+}
+
+// ❌ WRONG (Zod v3 style) - DO NOT USE
+error.format() // Deprecated
+error.flatten() // Deprecated
+```
+
+### 7. Function Schemas
+
+Function validation has a completely new API in Zod v4:
+
+```typescript
+// ✅ CORRECT (Zod v4)
+const myFunction = z.function({
+  input: [z.object({ name: z.string() })], // Array of parameter schemas
+  output: z.string(),
+})
+
+const impl = myFunction.implement((input) => {
+  return `Hello ${input.name}`
+})
+
+// For async functions:
+const asyncImpl = myFunction.implementAsync(async (input) => {
+  return `Hello ${input.name}`
+})
+
+// ❌ WRONG (Zod v3 style) - DO NOT USE
+z.function()
+  .args(z.object({ name: z.string() }))
+  .returns(z.string())
+```
+
+### 8. Record Schemas
+
+Record schemas must now specify both key and value types:
+
+```typescript
+// ✅ CORRECT (Zod v4)
+z.record(z.string(), z.number()) // Must specify both key and value
+
+// ❌ WRONG (Zod v3 style) - DO NOT USE
+z.record(z.number()) // Single argument no longer supported
+```
+
+### 9. Default Values vs Prefault
+
+In Zod v4, `.default()` behavior has changed - it applies to the output type:
+
+```typescript
+// ✅ CORRECT (Zod v4) - .default() applies to output
+const schema = z
+  .string()
+  .transform((val) => val.length)
+  .default(0)
+schema.parse(undefined) // => 0 (number)
+
+// For old v3 behavior, use .prefault() instead
+const legacySchema = z
+  .string()
+  .transform((val) => val.length)
+  .prefault("test")
+legacySchema.parse(undefined) // => 4 (length of "test")
+```
+
+### 10. ISO Date/Time Functions
+
+Zod v4 provides dedicated ISO format functions:
+
+```typescript
+// ✅ CORRECT (Zod v4)
+z.iso.datetime() // Replaces z.string().datetime()
+z.iso.date() // Replaces z.string().date()
+z.iso.time() // New in v4
+z.iso.duration() // New in v4
+
+// ❌ WRONG (Zod v3 style) - DO NOT USE
+z.string().datetime()
+z.string().date()
+```
+
+### 11. File Validation
+
+Zod v4 introduces file validation for File objects:
+
+```typescript
+// ✅ NEW in Zod v4
+z.file()
+  .min(1024) // Minimum file size in bytes
+  .max(5 * 1024 * 1024) // Maximum file size (5MB)
+  .mime(["image/jpeg", "image/png"]) // MIME type validation
+```
+
+### 12. Pipe Operations
+
+Chain schemas with pipe operations for complex transformations:
+
+```typescript
+// ✅ NEW in Zod v4
+const userSchema = z
+  .object({ id: z.string() })
+  .pipe(z.object({ id: z.number() }))
+
+// Or use z.pipe() function:
+const schema = z.pipe(
+  z.string(),
+  z.number() // Parses string then converts to number
+)
+```
+
+### 13. Common Patterns in Zod v4
 
 ```typescript
 // Email validation with custom error
@@ -162,7 +289,26 @@ z.strictObject({
 })
 ```
 
-### 7. Error Handling
+### 14. New Features in Zod v4
+
+```typescript
+// JSON Schema Generation
+const jsonSchema = z.toJSONSchema(mySchema)
+
+// Type Helpers
+z.$output<typeof schema> // Extract output type
+z.$input<typeof schema> // Extract input type
+z.$brand<"MyBrand">() // Create branded types
+
+// Registry System
+z.globalRegistry // Global schema registry
+z.registry() // Create local registry
+
+const myRegistry = z.registry()
+const schema = z.string().register(myRegistry, { name: "username" })
+```
+
+### 15. Error Handling
 
 ```typescript
 const schema = z.email()
@@ -196,6 +342,11 @@ if (result.success) {
 5. Use `z.strictObject()` or `z.looseObject()` for objects
 6. Use `.check()` for custom validation, not `.superRefine()`
 7. Numbers are finite by default - no need for `.finite()`
+8. Use `z.prettifyError()` or `z.treeifyError()` for error formatting, not `.format()` or `.flatten()`
+9. Function schemas use new `{ input: [...], output: ... }` syntax
+10. Record schemas must specify both key and value types
+11. `.default()` applies to output type; use `.prefault()` for old v3 behavior
+12. Use ISO date/time functions like `z.iso.datetime()` instead of `z.string().datetime()`
 
 ## Example: Form Validation Schema
 
@@ -222,5 +373,21 @@ const userRegistrationSchema = z.strictObject({
 
 type UserRegistration = z.infer<typeof userRegistrationSchema>
 ```
+
+## Quick Migration Reference
+
+| Operation        | Zod v3                    | Zod v4                         |
+| ---------------- | ------------------------- | ------------------------------ |
+| Import           | `import { z } from "zod"` | `import { z } from "zod/v4"`   |
+| Email validation | `z.string().email()`      | `z.email()`                    |
+| URL validation   | `z.string().url()`        | `z.url()`                      |
+| Error message    | `{ message: "Error" }`    | `{ error: "Error" }`           |
+| Strict object    | `.strict()`               | `z.strictObject()`             |
+| Error formatting | `.format()`               | `z.treeifyError()`             |
+| Native enum      | `z.nativeEnum()`          | `z.enum()`                     |
+| IP validation    | `z.string().ip()`         | `z.ipv4()` or `z.ipv6()`       |
+| Date/time        | `z.string().datetime()`   | `z.iso.datetime()`             |
+| Function schema  | `.args().returns()`       | `{input: [...], output: ...}`  |
+| Record schema    | `z.record(valueType)`     | `z.record(keyType, valueType)` |
 
 Remember: When in doubt, refer to the official Zod v4 documentation and always import from `'zod/v4'`.
