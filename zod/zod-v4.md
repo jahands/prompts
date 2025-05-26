@@ -92,6 +92,12 @@ z.number().finite() // No longer needed, numbers are finite by default
 ### 4. Object Schema Best Practices
 
 ```typescript
+// Standard object (strips unknown properties - MOST COMMON)
+z.object({
+  name: z.string(),
+  age: z.int(),
+})
+
 // For strict objects (no extra properties allowed)
 z.strictObject({
   name: z.string(),
@@ -105,8 +111,8 @@ z.looseObject({
 })
 
 // ❌ DEPRECATED - Do not use
-z.object({}).strict()
-z.object({}).passthrough()
+z.object({}).strict() // Use z.strictObject() instead
+z.object({}).passthrough() // Use z.looseObject() instead
 ```
 
 ### 5. Custom Validation
@@ -310,15 +316,15 @@ const myRegistry = z.registry()
 const schema = z.string().register(myRegistry, { name: "username" })
 ```
 
-
-
 ## Summary of Critical Rules
 
 1. **ALWAYS** import from `'zod/v4'`, never from `'zod'`
 2. Use standalone functions for string formats (e.g., `z.email()` not `z.string().email()`)
 3. Use `error` parameter for custom messages, not `message` or `errorMap`
 4. Use `z.int()` for integers, not `z.number().int()`
-5. Use `z.strictObject()` or `z.looseObject()` for objects
+5. `z.object()` is still the standard way to create objects (strips unknown properties)
+   - Use `z.strictObject()` when you need to reject extra properties
+   - Use `z.looseObject()` when you need to pass through extra properties
 6. Use `.check()` for custom validation, not `.superRefine()`
 7. Numbers are finite by default - no need for `.finite()`
 8. Use `z.prettifyError()` or `z.treeifyError()` for error formatting, not `.format()` or `.flatten()`
@@ -332,7 +338,7 @@ const schema = z.string().register(myRegistry, { name: "username" })
 ```typescript
 import { z } from "zod/v4"
 
-const userRegistrationSchema = z.strictObject({
+const userRegistrationSchema = z.object({
   email: z.email({ error: "Please enter a valid email address" }),
   password: z
     .string()
