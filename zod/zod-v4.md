@@ -2,6 +2,66 @@
 
 Use these rules when working with Zod for TypeScript schema validation. Copy this to your Cursor rules, Claude project instructions, or other AI coding assistant configuration.
 
+## Preferences
+
+- **EVERY Zod schema MUST have an inferred type** - no exceptions, even for internal/helper schemas.
+- When creating a type by inferring from a zod schema, ALWAYS place the type ABOVE the schema.
+- A type should always use the following syntax: `export type Thing = z.infer<typeof Thing>`
+- The inferred type should ALWAYS have the same name as the schema.
+- **Schema names should NOT have a "Schema" suffix** - use `User` not `UserSchema`, `ApiConfig` not `ApiConfigSchema`.
+- **ALWAYS use JSDoc/TSDoc docstrings (`/** */`) for schema documentation instead of regular comments (`//`).**
+
+## Documentation Best Practices
+
+### Use JSDoc/TSDoc Docstrings for Schema Documentation
+
+When documenting Zod schemas and their corresponding types, **ALWAYS** use JSDoc/TSDoc docstrings (`/** */`) instead of regular comments (`//`). This provides better IDE integration, documentation generation, and IntelliSense support.
+
+```typescript
+// ❌ WRONG - Don't use regular comments
+// User schema for authentication
+export type User = z.infer<typeof User>
+export const User = z.object({
+  id: z.string(),
+  email: z.email(),
+})
+
+// ✅ CORRECT - Use JSDoc/TSDoc docstrings
+/**
+ * User schema for authentication
+ */
+export type User = z.infer<typeof User>
+export const User = z.object({
+  id: z.string(),
+  email: z.email(),
+})
+
+/**
+ * Configuration schema for API endpoints
+ * @example
+ * ```typescript
+ * const config = ApiConfig.parse({
+ *   baseUrl: "https://api.example.com",
+ *   timeout: 5000
+ * })
+ * ```
+ */
+export type ApiConfig = z.infer<typeof ApiConfig>
+export const ApiConfig = z.object({
+  baseUrl: z.url(),
+  timeout: z.int().min(1000).max(30000),
+  retries: z.int().min(0).max(5).default(3),
+})
+```
+
+### Benefits of JSDoc/TSDoc Docstrings
+
+1. **IDE Integration**: Hover tooltips show the documentation
+2. **Documentation Generation**: Tools like TypeDoc can generate docs automatically
+3. **IntelliSense**: Better autocomplete and type information
+4. **Standard Format**: Follows TypeScript/JavaScript conventions
+5. **Rich Formatting**: Support for `@param`, `@returns`, `@example`, etc.
+
 ## Important: Always Use Zod v4
 
 When working with Zod, **ALWAYS** use Zod v4 by importing from `'zod/v4'`. Never use the default `'zod'` import, which is Zod v3.
@@ -397,7 +457,11 @@ const schema = z.string().register(myRegistry, { name: "username" })
 ```typescript
 import { z } from "zod/v4"
 
-const userRegistrationSchema = z.object({
+/**
+ * User registration schema for authentication
+ */
+export type UserRegistration = z.infer<typeof UserRegistration>
+export const UserRegistration = z.object({
   email: z.email(), // Zod says: "Invalid email"
   password: z
     .string()
@@ -414,8 +478,6 @@ const userRegistrationSchema = z.object({
     error: "You must accept the terms and conditions", // This one is useful context!
   }),
 })
-
-type UserRegistration = z.infer<typeof userRegistrationSchema>
 ```
 
 ## Quick Migration Reference
