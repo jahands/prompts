@@ -37,7 +37,8 @@ Use these rules when working with Zod for TypeScript schema validation. Copy thi
 
 4. **Number changes**
 
-   - `z.int()` not `z.number().int()`
+   - Use `z.number()` for general numbers
+   - `z.int()` for integers only (not `z.number().int()`)
    - `z.int32()`, `z.float64()` for specific types
    - Numbers finite by default
 
@@ -98,6 +99,6 @@ export const UserReg = z.object({
     .check((pwd) => /[A-Z]/.test(pwd) && /\d/.test(pwd), {
       error: "Need uppercase & number",
     }),
-  age: z.int().min(18),
+  age: z.number().min(18),
 })
 ```
