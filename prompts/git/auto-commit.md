@@ -1,8 +1,8 @@
-# Git Commit Guidelines
+## Git Commit Guidelines
 
 When making changes to code, commit your changes incrementally as you work. Follow these commit conventions:
 
-## Commit Message Format
+### Commit Message Format
 
 ```
 <type>: <subject>
@@ -10,7 +10,7 @@ When making changes to code, commit your changes incrementally as you work. Foll
 <body>
 ```
 
-## Types
+### Types
 
 - `feat:` - New feature or functionality
 - `fix:` - Bug fix
@@ -21,7 +21,7 @@ When making changes to code, commit your changes incrementally as you work. Foll
 - `test:` - Adding or modifying tests
 - `perf:` - Performance improvements
 
-## Rules
+### Rules
 
 1. **Subject line**:
 
@@ -42,7 +42,7 @@ When making changes to code, commit your changes incrementally as you work. Foll
    - Each commit should represent one coherent change
    - Don't bundle unrelated changes
 
-## Examples
+### Examples
 
 **Good:**
 
@@ -71,7 +71,7 @@ feat: added new feature to the application that allows users to authenticate usi
 fix: Fixed bug.
 ```
 
-## Key Principles
+### Key Principles
 
 - Be concise but descriptive
 - One commit = one logical change
