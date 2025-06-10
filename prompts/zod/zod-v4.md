@@ -24,7 +24,7 @@ Use these rules when working with Zod for TypeScript schema validation. Copy thi
    type UserOutput = z.output<typeof User>
    type UserInput = z.input<typeof User>
 
-   // Never use these: typeof User['_type'] // or _input, _output
+   // Never use: typeof User['_type'] // or _input, _output
    ```
 
 3. **String validations are standalone functions**
