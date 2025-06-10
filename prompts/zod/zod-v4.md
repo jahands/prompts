@@ -17,14 +17,24 @@ Use these rules when working with Zod for TypeScript schema validation. Copy thi
    - No "Schema" suffix
    - Use JSDoc (`/** */`), not `//`
 
-2. **String validations are standalone functions**
+2. **Type extraction from schemas**
+
+   ```typescript
+   // Extract output (parsed) & input (raw) types
+   type UserOutput = z.output<typeof User>
+   type UserInput = z.input<typeof User>
+
+   // Never use these: typeof User['_type'] // or _input, _output
+   ```
+
+3. **String validations are standalone functions**
 
    ```typescript
    // ❌ z.string().email()
    // ✅ z.email(), z.url(), z.uuid(), z.ip()
    ```
 
-3. **Use `error` param sparingly** - Zod's defaults are excellent
+4. **Use `error` param sparingly** - Zod's defaults are excellent
 
    ```typescript
    // ❌ z.email({error: "Invalid email"}) // Redundant!
@@ -35,24 +45,24 @@ Use these rules when working with Zod for TypeScript schema validation. Copy thi
    })
    ```
 
-4. **Number changes**
+5. **Number changes**
 
    - Use `z.number()` for general numbers
    - `z.int()` for integers only (not `z.number().int()`)
    - `z.int32()`, `z.float64()` for specific types
    - Numbers finite by default
 
-5. **Object types**
+6. **Object types**
 
    - `z.object()` - strips unknowns (default)
    - `z.strictObject()` - rejects extras
    - `z.looseObject()` - allows extras
 
-6. **Custom validation**: Use `.check()` not `.superRefine()`
+7. **Custom validation**: Use `.check()` not `.superRefine()`
 
-7. **Error formatting**: `z.prettifyError()` or `z.treeifyError()`
+8. **Error formatting**: `z.prettifyError()` or `z.treeifyError()`
 
-8. **Functions**:
+9. **Functions**:
 
    ```typescript
    z.function({
@@ -61,11 +71,11 @@ Use these rules when working with Zod for TypeScript schema validation. Copy thi
    })
    ```
 
-9. **Records**: `z.record(keyType, valueType)`
+10. **Records**: `z.record(keyType, valueType)`
 
-10. **ISO formats**: `z.iso.datetime()`, `z.iso.date()`
+11. **ISO formats**: `z.iso.datetime()`, `z.iso.date()`
 
-11. **Other key features**:
+12. **Other key features**:
     - **Default**: `.default()` applies to output; use `.prefault()` for v3 behavior
     - **File validation**: `z.file().min(1024).max(5*1024*1024).mime(['image/jpeg'])`
     - **Pipe**: `z.pipe(z.string(), z.number())` for transformations
