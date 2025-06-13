@@ -24,9 +24,9 @@ Only add comments when they provide value beyond what the code itself communicat
 </dont-comment>
 
 <examples>
-<bad-example>
+<example type="bad">
 <description>Redundant comments that restate the obvious</description>
-<code>
+```python
 # Add 1 to count
 count += 1
 
@@ -34,20 +34,20 @@ count += 1
 if user.is_admin:
     # Grant access
     grant_access()
-</code>
-</bad-example>
+```
+</example>
 
-<good-example>
+<example type="good">
 <description>Comments that add valuable context</description>
-<code>
+```python
 # Compensate for zero-indexing in the UI display
 count += 1
 
 # Admin check required by compliance policy XYZ-123
 if user.is_admin:
     grant_access()  # Bypasses the standard approval workflow
-</code>
-</good-example>
+```
+</example>
 </examples>
 
 <reminder>

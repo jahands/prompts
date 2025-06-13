@@ -2,19 +2,20 @@
 
 <title>Zod v4 Coding Guidelines</title>
 
+<overview>
 Use these rules when working with Zod for TypeScript schema validation. Copy this to your Cursor rules, Claude project instructions, or other AI coding assistant configuration.
+</overview>
 
 <critical>
 CRITICAL: Always import from 'zod/v4', never 'zod'
 </critical>
 
 <core-rules>
-<title>Core Rules</title>
 
 <rule>
 Every schema MUST have inferred type above it
 
-<example>
+<example type="good">
 ```typescript
 export type User = z.infer<typeof User>
 export const User = z.object({...})
@@ -29,7 +30,7 @@ export const User = z.object({...})
 <rule>
 Type extraction from schemas
 
-<example>
+<example type="good">
 ```typescript
 // Extract output (parsed) & input (raw) types
 type UserOutput = z.output<typeof User>
@@ -104,7 +105,7 @@ Error formatting: `z.prettifyError()` or `z.treeifyError()`
 <rule>
 Functions:
 
-<example>
+<example type="good">
 ```typescript
 z.function({
   input: [z.string()],
@@ -134,7 +135,6 @@ Other key features:
 </core-rules>
 
 <quick-reference>
-<title>Quick Reference</title>
 
 | v3                      | v4                          |
 | ----------------------- | --------------------------- |
@@ -147,8 +147,7 @@ Other key features:
 
 </quick-reference>
 
-<example>
-<title>Example</title>
+<example type="complete">
 
 ```typescript
 import { z } from 'zod/v4'

@@ -6,8 +6,6 @@ alwaysApply: false
 
 <zod-v4-guidelines>
 
-<title>Zod v4 Coding Guidelines</title>
-
 <critical-import-rule>
 <requirement>Always import from 'zod/v4', never 'zod'</requirement>
 </critical-import-rule>

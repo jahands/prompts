@@ -2,10 +2,11 @@
 
 <title>Git Commit Guidelines</title>
 
+<overview>
 When making changes to code, commit your changes incrementally as you work. Follow these commit conventions:
+</overview>
 
 <commit-format>
-<title>Commit Message Format</title>
 
 ```
 <type>: <subject>
@@ -16,7 +17,6 @@ When making changes to code, commit your changes incrementally as you work. Foll
 </commit-format>
 
 <types>
-<title>Types</title>
 
 - feat: New feature or functionality
 - fix: Bug fix
@@ -29,10 +29,8 @@ When making changes to code, commit your changes incrementally as you work. Foll
 </types>
 
 <rules>
-<title>Rules</title>
 
-<rule>
-<title>Subject line</title>
+<rule name="subject-line">
 
 - Maximum 90 characters
 - Start with lowercase
@@ -40,8 +38,7 @@ When making changes to code, commit your changes incrementally as you work. Foll
 - Use imperative mood ("add" not "adds" or "added")
 </rule>
 
-<rule>
-<title>Body (optional)</title>
+<rule name="body">
 
 - Separate from subject with blank line
 - Wrap at 72 characters
@@ -49,8 +46,7 @@ When making changes to code, commit your changes incrementally as you work. Foll
 - Only include when the change requires context
 </rule>
 
-<rule>
-<title>Commit frequency</title>
+<rule name="commit-frequency">
 
 - Commit after each logical unit of change
 - Each commit should represent one coherent change
@@ -94,7 +90,6 @@ fix: Fixed bug.
 </examples>
 
 <key-principles>
-<title>Key Principles</title>
 
 - Be concise but descriptive
 - One commit = one logical change

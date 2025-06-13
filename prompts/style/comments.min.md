@@ -18,12 +18,11 @@ Only comment to explain WHY, not WHAT. Comment when code alone cannot convey the
 - Obvious control flow
 </dont-comment>
 
-<example>
-<bad>
+<example type="bad">
 count += 1  # Increment count
-</bad>
-<good>
+</example>
+
+<example type="good">
 count += 1  # Compensate for zero-indexing in UI
-</good>
 </example>
 </code-comment-guidelines>
