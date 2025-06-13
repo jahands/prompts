@@ -3,38 +3,36 @@ description: How to add Cursor rules (ALWAYS read before adding rules)
 globs:
 alwaysApply: false
 ---
-
 <cursor-rules-guide>
 
-# Cursor Rules - Organization and Format
+<title>Cursor Rules - Organization and Format</title>
 
 <location>
-## Location
-All cursor rules should be placed in the `.cursor/rules/` directory with the `.mdc` extension.
+<title>Location</title>
+<description>All cursor rules should be placed in the `.cursor/rules/` directory with the `.mdc` extension.</description>
 
-<dont>
-❌ Do NOT create:
+<requirements type="dont">
 - `.cursorrules` file in the root (deprecated)
 - Rules in other locations
 - Rules with other extensions
-</dont>
+</requirements>
 
-<do>
-✅ DO create:
+<requirements type="do">
 - `.cursor/rules/{descriptive-name}.mdc`
 - One rule per file
 - Clear, focused rules
-</do>
+</requirements>
 </location>
 
 <file-naming>
-## File Naming
+<title>File Naming</title>
+<requirements>
 - Use kebab-case: `my-rule-name.mdc`
 - Be descriptive but concise
 - Group related rules with common prefixes
+</requirements>
 
 <examples>
-Examples:
 - `github-actions-runners.mdc`
 - `docker-compose.mdc`
 - `development-workflow.mdc`
@@ -42,166 +40,220 @@ Examples:
 </file-naming>
 
 <rule-format>
-## Rule Format
-Rules should use **XML-style tags** to structure content for better Claude 4 compatibility, while allowing markdown lists within tags for token efficiency.
+<title>Rule Format</title>
+<description>Rules must be written for LLM optimization. Prioritize machine readability over human readability.</description>
 
-```xml
+<template>
+<code language="xml">
 <rule-name-guidelines>
 
-# Title - Brief Description
+<title>Rule Title - Brief Description</title>
+
+<description>What this rule helps with</description>
 
 <context>
-## Context/Location
-Where this rule applies (files, directories, etc.)
+<title>Context/Location</title>
+<applies-to>Where this rule applies (files, directories, etc.)</applies-to>
 </context>
 
 <overview>
-### Overview/Architecture
-High-level explanation of the system/pattern
+<title>Overview/Architecture</title>
+<content>High-level explanation of the system/pattern</content>
 </overview>
 
 <key-concepts>
-### Key Concepts
 - First important concept
 - Second important concept
 - Additional concepts as needed
 </key-concepts>
 
 <rules>
-### Rules
-
 <rule>
-**Rule name**
+<name>Rule name</name>
+<requirements>
 - First requirement or detail
 - Second requirement or detail
 - Additional requirements
+</requirements>
 </rule>
 
 <rule>
-**Another rule**
+<name>Another rule</name>
+<steps>
 1. First numbered step (when order matters)
 2. Second numbered step
 3. Third numbered step
+</steps>
 </rule>
 </rules>
 
 <examples>
-### Examples
-
 <example type="good">
-```typescript
+<code language="typescript">
 // Good example code here
-```
+</code>
 </example>
-
 <example type="bad">
-```typescript
+<code language="typescript">
 // Bad example code here
-```
+</code>
 </example>
 </examples>
 
 </rule-name-guidelines>
-```
+</code>
+</template>
 
-### XML Tag Guidelines for LLM Readability
+<xml-tag-guidelines>
+<title>XML Tag Guidelines for LLM Optimization</title>
 
-#### Structure Requirements
-- **XML tags for sections** - Use XML tags to define major sections and provide structure
-- **Markdown within tags** - Markdown headers, lists, and formatting are allowed inside XML tags
-- **Consistent nesting** - Maintain clear parent-child relationships with XML tags
-- **Balance efficiency and structure** - Use XML for semantic structure, markdown for content formatting
+<structure-requirements>
+<title>Structure Requirements</title>
+- XML tags only - No markdown headers or formatting
+- Every section needs an XML tag
+- Use dash lists within tags to save tokens
+- No visual formatting (bold, italic, emojis)
+- Consistent nesting and clear parent-child relationships
+</structure-requirements>
 
-#### Tag Design Principles
-- **Semantic names** - Tags should describe content sections, not formatting
-- **Lowercase with hyphens** - `<rule-name>` not `<RuleName>` or `<rule_name>`
-- **Attributes for metadata** - Use `type="good"`, `language="typescript"`, `id="1"`
-- **Wrap related content** - Use tags to group logically related content
+<tag-design-principles>
+<title>Tag Design Principles</title>
+- Semantic names - Tags describe content, not formatting
+- Lowercase with hyphens - Use rule-name not RuleName or rule_name
+- Attributes for metadata - Use type="good", language="typescript"
+- Specific over generic - Use requirement not item, concept not point
+- No redundant text - Let tags convey meaning
+</tag-design-principles>
 
-#### When to Use Lists
-```xml
-<!-- Use dash lists for unordered items -->
+<optimization-rules>
+<title>LLM Optimization Rules</title>
+- No markdown headers (#, ##, ###) - Use XML structure only
+- No text formatting (**bold**, *italic*) - Unnecessary for LLMs
+- No emojis or Unicode symbols - Use type attributes instead
+- No redundant labels - If tag is named "examples", don't add "Examples:" text
+- Use attributes for categorization - type="good" not separate good/bad sections
+- Consistent patterns throughout - Same structure for similar content
+</optimization-rules>
+
+<list-patterns>
+<title>When to Use Lists</title>
+<pattern type="unordered">
+<description>Use dash lists for most content</description>
+<code language="xml">
 <requirements>
 - Each requirement is important
 - Order doesn't matter
 - Keep items concise
 </requirements>
+</code>
+</pattern>
 
-<!-- Use numbered lists when order matters -->
+<pattern type="ordered">
+<description>Use numbered lists only when order is critical</description>
+<code language="xml">
 <steps>
 1. First do this
 2. Then do that
 3. Finally do this
 </steps>
+</code>
+</pattern>
 
-<!-- For simple lists, just use markdown -->
-<types>
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `docs:` - Documentation
-</types>
-```
-
-#### Common Patterns
-```xml
-<!-- Lists save tokens vs individual tags -->
-<concepts>
-- Concept one explanation
-- Concept two explanation
-- Concept three explanation
-</concepts>
-
-<!-- Code examples with attributes -->
-<example type="good">
-```typescript
-// Code here
-```
-</example>
-
-<!-- Key-value pairs can use markdown -->
+<pattern type="key-value">
+<description>For type definitions, use consistent format</description>
+<code language="xml">
 <types>
 - `feat:` - New feature or functionality
 - `fix:` - Bug fix
 - `chore:` - Maintenance tasks
 </types>
-```
+</code>
+</pattern>
+</list-patterns>
 
-#### What to Avoid
-- ❌ Over-tagging: Don't wrap every list item in its own tag
-- ❌ Generic tags: `<section>`, `<div>`, `<content>`
-- ❌ Inconsistent structure: Pick a pattern and stick with it
+<common-patterns>
+<title>Common Patterns</title>
+<pattern>
+<name>Lists save tokens vs individual tags</name>
+<code language="xml">
+<concepts>
+- Concept one explanation
+- Concept two explanation
+- Concept three explanation
+</concepts>
+</code>
+</pattern>
 
-#### Benefits for LLMs
+<pattern>
+<name>Code examples with attributes</name>
+<code language="xml">
+<example type="good">
+<code language="typescript">
+// Code here
+</code>
+</example>
+</code>
+</pattern>
+
+<pattern>
+<name>Structured comparisons</name>
+<code language="xml">
+<comparison>
+<before>Old approach</before>
+<after>New approach</after>
+</comparison>
+</code>
+</pattern>
+</common-patterns>
+
+<avoid>
+<title>What to Avoid</title>
+- Markdown formatting inside XML
+- Visual elements (emojis, symbols)
+- Redundant text that duplicates tag names
+- Generic tags like section, div, content
+- Inconsistent structure patterns
+- Human-oriented formatting
+</avoid>
+
+<benefits>
+<title>Benefits for LLMs</title>
 - Unambiguous structure for parsing
 - Clear data extraction paths
 - Consistent patterns across all rules
-- Machine-readable without markdown parsing
+- No markdown parsing required
 - Explicit relationships between elements
+- Optimal token usage
+</benefits>
+
+</xml-tag-guidelines>
 </rule-format>
 
 <best-practices>
-## Best Practices
-- **Use XML-style tags** - Structure content with XML tags for better Claude 4 compatibility
-- **Markdown lists are fine** - Use `-` lists or numbered lists within XML tags to save tokens
-- **Balance structure and efficiency** - XML for semantic sections, markdown for content
-- **Focus on patterns** - Describe patterns rather than providing static templates
-- **Let LLMs learn from code** - Reference existing code patterns when possible
-- **Single-purpose rules** - Each rule file should focus on one specific topic
-- **Regular updates** - Update rules when patterns significantly change
-- **Clean obsolete rules** - Remove rules that are no longer relevant
-- **Semantic tag names** - Choose tags that describe content sections, not formatting
-- **Consistent structure** - Use the same patterns across all rules
+<title>Best Practices</title>
+- Optimize for LLM parsing - Remove all human-oriented formatting
+- Use XML structure exclusively - No markdown headers or formatting
+- Dash lists within tags - Saves tokens while maintaining structure
+- Semantic tag names - Describe content, not presentation
+- Consistent patterns - Same structure for similar content types
+- Single-purpose rules - One topic per file
+- Regular updates - Keep rules current with codebase changes
+- Remove obsolete rules - Don't keep outdated information
+- No visual formatting - No bold, italic, or emojis
+- Let tags convey meaning - Avoid redundant text
 </best-practices>
 
 <current-rules>
-## Current Rules
-Reference the existing rules in `.cursor/rules/` for examples of proper formatting and organization:
+<title>Current Rules</title>
+<description>Reference existing rules in `.cursor/rules/` for examples:</description>
+<rules>
 - `monorepo-structure.mdc`
 - `development-workflow.mdc`
 - `cli-tools.mdc`
 - `docker-compose.mdc`
 - `server-management.mdc`
 - `github-actions-runners.mdc`
+</rules>
 </current-rules>
 
 </cursor-rules-guide>
