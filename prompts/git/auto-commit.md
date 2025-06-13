@@ -1,7 +1,10 @@
+<git-commit-guidelines>
+
 ## Git Commit Guidelines
 
 When making changes to code, commit your changes incrementally as you work. Follow these commit conventions:
 
+<commit-format>
 ### Commit Message Format
 
 ```
@@ -9,7 +12,9 @@ When making changes to code, commit your changes incrementally as you work. Foll
 
 <body>
 ```
+</commit-format>
 
+<types>
 ### Types
 
 - `feat:` - New feature or functionality
@@ -20,60 +25,81 @@ When making changes to code, commit your changes incrementally as you work. Foll
 - `refactor:` - Code restructuring without changing functionality
 - `test:` - Adding or modifying tests
 - `perf:` - Performance improvements
+</types>
 
+<rules>
 ### Rules
 
-1. **Subject line**:
+<rule>
+**Subject line**:
 
-   - Maximum 90 characters
-   - Start with lowercase
-   - No period at the end
-   - Use imperative mood ("add" not "adds" or "added")
+- Maximum 90 characters
+- Start with lowercase
+- No period at the end
+- Use imperative mood ("add" not "adds" or "added")
+</rule>
 
-2. **Body** (optional):
+<rule>
+**Body** (optional):
 
-   - Separate from subject with blank line
-   - Wrap at 72 characters
-   - Explain _what_ and _why_, not _how_
-   - Only include when the change requires context
+- Separate from subject with blank line
+- Wrap at 72 characters
+- Explain _what_ and _why_, not _how_
+- Only include when the change requires context
+</rule>
 
-3. **Commit frequency**:
-   - Commit after each logical unit of change
-   - Each commit should represent one coherent change
-   - Don't bundle unrelated changes
+<rule>
+**Commit frequency**:
+- Commit after each logical unit of change
+- Each commit should represent one coherent change
+- Don't bundle unrelated changes
+</rule>
+</rules>
 
+<examples>
 ### Examples
 
-**Good:**
-
+<example type="good">
 ```
 feat: add user authentication middleware
 
 Implements JWT-based authentication for API routes.
 Includes token validation and refresh logic.
 ```
+</example>
 
+<example type="good">
 ```
 fix: resolve null pointer in user lookup
 ```
+</example>
 
+<example type="good">
 ```
 chore: update dependencies to latest versions
 ```
+</example>
 
-**Bad:**
-
+<example type="bad">
 ```
 feat: added new feature to the application that allows users to authenticate using JWT tokens and also fixed some bugs and updated dependencies
 ```
+</example>
 
+<example type="bad">
 ```
 fix: Fixed bug.
 ```
+</example>
+</examples>
 
+<key-principles>
 ### Key Principles
 
 - Be concise but descriptive
 - One commit = one logical change
 - Commit message should make sense without looking at the code
 - Skip the body if the subject line is self-explanatory
+</key-principles>
+
+</git-commit-guidelines>
