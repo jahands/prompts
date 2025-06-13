@@ -1,26 +1,29 @@
-## Code Comment Guidelines
+<code-comment-guidelines>
+<title>Code Comment Guidelines</title>
 
-**Only comment to explain WHY, not WHAT. Comment when code alone cannot convey the full context.**
+<principle>
+Only comment to explain WHY, not WHAT. Comment when code alone cannot convey the full context.
+</principle>
 
-**Comment when:**
-
+<comment-when>
 - Explaining non-obvious decisions or business logic
 - Documenting workarounds, edge cases, or gotchas
 - Adding TODOs or noting limitations
 - Clarifying complex algorithms or regex patterns
+</comment-when>
 
-**Don't comment:**
-
-- Self-evident code (`count++`, `user.name = "John"`)
+<dont-comment>
+- Self-evident code (count++, user.name = "John")
 - What well-named functions/variables already express
 - Obvious control flow
+</dont-comment>
 
-**Example:**
-
-```python
-# Bad: Redundant
+<example>
+<bad>
 count += 1  # Increment count
-
-# Good: Explains context
+</bad>
+<good>
 count += 1  # Compensate for zero-indexing in UI
-```
+</good>
+</example>
+</code-comment-guidelines>

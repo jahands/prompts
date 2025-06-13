@@ -1,11 +1,11 @@
 <git-commit-guidelines>
 
-## Git Commit Guidelines
+<title>Git Commit Guidelines</title>
 
 When making changes to code, commit your changes incrementally as you work. Follow these commit conventions:
 
 <commit-format>
-### Commit Message Format
+<title>Commit Message Format</title>
 
 ```
 <type>: <subject>
@@ -16,23 +16,23 @@ When making changes to code, commit your changes incrementally as you work. Foll
 </commit-format>
 
 <types>
-### Types
+<title>Types</title>
 
-- `feat:` - New feature or functionality
-- `fix:` - Bug fix
-- `chore:` - Maintenance tasks, dependency updates, configuration changes
-- `docs:` - Documentation only changes
-- `style:` - Code style/formatting changes (no functional changes)
-- `refactor:` - Code restructuring without changing functionality
-- `test:` - Adding or modifying tests
-- `perf:` - Performance improvements
+- feat: New feature or functionality
+- fix: Bug fix
+- chore: Maintenance tasks, dependency updates, configuration changes
+- docs: Documentation only changes
+- style: Code style/formatting changes (no functional changes)
+- refactor: Code restructuring without changing functionality
+- test: Adding or modifying tests
+- perf: Performance improvements
 </types>
 
 <rules>
-### Rules
+<title>Rules</title>
 
 <rule>
-**Subject line**:
+<title>Subject line</title>
 
 - Maximum 90 characters
 - Start with lowercase
@@ -41,16 +41,17 @@ When making changes to code, commit your changes incrementally as you work. Foll
 </rule>
 
 <rule>
-**Body** (optional):
+<title>Body (optional)</title>
 
 - Separate from subject with blank line
 - Wrap at 72 characters
-- Explain _what_ and _why_, not _how_
+- Explain what and why, not how
 - Only include when the change requires context
 </rule>
 
 <rule>
-**Commit frequency**:
+<title>Commit frequency</title>
+
 - Commit after each logical unit of change
 - Each commit should represent one coherent change
 - Don't bundle unrelated changes
@@ -58,8 +59,6 @@ When making changes to code, commit your changes incrementally as you work. Foll
 </rules>
 
 <examples>
-### Examples
-
 <example type="good">
 ```
 feat: add user authentication middleware
@@ -95,7 +94,7 @@ fix: Fixed bug.
 </examples>
 
 <key-principles>
-### Key Principles
+<title>Key Principles</title>
 
 - Be concise but descriptive
 - One commit = one logical change
