@@ -84,14 +84,14 @@ alwaysApply: false
 
 <examples>
 <example type="good">
-<code language="typescript">
+```typescript
 // Good example code here
-</code>
+```
 </example>
 <example type="bad">
-<code language="typescript">
+```typescript
 // Bad example code here
-</code>
+```
 </example>
 </examples>
 
@@ -145,64 +145,66 @@ alwaysApply: false
 - No redundant labels - If tag is named "examples", don't add "Examples:" text
 - Use attributes for categorization - type="good" not separate good/bad sections
 - Consistent patterns throughout - Same structure for similar content
+- Exception: Use markdown code blocks (```) for all code examples
+- Exception: Use markdown tables for comparisons and mappings
 </optimization-rules>
 
 <list-patterns>
 <pattern type="unordered">
 <description>Use dash lists for most content</description>
-<code language="xml">
+```xml
 <requirements>
 - Each requirement is important
 - Order doesn't matter
 - Keep items concise
 </requirements>
-</code>
+```
 </pattern>
 
 <pattern type="ordered">
 <description>Use numbered lists only when order is critical</description>
-<code language="xml">
+```xml
 <steps>
 1. First do this
 2. Then do that
 3. Finally do this
 </steps>
-</code>
+```
 </pattern>
 
 <pattern type="key-value">
 <description>For type definitions, use consistent format</description>
-<code language="xml">
+```xml
 <types>
 - `feat:` - New feature or functionality
 - `fix:` - Bug fix
 - `chore:` - Maintenance tasks
 </types>
-</code>
+```
 </pattern>
 </list-patterns>
 
 <common-patterns>
 <pattern>
 <name>Lists save tokens vs individual tags</name>
-<code language="xml">
+```xml
 <concepts>
 - Concept one explanation
 - Concept two explanation
 - Concept three explanation
 </concepts>
-</code>
+```
 </pattern>
 
 <pattern>
 <name>Code examples with attributes</name>
-<code language="xml">
+```xml
 <example type="good">
-<code language="typescript">
+```typescript
 // Code here
-</code>
+```
 </example>
-</code>
+```
 </pattern>
 
 <pattern>
@@ -235,6 +237,29 @@ alwaysApply: false
 </benefits>
 
 </xml-tag-guidelines>
+
+<exceptions>
+
+<tables>
+<description>Use markdown tables for structured comparisons</description>
+<when>
+- Side-by-side comparisons
+- Key-value mappings
+- Migration guides
+- Fixed column data
+</when>
+<example>
+| Old API | New API |
+| ------- | ------- |
+| .foo()  | .bar()  |
+</example>
+</tables>
+
+<code-blocks>
+<description>Always use markdown code blocks</description>
+<rationale>XML code tags are redundant when markdown provides syntax highlighting</rationale>
+</code-blocks>
+</exceptions>
 
 <rule-complexity-guidelines>
 
@@ -274,7 +299,7 @@ alwaysApply: false
 50+ lines of XML with nested sections for "don't use filler phrases"
 </example>
 <example type="good">
-<code language="xml">
+```xml
 <direct-communication>
 <rules>
 - Skip pleasantries and affirmations
@@ -283,7 +308,7 @@ alwaysApply: false
 - Focus on content, not meta-commentary
 </rules>
 </direct-communication>
-</code>
+```
 </example>
 </anti-pattern>
 
