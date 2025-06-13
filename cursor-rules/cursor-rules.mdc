@@ -43,10 +43,10 @@ Examples:
 
 <rule-format>
 ## Rule Format
-Rules should be written in Markdown with XML-style tags for better Claude 4 compatibility:
+Rules should use **XML-style tags** to structure content for better Claude 4 compatibility, while allowing markdown lists within tags for token efficiency.
 
-```markdown
-<rule-name>
+```xml
+<rule-name-guidelines>
 
 # Title - Brief Description
 
@@ -62,41 +62,135 @@ High-level explanation of the system/pattern
 
 <key-concepts>
 ### Key Concepts
-Important points to understand
+- First important concept
+- Second important concept
+- Additional concepts as needed
 </key-concepts>
 
-<usage>
-### Usage/Patterns
-How to apply the rule
-</usage>
+<rules>
+### Rules
+
+<rule>
+**Rule name**
+- First requirement or detail
+- Second requirement or detail
+- Additional requirements
+</rule>
+
+<rule>
+**Another rule**
+1. First numbered step (when order matters)
+2. Second numbered step
+3. Third numbered step
+</rule>
+</rules>
 
 <examples>
 ### Examples
-Clear, concrete examples
+
+<example type="good">
+```typescript
+// Good example code here
+```
+</example>
+
+<example type="bad">
+```typescript
+// Bad example code here
+```
+</example>
 </examples>
 
-</rule-name>
+</rule-name-guidelines>
 ```
 
-### XML Tag Guidelines
+### XML Tag Guidelines for LLM Readability
 
-- Wrap the entire rule in a descriptive root tag (e.g., `<git-commit-guidelines>`)
-- Use semantic tags for major sections (e.g., `<rules>`, `<examples>`, `<best-practices>`)
-- Use `<rule>` tags for individual rules or guidelines
-- Use `<example>` tags with optional `type="good"` or `type="bad"` attributes
-- Keep tag names lowercase with hyphens for multi-word names
-- Close all tags properly to maintain valid XML structure
-  </rule-format>
+#### Structure Requirements
+- **XML tags for sections** - Use XML tags to define major sections and provide structure
+- **Markdown within tags** - Markdown headers, lists, and formatting are allowed inside XML tags
+- **Consistent nesting** - Maintain clear parent-child relationships with XML tags
+- **Balance efficiency and structure** - Use XML for semantic structure, markdown for content formatting
+
+#### Tag Design Principles
+- **Semantic names** - Tags should describe content sections, not formatting
+- **Lowercase with hyphens** - `<rule-name>` not `<RuleName>` or `<rule_name>`
+- **Attributes for metadata** - Use `type="good"`, `language="typescript"`, `id="1"`
+- **Wrap related content** - Use tags to group logically related content
+
+#### When to Use Lists
+```xml
+<!-- Use dash lists for unordered items -->
+<requirements>
+- Each requirement is important
+- Order doesn't matter
+- Keep items concise
+</requirements>
+
+<!-- Use numbered lists when order matters -->
+<steps>
+1. First do this
+2. Then do that
+3. Finally do this
+</steps>
+
+<!-- For simple lists, just use markdown -->
+<types>
+- `feat:` - New feature
+- `fix:` - Bug fix
+- `docs:` - Documentation
+</types>
+```
+
+#### Common Patterns
+```xml
+<!-- Lists save tokens vs individual tags -->
+<concepts>
+- Concept one explanation
+- Concept two explanation
+- Concept three explanation
+</concepts>
+
+<!-- Code examples with attributes -->
+<example type="good">
+```typescript
+// Code here
+```
+</example>
+
+<!-- Key-value pairs can use markdown -->
+<types>
+- `feat:` - New feature or functionality
+- `fix:` - Bug fix
+- `chore:` - Maintenance tasks
+</types>
+```
+
+#### What to Avoid
+- ❌ Over-tagging: Don't wrap every list item in its own tag
+- ❌ Generic tags: `<section>`, `<div>`, `<content>`
+- ❌ Inconsistent structure: Pick a pattern and stick with it
+
+#### Benefits for LLMs
+- Unambiguous structure for parsing
+- Clear data extraction paths
+- Consistent patterns across all rules
+- Machine-readable without markdown parsing
+- Explicit relationships between elements
+</rule-format>
 
 <best-practices>
 ## Best Practices
-- Use XML-style tags to structure content for better Claude 4 compatibility
-- Focus on describing patterns rather than providing static templates
-- Let LLMs learn from existing code when possible
-- Keep rules focused and single-purpose
-- Update rules when patterns significantly change
-- Remove rules that become obsolete
-- Choose semantic tag names that clearly describe the content they wrap
+- **Use XML-style tags** - Structure content with XML tags for better Claude 4 compatibility
+- **Markdown lists are fine** - Use `-` lists or numbered lists within XML tags to save tokens
+- **Balance structure and efficiency** - XML for semantic sections, markdown for content
+- **Focus on patterns** - Describe patterns rather than providing static templates
+- **Let LLMs learn from code** - Reference existing code patterns when possible
+- **Single-purpose rules** - Each rule file should focus on one specific topic
+- **Regular updates** - Update rules when patterns significantly change
+- **Clean obsolete rules** - Remove rules that are no longer relevant
+- **Semantic tag names** - Choose tags that describe content sections, not formatting
+- **Consistent structure** - Use the same patterns across all rules
 </best-practices>
 
 <current-rules>
