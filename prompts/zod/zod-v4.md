@@ -6,30 +6,30 @@
 Use these rules when working with Zod for TypeScript schema validation. Copy this to your Cursor rules, Claude project instructions, or other AI coding assistant configuration.
 </overview>
 
-<critical>
-CRITICAL: Always import from 'zod/v4', never 'zod'
-</critical>
+<critical-import-rule>
+<requirement>Always import from 'zod/v4', never 'zod'</requirement>
+</critical-import-rule>
 
 <core-rules>
 
 <rule>
-Every schema MUST have inferred type above it
-
+<name>Type Inference</name>
+<requirement>Every schema MUST have inferred type above it</requirement>
 <example type="good">
 ```typescript
 export type User = z.infer<typeof User>
 export const User = z.object({...})
 ```
 </example>
-
+<requirements>
 - Same name for type & schema
 - No "Schema" suffix
 - Use JSDoc (`/** */`), not `//`
+</requirements>
 </rule>
 
 <rule>
-Type extraction from schemas
-
+<name>Type extraction from schemas</name>
 <example type="good">
 ```typescript
 // Extract output (parsed) & input (raw) types
@@ -42,69 +42,66 @@ type UserInput = z.input<typeof User>
 </rule>
 
 <rule>
-String validations are standalone functions
-
-<example type="avoid">
+<name>String Validation</name>
+<requirement>String validations are standalone functions</requirement>
+<example type="comparison">
 ```typescript
-z.string().email()
-```
-</example>
-
-<example type="preferred">
-```typescript
-z.email(), z.url(), z.uuid(), z.ip()
+// WRONG: z.string().email()
+// RIGHT: z.email(), z.url(), z.uuid(), z.ip()
 ```
 </example>
 </rule>
 
 <rule>
-Use `error` param sparingly - Zod's defaults are excellent
-
-<example type="avoid">
+<name>Error Messages</name>
+<requirement>Use `error` param sparingly - Zod's defaults are excellent</requirement>
+<example type="comparison">
 ```typescript
-z.email({error: "Invalid email"}) // Redundant!
-```
-</example>
-
-<example type="preferred">
-```typescript
-z.email() // Zod says "Invalid email"
-// Only for business logic:
+// WRONG: z.email({error: "Invalid email"}) // Redundant!
+// RIGHT: z.email() // Zod says "Invalid email"
+// RIGHT: Only for business logic:
 z.string().check((val) => /[A-Z]/.test(val), {
-  error: "Must contain uppercase",
+  error: 'Must contain uppercase',
 })
 ```
 </example>
 </rule>
 
 <rule>
-Number changes
-
+<name>Number Types</name>
+<requirements>
 - Use `z.number()` for general numbers
 - `z.int()` for integers only (not `z.number().int()`)
 - `z.int32()`, `z.float64()` for specific types
 - Numbers finite by default
+</requirements>
 </rule>
 
 <rule>
-Object types
-
+<name>Object Types</name>
+<types>
 - `z.object()` - strips unknowns (default)
 - `z.strictObject()` - rejects extras
 - `z.looseObject()` - allows extras
+</types>
 </rule>
 
 <rule>
-Custom validation: Use `.check()` not `.superRefine()`
+<name>Custom Validation</name>
+<requirement>Use `.check()` not `.superRefine()`</requirement>
 </rule>
 
 <rule>
-Error formatting: `z.prettifyError()` or `z.treeifyError()`
+<name>Error Formatting</name>
+<methods>
+- `z.prettifyError()` - Human-readable format
+- `z.treeifyError()` - Tree structure format
+</methods>
 </rule>
 
 <rule>
-Functions:
-
+<name>Functions</name>
+<requirement>Define function schemas with input/output types</requirement>
 <example type="good">
 ```typescript
 z.function({
@@ -116,21 +113,28 @@ z.function({
 </rule>
 
 <rule>
-Records: `z.record(keyType, valueType)`
+<name>Records</name>
+<syntax>`z.record(keyType, valueType)`</syntax>
 </rule>
 
 <rule>
-ISO formats: `z.iso.datetime()`, `z.iso.date()`
+<name>ISO Formats</name>
+<formats>
+- `z.iso.datetime()` - ISO 8601 datetime
+- `z.iso.date()` - ISO 8601 date
+</formats>
 </rule>
 
 <rule>
-Other key features:
+<name>Additional Features</name>
+<features>
 - Default: `.default()` applies to output; use `.prefault()` for v3 behavior
 - File validation: `z.file().min(1024).max(5*1024*1024).mime(['image/jpeg'])`
 - Pipe: `z.pipe(z.string(), z.number())` for transformations
 - Async: Use `.check(async (val) => {...})` for async validation
 - Arrays: `z.array(z.email())` or `z.email().array()`
 - Optional: `.optional()`, `.nullable()`, `.nullish()`
+</features>
 </rule>
 </core-rules>
 
@@ -147,8 +151,7 @@ Other key features:
 
 </quick-reference>
 
-<example type="complete">
-
+<complete-example>
 ```typescript
 import { z } from 'zod/v4'
 
@@ -165,7 +168,6 @@ export const UserReg = z.object({
   age: z.number().min(18),
 })
 ```
-
-</example>
+</complete-example>
 
 </zod-v4-guidelines>
