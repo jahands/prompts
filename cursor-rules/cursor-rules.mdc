@@ -8,7 +8,6 @@ alwaysApply: false
 <title>Cursor Rules - Organization and Format</title>
 
 <location>
-<title>Location</title>
 <description>All cursor rules should be placed in the `.cursor/rules/` directory with the `.mdc` extension.</description>
 
 <requirements type="dont">
@@ -25,7 +24,6 @@ alwaysApply: false
 </location>
 
 <file-naming>
-<title>File Naming</title>
 <requirements>
 - Use kebab-case: `my-rule-name.mdc`
 - Be descriptive but concise
@@ -40,7 +38,6 @@ alwaysApply: false
 </file-naming>
 
 <rule-format>
-<title>Rule Format</title>
 <description>Rules must be written for LLM optimization. Prioritize machine readability over human readability.</description>
 
 <template>
@@ -52,12 +49,10 @@ alwaysApply: false
 <description>What this rule helps with</description>
 
 <context>
-<title>Context/Location</title>
 <applies-to>Where this rule applies (files, directories, etc.)</applies-to>
 </context>
 
 <overview>
-<title>Overview/Architecture</title>
 <content>High-level explanation of the system/pattern</content>
 </overview>
 
@@ -105,10 +100,8 @@ alwaysApply: false
 </template>
 
 <xml-tag-guidelines>
-<title>XML Tag Guidelines for LLM Optimization</title>
 
 <structure-requirements>
-<title>Structure Requirements</title>
 - XML tags only - No markdown headers or formatting
 - Every section needs an XML tag
 - Use dash lists within tags to save tokens
@@ -117,7 +110,6 @@ alwaysApply: false
 </structure-requirements>
 
 <xml-benefits>
-<title>XML Benefits</title>
 - Unambiguous parsing - no regex needed for headers
 - Explicit hierarchy - parent-child relationships are clear
 - Consistent extraction - same path to data every time
@@ -125,7 +117,6 @@ alwaysApply: false
 </xml-benefits>
 
 <common-mistakes>
-<title>Common Mistakes</title>
 - Mixing markdown headers with XML tags
 - Using XML tags for formatting (like <bold>)
 - Creating deeply nested structures (>4 levels)
@@ -133,7 +124,6 @@ alwaysApply: false
 </common-mistakes>
 
 <token-optimization>
-<title>Token Optimization</title>
 - XML tag pair: ~2-3 tokens
 - Dash list item: ~1 token
 - Individual XML elements: ~4-5 tokens each
@@ -141,7 +131,6 @@ alwaysApply: false
 </token-optimization>
 
 <tag-design-principles>
-<title>Tag Design Principles</title>
 - Semantic names - Tags describe content, not formatting
 - Lowercase with hyphens - Use rule-name not RuleName or rule_name
 - Attributes for metadata - Use type="good", language="typescript"
@@ -150,7 +139,6 @@ alwaysApply: false
 </tag-design-principles>
 
 <optimization-rules>
-<title>LLM Optimization Rules</title>
 - No markdown headers (#, ##, ###) - Use XML structure only
 - No text formatting (**bold**, *italic*) - Unnecessary for LLMs
 - No emojis or Unicode symbols - Use type attributes instead
@@ -160,7 +148,6 @@ alwaysApply: false
 </optimization-rules>
 
 <list-patterns>
-<title>When to Use Lists</title>
 <pattern type="unordered">
 <description>Use dash lists for most content</description>
 <code language="xml">
@@ -196,7 +183,6 @@ alwaysApply: false
 </list-patterns>
 
 <common-patterns>
-<title>Common Patterns</title>
 <pattern>
 <name>Lists save tokens vs individual tags</name>
 <code language="xml">
@@ -231,7 +217,6 @@ alwaysApply: false
 </common-patterns>
 
 <avoid>
-<title>What to Avoid</title>
 - Markdown formatting inside XML
 - Visual elements (emojis, symbols)
 - Redundant text that duplicates tag names
@@ -241,7 +226,6 @@ alwaysApply: false
 </avoid>
 
 <benefits>
-<title>Benefits for LLMs</title>
 - Unambiguous structure for parsing
 - Clear data extraction paths
 - Consistent patterns across all rules
@@ -251,10 +235,67 @@ alwaysApply: false
 </benefits>
 
 </xml-tag-guidelines>
+
+<rule-complexity-guidelines>
+
+<principle>Use the minimum structure needed for clarity - no more, no less</principle>
+
+<simple-rules>
+<when>For straightforward behavioral rules (< 10 requirements)</when>
+<approach>
+- Single <rules> section with dash list
+- Skip sections that add no value (overview, concepts)
+- 10-30 lines total
+</approach>
+<examples>
+- Communication style
+- Naming conventions
+- Simple do/don't lists
+</examples>
+</simple-rules>
+
+<complex-rules>
+<when>For technical systems or multi-faceted implementations</when>
+<approach>
+- Full template with multiple sections
+- Include overview, concepts, examples
+- Detailed requirements and steps
+</approach>
+<examples>
+- API design patterns
+- Architecture guidelines
+- Multi-step processes
+</examples>
+</complex-rules>
+
+<anti-pattern>
+<description>Don't over-structure simple content</description>
+<example type="bad">
+50+ lines of XML with nested sections for "don't use filler phrases"
+</example>
+<example type="good">
+<code language="xml">
+<direct-communication>
+<rules>
+- Skip pleasantries and affirmations
+- Don't start with "Great question!", "You're right!", etc.
+- Begin directly with the answer
+- Focus on content, not meta-commentary
+</rules>
+</direct-communication>
+</code>
+</example>
+</anti-pattern>
+
+<token-efficiency>
+- Simple rule with minimal XML: ~50-100 tokens
+- Over-structured simple rule: ~200-300 tokens
+- Complex rule with full structure: ~300-500 tokens (justified by content)
+</token-efficiency>
+</rule-complexity-guidelines>
 </rule-format>
 
 <best-practices>
-<title>Best Practices</title>
 - Optimize for LLM parsing - Remove all human-oriented formatting
 - Use XML structure exclusively - No markdown headers or formatting
 - Dash lists within tags - Saves tokens while maintaining structure
@@ -266,18 +307,5 @@ alwaysApply: false
 - No visual formatting - No bold, italic, or emojis
 - Let tags convey meaning - Avoid redundant text
 </best-practices>
-
-<current-rules>
-<title>Current Rules</title>
-<description>Reference existing rules in `.cursor/rules/` for examples:</description>
-<rules>
-- `monorepo-structure.mdc`
-- `development-workflow.mdc`
-- `cli-tools.mdc`
-- `docker-compose.mdc`
-- `server-management.mdc`
-- `github-actions-runners.mdc`
-</rules>
-</current-rules>
 
 </cursor-rules-guide>
