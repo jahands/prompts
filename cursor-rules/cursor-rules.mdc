@@ -1,5 +1,5 @@
 ---
-description: How to add Cursor rules (ALWAYS read before adding rules)
+description: Cursor rule guidelines (ALWAYS read before adding/updating rules)
 globs:
 alwaysApply: false
 ---
