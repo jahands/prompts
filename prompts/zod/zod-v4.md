@@ -143,7 +143,7 @@ z.function({
 ## Example
 
 ```typescript
-import { z } from "zod/v4"
+import { z } from 'zod/v4'
 
 /** User registration */
 export type UserReg = z.infer<typeof UserReg>
@@ -153,7 +153,7 @@ export const UserReg = z.object({
     .string()
     .min(8)
     .check((pwd) => /[A-Z]/.test(pwd) && /\d/.test(pwd), {
-      error: "Need uppercase & number",
+      error: 'Need uppercase & number',
     }),
   age: z.number().min(18),
 })

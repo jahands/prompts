@@ -12,6 +12,7 @@ When making changes to code, commit your changes incrementally as you work. Foll
 
 <body>
 ```
+
 </commit-format>
 
 <types>
@@ -25,7 +26,7 @@ When making changes to code, commit your changes incrementally as you work. Foll
 - `refactor:` - Code restructuring without changing functionality
 - `test:` - Adding or modifying tests
 - `perf:` - Performance improvements
-</types>
+  </types>
 
 <rules>
 ### Rules
@@ -37,7 +38,7 @@ When making changes to code, commit your changes incrementally as you work. Foll
 - Start with lowercase
 - No period at the end
 - Use imperative mood ("add" not "adds" or "added")
-</rule>
+  </rule>
 
 <rule>
 **Body** (optional):
@@ -46,7 +47,7 @@ When making changes to code, commit your changes incrementally as you work. Foll
 - Wrap at 72 characters
 - Explain _what_ and _why_, not _how_
 - Only include when the change requires context
-</rule>
+  </rule>
 
 <rule>
 **Commit frequency**:
@@ -65,30 +66,39 @@ feat: add user authentication middleware
 
 Implements JWT-based authentication for API routes.
 Includes token validation and refresh logic.
+
 ```
 </example>
 
 <example type="good">
 ```
+
 fix: resolve null pointer in user lookup
+
 ```
 </example>
 
 <example type="good">
 ```
+
 chore: update dependencies to latest versions
+
 ```
 </example>
 
 <example type="bad">
 ```
+
 feat: added new feature to the application that allows users to authenticate using JWT tokens and also fixed some bugs and updated dependencies
+
 ```
 </example>
 
 <example type="bad">
 ```
+
 fix: Fixed bug.
+
 ```
 </example>
 </examples>
@@ -103,3 +113,4 @@ fix: Fixed bug.
 </key-principles>
 
 </git-commit-guidelines>
+```

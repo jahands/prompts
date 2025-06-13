@@ -68,12 +68,12 @@ Create `packages/eslint-config/src/` directory and add the following files:
 #### 1.3 Create helpers.ts
 
 ```typescript
-import { existsSync } from "node:fs"
-import path from "node:path"
-import { fileURLToPath } from "node:url"
-import { includeIgnoreFile } from "@eslint/compat"
+import { existsSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { includeIgnoreFile } from '@eslint/compat'
 
-import type { FlatConfig } from "@eslint/compat"
+import type { FlatConfig } from '@eslint/compat'
 
 export function getDirname(importMetaUrl: string) {
   const __filename = fileURLToPath(importMetaUrl)
@@ -82,14 +82,12 @@ export function getDirname(importMetaUrl: string) {
 
 export function getGitIgnoreFiles(importMetaUrl: string) {
   // always include the root gitignore file
-  const rootGitignorePath = fileURLToPath(
-    new URL("../../../.gitignore", import.meta.url)
-  )
+  const rootGitignorePath = fileURLToPath(new URL('../../../.gitignore', import.meta.url))
 
   const ignoreFiles: FlatConfig[] = [includeIgnoreFile(rootGitignorePath)]
 
   const packageDir = getDirname(importMetaUrl)
-  const packageGitignorePath = path.join(packageDir, ".gitignore")
+  const packageGitignorePath = path.join(packageDir, '.gitignore')
   if (existsSync(packageGitignorePath)) {
     ignoreFiles.push(includeIgnoreFile(packageGitignorePath))
   }
@@ -99,28 +97,26 @@ export function getGitIgnoreFiles(importMetaUrl: string) {
 
 export function getTsconfigRootDir(importMetaUrl: string) {
   const tsconfigRootDir = getDirname(importMetaUrl)
-  return existsSync(path.join(tsconfigRootDir, "tsconfig.json"))
-    ? tsconfigRootDir
-    : undefined
+  return existsSync(path.join(tsconfigRootDir, 'tsconfig.json')) ? tsconfigRootDir : undefined
 }
 ```
 
 #### 1.4 Create default.config.ts
 
 ```typescript
-import { FlatCompat } from "@eslint/eslintrc"
-import eslint from "@eslint/js"
-import tsEslintPlugin from "@typescript-eslint/eslint-plugin"
-import tsEslintParser from "@typescript-eslint/parser"
-import eslintConfigPrettier from "eslint-config-prettier"
-import turboConfig from "eslint-config-turbo/flat"
+import { FlatCompat } from '@eslint/eslintrc'
+import eslint from '@eslint/js'
+import tsEslintPlugin from '@typescript-eslint/eslint-plugin'
+import tsEslintParser from '@typescript-eslint/parser'
+import eslintConfigPrettier from 'eslint-config-prettier'
+import turboConfig from 'eslint-config-turbo/flat'
 // @ts-ignore eslint-plugin-import has no types
-import * as importPlugin from "eslint-plugin-import"
-import unusedImportsPlugin from "eslint-plugin-unused-imports"
-import { defineConfig } from "eslint/config"
-import tseslint from "typescript-eslint"
+import * as importPlugin from 'eslint-plugin-import'
+import unusedImportsPlugin from 'eslint-plugin-unused-imports'
+import { defineConfig } from 'eslint/config'
+import tseslint from 'typescript-eslint'
 
-import { getDirname, getGitIgnoreFiles, getTsconfigRootDir } from "./helpers"
+import { getDirname, getGitIgnoreFiles, getTsconfigRootDir } from './helpers'
 
 export { defineConfig }
 
@@ -134,13 +130,13 @@ export function getConfig(importMetaUrl: string) {
     // Global ignores
     {
       ignores: [
-        ".*.{js,cjs}",
-        "**/*.{js,cjs}",
-        "**/node_modules/**",
-        "**/dist/**",
-        "eslint.config.ts",
-        "**/eslint.config.ts",
-        "**/worker-configuration.d.ts",
+        '.*.{js,cjs}',
+        '**/*.{js,cjs}',
+        '**/node_modules/**',
+        '**/dist/**',
+        'eslint.config.ts',
+        '**/eslint.config.ts',
+        '**/worker-configuration.d.ts',
       ],
     },
 
@@ -153,58 +149,55 @@ export function getConfig(importMetaUrl: string) {
 
     // TypeScript Configuration
     {
-      files: ["**/*.{ts,tsx,mts}"],
+      files: ['**/*.{ts,tsx,mts}'],
       languageOptions: {
         parser: tsEslintParser,
         parserOptions: {
           ecmaFeatures: {
             jsx: true,
           },
-          sourceType: "module",
+          sourceType: 'module',
           project: true,
           tsconfigRootDir: getTsconfigRootDir(importMetaUrl),
         },
       },
       plugins: {
-        "unused-imports": unusedImportsPlugin,
+        'unused-imports': unusedImportsPlugin,
       },
       settings: {
-        "import/resolver": {
+        'import/resolver': {
           typescript: {
-            project: "./tsconfig.json",
+            project: './tsconfig.json',
           },
         },
-        "import/parsers": {
-          "@typescript-eslint/parser": [".ts", ".tsx", "*.mts"],
+        'import/parsers': {
+          '@typescript-eslint/parser': ['.ts', '.tsx', '*.mts'],
         },
       },
       rules: {
         ...tsEslintPlugin.configs.recommended.rules,
         ...importPlugin.configs?.typescript.rules,
 
-        "@typescript-eslint/consistent-type-imports": [
-          "warn",
-          { prefer: "type-imports" },
-        ],
-        "@typescript-eslint/explicit-function-return-type": "off",
-        "@typescript-eslint/ban-ts-comment": "off",
-        "@typescript-eslint/no-floating-promises": "warn",
-        "unused-imports/no-unused-imports": "warn",
-        "@typescript-eslint/array-type": ["warn", { default: "array-simple" }],
-        "@typescript-eslint/no-unused-vars": [
-          "warn",
+        '@typescript-eslint/consistent-type-imports': ['warn', { prefer: 'type-imports' }],
+        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/ban-ts-comment': 'off',
+        '@typescript-eslint/no-floating-promises': 'warn',
+        'unused-imports/no-unused-imports': 'warn',
+        '@typescript-eslint/array-type': ['warn', { default: 'array-simple' }],
+        '@typescript-eslint/no-unused-vars': [
+          'warn',
           {
-            argsIgnorePattern: "^_",
-            varsIgnorePattern: "^_",
+            argsIgnorePattern: '^_',
+            varsIgnorePattern: '^_',
           },
         ],
-        "@typescript-eslint/no-empty-object-type": "off",
-        "@typescript-eslint/no-explicit-any": "off",
-        "import/no-named-as-default": "off",
-        "import/no-named-as-default-member": "off",
-        "prefer-const": "warn",
-        "no-mixed-spaces-and-tabs": ["error", "smart-tabs"],
-        "no-empty": "warn",
+        '@typescript-eslint/no-empty-object-type': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',
+        'import/no-named-as-default': 'off',
+        'import/no-named-as-default-member': 'off',
+        'prefer-const': 'warn',
+        'no-mixed-spaces-and-tabs': ['error', 'smart-tabs'],
+        'no-empty': 'warn',
 
         // Add Prettier last to override other formatting rules
         ...eslintConfigPrettier.rules,
@@ -212,27 +205,27 @@ export function getConfig(importMetaUrl: string) {
     },
 
     // Import plugin's TypeScript specific rules using FlatCompat
-    ...compat.extends("plugin:import/typescript").map((config) => ({
+    ...compat.extends('plugin:import/typescript').map((config) => ({
       ...config,
-      files: ["**/*.{ts,tsx,mjs}"],
+      files: ['**/*.{ts,tsx,mjs}'],
     })),
 
     {
-      files: ["**/*.spec.ts", "**/*.test.ts", "**/test/**/*.ts", "**/mocks.ts"],
+      files: ['**/*.spec.ts', '**/*.test.ts', '**/test/**/*.ts', '**/mocks.ts'],
       rules: {
-        "import/no-unresolved": "off",
+        'import/no-unresolved': 'off',
       },
     },
     {
-      files: ["**/*.ts"],
+      files: ['**/*.ts'],
       rules: {
-        "import/no-unresolved": "off",
+        'import/no-unresolved': 'off',
       },
     },
     {
-      files: ["tailwind.config.ts", "postcss.config.mjs"],
+      files: ['tailwind.config.ts', 'postcss.config.mjs'],
       rules: {
-        "@typescript-eslint/no-require-imports": "off",
+        '@typescript-eslint/no-require-imports': 'off',
       },
     },
 
@@ -245,23 +238,23 @@ export function getConfig(importMetaUrl: string) {
 #### 1.5 Create react.config.ts
 
 ```typescript
-import tsEslintParser from "@typescript-eslint/parser"
-import eslintConfigPrettier from "eslint-config-prettier"
-import react from "eslint-plugin-react"
-import * as reactHooks from "eslint-plugin-react-hooks"
-import unusedImportsPlugin from "eslint-plugin-unused-imports"
+import tsEslintParser from '@typescript-eslint/parser'
+import eslintConfigPrettier from 'eslint-config-prettier'
+import react from 'eslint-plugin-react'
+import * as reactHooks from 'eslint-plugin-react-hooks'
+import unusedImportsPlugin from 'eslint-plugin-unused-imports'
 
-import { defineConfig, getConfig } from "./default.config"
-import { getTsconfigRootDir } from "./helpers"
+import { defineConfig, getConfig } from './default.config'
+import { getTsconfigRootDir } from './helpers'
 
 export function getReactConfig(importMetaUrl: string) {
   return defineConfig([
     ...getConfig(importMetaUrl),
     {
-      files: ["**/*.{js,jsx,mjs,cjs,ts,tsx}"],
+      files: ['**/*.{js,jsx,mjs,cjs,ts,tsx}'],
       plugins: {
         react,
-        "unused-imports": unusedImportsPlugin,
+        'unused-imports': unusedImportsPlugin,
       },
       languageOptions: {
         parser: tsEslintParser,
@@ -269,18 +262,18 @@ export function getReactConfig(importMetaUrl: string) {
           ecmaFeatures: {
             jsx: true,
           },
-          sourceType: "module",
+          sourceType: 'module',
           project: true,
           tsconfigRootDir: getTsconfigRootDir(importMetaUrl),
         },
       },
     },
-    reactHooks.configs["recommended-latest"],
+    reactHooks.configs['recommended-latest'],
     {
       rules: {
         // this commonly causes false positives with Hono middleware
         // that have a similar naming scheme (e.g. useSentry())
-        "react-hooks/rules-of-hooks": "off",
+        'react-hooks/rules-of-hooks': 'off',
       },
     },
 
@@ -293,7 +286,7 @@ export function getReactConfig(importMetaUrl: string) {
 #### 1.6 Create eslint.config.ts for the config package itself
 
 ```typescript
-import { defineConfig, getConfig } from "./src/default.config"
+import { defineConfig, getConfig } from './src/default.config'
 
 const config = getConfig(import.meta.url)
 
@@ -309,7 +302,7 @@ Delete the old `packages/eslint-config/default.cjs` file.
 Replace the root `.eslintrc.cjs` with `eslint.config.ts`:
 
 ```typescript
-import { defineConfig, getConfig } from "@repo/eslint-config"
+import { defineConfig, getConfig } from '@repo/eslint-config'
 
 const config = getConfig(import.meta.url)
 
@@ -327,7 +320,7 @@ For each package/app in the monorepo:
 Replace `.eslintrc.cjs` with `eslint.config.ts`:
 
 ```typescript
-import { defineConfig, getConfig } from "@repo/eslint-config"
+import { defineConfig, getConfig } from '@repo/eslint-config'
 
 const config = getConfig(import.meta.url)
 
@@ -339,8 +332,8 @@ export default defineConfig([...config])
 Replace `.eslintrc.cjs` with `eslint.config.ts`:
 
 ```typescript
-import { defineConfig } from "@repo/eslint-config"
-import { getReactConfig } from "@repo/eslint-config/react"
+import { defineConfig } from '@repo/eslint-config'
+import { getReactConfig } from '@repo/eslint-config/react'
 
 const config = getReactConfig(import.meta.url)
 

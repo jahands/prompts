@@ -1,0 +1,13 @@
+{
+	"name": "prompts",
+	"version": "0.1.0",
+	"description": "My AI prompts and cursor rules",
+	"scripts": {},
+	"keywords": [],
+	"author": "Jacob Hands",
+	"license": "MIT",
+	"packageManager": "pnpm@10.11.1",
+	"devDependencies": {
+		"prettier": "^3.5.3"
+	}
+}
