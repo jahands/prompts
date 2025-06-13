@@ -75,6 +75,14 @@ Object types
 
 <rule type="validation">
 Custom validation: Use .check() not .superRefine()
+
+<superrefine-migration>
+- `val` → `ctx.value`
+- `ctx.addIssue()` → `ctx.issues.push()`
+- `z.ZodIssueCode.custom` → `'custom'`
+- Add `input: ctx.value` to issue object
+- Use .check() for detailed errors, .refine() for simple validation
+</superrefine-migration>
 </rule>
 
 <rule type="error-formatting">
@@ -124,6 +132,9 @@ Other key features:
 | .format()               | z.treeifyError()            |
 | z.string().datetime()   | z.iso.datetime()            |
 | .args().returns()       | {input:[...], output:...}   |
+| .superRefine()          | .check()                    |
+| ctx.addIssue()          | ctx.issues.push()           |
+| z.ZodIssueCode.custom   | 'custom'                    |
 </quick-reference>
 
 <example>
