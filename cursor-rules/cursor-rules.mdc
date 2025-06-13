@@ -42,35 +42,59 @@ Examples:
 
 <rule-format>
 ## Rule Format
-Rules should be written in Markdown with this structure:
+Rules should be written in Markdown with XML-style tags for better Claude 4 compatibility:
 
 ```markdown
+<rule-name>
+
 # Title - Brief Description
 
+<context>
 ## Context/Location
 Where this rule applies (files, directories, etc.)
+</context>
 
+<overview>
 ### Overview/Architecture
 High-level explanation of the system/pattern
+</overview>
 
+<key-concepts>
 ### Key Concepts
 Important points to understand
+</key-concepts>
 
+<usage>
 ### Usage/Patterns
 How to apply the rule
+</usage>
 
+<examples>
 ### Examples
 Clear, concrete examples
+</examples>
+
+</rule-name>
 ```
+
+### XML Tag Guidelines
+- Wrap the entire rule in a descriptive root tag (e.g., `<git-commit-guidelines>`)
+- Use semantic tags for major sections (e.g., `<rules>`, `<examples>`, `<best-practices>`)
+- Use `<rule>` tags for individual rules or guidelines
+- Use `<example>` tags with optional `type="good"` or `type="bad"` attributes
+- Keep tag names lowercase with hyphens for multi-word names
+- Close all tags properly to maintain valid XML structure
 </rule-format>
 
 <best-practices>
 ## Best Practices
+- Use XML-style tags to structure content for better Claude 4 compatibility
 - Focus on describing patterns rather than providing static templates
 - Let LLMs learn from existing code when possible
 - Keep rules focused and single-purpose
 - Update rules when patterns significantly change
 - Remove rules that become obsolete
+- Choose semantic tag names that clearly describe the content they wrap
 </best-practices>
 
 <current-rules>
