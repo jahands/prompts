@@ -1,32 +1,41 @@
-# ESLint 8 to 9 Migration Guide for TypeScript Monorepos
+<eslint9-migration-guide>
 
-This guide provides step-by-step instructions for migrating a TypeScript monorepo from ESLint 8 (legacy config) to ESLint 9 (flat config). This guide is designed to be used by LLMs for automated migration.
+<title>ESLint 8 to 9 Migration Guide for TypeScript Monorepos</title>
 
-## Overview
+<description>Step-by-step instructions for migrating a TypeScript monorepo from ESLint 8 (legacy config) to ESLint 9 (flat config)</description>
 
-**Before (ESLint 8):**
+<context>
+<applies-to>TypeScript monorepos using ESLint 8 with .eslintrc.cjs files</applies-to>
+<target>ESLint 9 with flat config using eslint.config.ts files</target>
+</context>
 
-- Uses `.eslintrc.cjs` files throughout the monorepo
-- Single shared config: `packages/eslint-config/default.cjs`
+<overview>
+<title>Migration Overview</title>
+<transformation>
+<before>
+- Uses .eslintrc.cjs files throughout the monorepo
+- Single shared config: packages/eslint-config/default.cjs
 - Simple package.json exports
 - Legacy configuration format
-
-**After (ESLint 9):**
-
-- Uses `eslint.config.ts` files throughout the monorepo
+</before>
+<after>
+- Uses eslint.config.ts files throughout the monorepo
 - Multiple shared configs with TypeScript support
 - Enhanced package.json exports
 - Flat configuration format with better TypeScript integration
+</after>
+</transformation>
+</overview>
 
-## Migration Steps
+<migration-steps>
 
-### Step 1: Update Shared ESLint Config Package
+<step number="1">
+<name>Update Shared ESLint Config Package</name>
 
-#### 1.1 Update package.json
-
-Replace the existing `packages/eslint-config/package.json` with updated exports and dependencies:
-
-```json
+<substep number="1.1">
+<name>Update package.json</name>
+<description>Replace existing packages/eslint-config/package.json with updated exports and dependencies</description>
+<code language="json">
 {
   "name": "@repo/eslint-config",
   "version": "0.2.3",
@@ -59,15 +68,18 @@ Replace the existing `packages/eslint-config/package.json` with updated exports 
     "vitest": "3.1.4"
   }
 }
-```
+</code>
+</substep>
 
-#### 1.2 Create src/ directory structure
+<substep number="1.2">
+<name>Create src directory structure</name>
+<action>Create packages/eslint-config/src/ directory</action>
+</substep>
 
-Create `packages/eslint-config/src/` directory and add the following files:
-
-#### 1.3 Create helpers.ts
-
-```typescript
+<substep number="1.3">
+<name>Create helpers.ts</name>
+<location>packages/eslint-config/src/helpers.ts</location>
+<code language="typescript">
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -76,34 +88,36 @@ import { includeIgnoreFile } from '@eslint/compat'
 import type { FlatConfig } from '@eslint/compat'
 
 export function getDirname(importMetaUrl: string) {
-  const __filename = fileURLToPath(importMetaUrl)
-  return path.dirname(__filename)
+const **filename = fileURLToPath(importMetaUrl)
+return path.dirname(**filename)
 }
 
 export function getGitIgnoreFiles(importMetaUrl: string) {
-  // always include the root gitignore file
-  const rootGitignorePath = fileURLToPath(new URL('../../../.gitignore', import.meta.url))
+// always include the root gitignore file
+const rootGitignorePath = fileURLToPath(new URL('../../../.gitignore', import.meta.url))
 
-  const ignoreFiles: FlatConfig[] = [includeIgnoreFile(rootGitignorePath)]
+const ignoreFiles: FlatConfig[] = [includeIgnoreFile(rootGitignorePath)]
 
-  const packageDir = getDirname(importMetaUrl)
-  const packageGitignorePath = path.join(packageDir, '.gitignore')
-  if (existsSync(packageGitignorePath)) {
-    ignoreFiles.push(includeIgnoreFile(packageGitignorePath))
-  }
+const packageDir = getDirname(importMetaUrl)
+const packageGitignorePath = path.join(packageDir, '.gitignore')
+if (existsSync(packageGitignorePath)) {
+ignoreFiles.push(includeIgnoreFile(packageGitignorePath))
+}
 
-  return ignoreFiles
+return ignoreFiles
 }
 
 export function getTsconfigRootDir(importMetaUrl: string) {
-  const tsconfigRootDir = getDirname(importMetaUrl)
-  return existsSync(path.join(tsconfigRootDir, 'tsconfig.json')) ? tsconfigRootDir : undefined
+const tsconfigRootDir = getDirname(importMetaUrl)
+return existsSync(path.join(tsconfigRootDir, 'tsconfig.json')) ? tsconfigRootDir : undefined
 }
-```
+</code>
+</substep>
 
-#### 1.4 Create default.config.ts
-
-```typescript
+<substep number="1.4">
+<name>Create default.config.ts</name>
+<location>packages/eslint-config/src/default.config.ts</location>
+<code language="typescript">
 import { FlatCompat } from '@eslint/eslintrc'
 import eslint from '@eslint/js'
 import tsEslintPlugin from '@typescript-eslint/eslint-plugin'
@@ -121,24 +135,24 @@ import { getDirname, getGitIgnoreFiles, getTsconfigRootDir } from './helpers'
 export { defineConfig }
 
 const compat = new FlatCompat({
-  // This helps FlatCompat resolve plugins relative to this config file
-  baseDirectory: getDirname(import.meta.url),
+// This helps FlatCompat resolve plugins relative to this config file
+baseDirectory: getDirname(import.meta.url),
 })
 
 export function getConfig(importMetaUrl: string) {
-  return defineConfig([
-    // Global ignores
-    {
-      ignores: [
-        '.*.{js,cjs}',
-        '**/*.{js,cjs}',
-        '**/node_modules/**',
-        '**/dist/**',
-        'eslint.config.ts',
-        '**/eslint.config.ts',
-        '**/worker-configuration.d.ts',
-      ],
-    },
+return defineConfig([
+// Global ignores
+{
+ignores: [
+'.*.{js,cjs}',
+'**/*.{js,cjs}',
+'**/node_modules/**',
+'**/dist/**',
+'eslint.config.ts',
+'**/eslint.config.ts',
+'**/worker-configuration.d.ts',
+],
+},
 
     ...getGitIgnoreFiles(importMetaUrl),
 
@@ -231,13 +245,16 @@ export function getConfig(importMetaUrl: string) {
 
     // Prettier (should be last to override other formatting rules)
     { rules: eslintConfigPrettier.rules },
-  ])
+
+])
 }
-```
+</code>
+</substep>
 
-#### 1.5 Create react.config.ts
-
-```typescript
+<substep number="1.5">
+<name>Create react.config.ts</name>
+<location>packages/eslint-config/src/react.config.ts</location>
+<code language="typescript">
 import tsEslintParser from '@typescript-eslint/parser'
 import eslintConfigPrettier from 'eslint-config-prettier'
 import react from 'eslint-plugin-react'
@@ -248,261 +265,272 @@ import { defineConfig, getConfig } from './default.config'
 import { getTsconfigRootDir } from './helpers'
 
 export function getReactConfig(importMetaUrl: string) {
-  return defineConfig([
-    ...getConfig(importMetaUrl),
-    {
-      files: ['**/*.{js,jsx,mjs,cjs,ts,tsx}'],
-      plugins: {
-        react,
-        'unused-imports': unusedImportsPlugin,
-      },
-      languageOptions: {
-        parser: tsEslintParser,
-        parserOptions: {
-          ecmaFeatures: {
-            jsx: true,
-          },
-          sourceType: 'module',
-          project: true,
-          tsconfigRootDir: getTsconfigRootDir(importMetaUrl),
-        },
-      },
-    },
-    reactHooks.configs['recommended-latest'],
-    {
-      rules: {
-        // this commonly causes false positives with Hono middleware
-        // that have a similar naming scheme (e.g. useSentry())
-        'react-hooks/rules-of-hooks': 'off',
-      },
-    },
+return defineConfig([
+...getConfig(importMetaUrl),
+{
+files: ['**/*.{js,jsx,mjs,cjs,ts,tsx}'],
+plugins: {
+react,
+'unused-imports': unusedImportsPlugin,
+},
+languageOptions: {
+parser: tsEslintParser,
+parserOptions: {
+ecmaFeatures: {
+jsx: true,
+},
+sourceType: 'module',
+project: true,
+tsconfigRootDir: getTsconfigRootDir(importMetaUrl),
+},
+},
+},
+reactHooks.configs['recommended-latest'],
+{
+rules: {
+// this commonly causes false positives with Hono middleware
+// that have a similar naming scheme (e.g. useSentry())
+'react-hooks/rules-of-hooks': 'off',
+},
+},
 
     // Prettier (should be last to override other formatting rules)
     { rules: eslintConfigPrettier.rules },
-  ])
+
+])
 }
-```
+</code>
+</substep>
 
-#### 1.6 Create eslint.config.ts for the config package itself
-
-```typescript
+<substep number="1.6">
+<name>Create eslint.config.ts for config package</name>
+<location>packages/eslint-config/eslint.config.ts</location>
+<code language="typescript">
 import { defineConfig, getConfig } from './src/default.config'
 
 const config = getConfig(import.meta.url)
 
 export default defineConfig([...config])
-```
+</code>
+</substep>
 
-#### 1.7 Remove old files
+<substep number="1.7">
+<name>Remove old files</name>
+<action>Delete packages/eslint-config/default.cjs</action>
+</substep>
 
-Delete the old `packages/eslint-config/default.cjs` file.
+</step>
 
-### Step 2: Update Root ESLint Configuration
-
-Replace the root `.eslintrc.cjs` with `eslint.config.ts`:
-
-```typescript
+<step number="2">
+<name>Update Root ESLint Configuration</name>
+<action>Replace root .eslintrc.cjs with eslint.config.ts</action>
+<code language="typescript">
 import { defineConfig, getConfig } from '@repo/eslint-config'
 
 const config = getConfig(import.meta.url)
 
 export default defineConfig([...config])
-```
+</code>
+<cleanup>Delete old .eslintrc.cjs file</cleanup>
+</step>
 
-Delete the old `.eslintrc.cjs` file.
+<step number="3">
+<name>Update Package ESLint Configurations</name>
 
-### Step 3: Update Package ESLint Configurations
-
-For each package/app in the monorepo:
-
-#### For packages using default config:
-
-Replace `.eslintrc.cjs` with `eslint.config.ts`:
-
-```typescript
+<config-type name="default">
+<description>For packages using default config</description>
+<action>Replace .eslintrc.cjs with eslint.config.ts</action>
+<code language="typescript">
 import { defineConfig, getConfig } from '@repo/eslint-config'
 
 const config = getConfig(import.meta.url)
 
 export default defineConfig([...config])
-```
+</code>
+</config-type>
 
-#### For packages using React config:
-
-Replace `.eslintrc.cjs` with `eslint.config.ts`:
-
-```typescript
+<config-type name="react">
+<description>For packages using React config</description>
+<action>Replace .eslintrc.cjs with eslint.config.ts</action>
+<code language="typescript">
 import { defineConfig } from '@repo/eslint-config'
 import { getReactConfig } from '@repo/eslint-config/react'
 
 const config = getReactConfig(import.meta.url)
 
 export default defineConfig([...config])
-```
+</code>
+</config-type>
 
-### Step 4: Update TypeScript Configuration
+</step>
 
-Since we're introducing `eslint.config.ts` files throughout the monorepo, we need to exclude them from TypeScript compilation.
+<step number="4">
+<name>Update TypeScript Configuration</name>
+<description>Exclude eslint.config.ts files from TypeScript compilation</description>
 
-#### 4.1 Update shared TypeScript configs
+<llm-instructions>
+<instruction>Find the TypeScript config package (like packages/typescript-config/)</instruction>
+<instruction>Identify all TypeScript config files (.json files)</instruction>
+<instruction>For each config file with an exclude array, add "${configDir}/eslint.config.ts"</instruction>
+<instruction>Preserve all existing excludes and JSON formatting</instruction>
+<instruction>Check individual package tsconfig.json files for custom exclude arrays</instruction>
+</llm-instructions>
 
-**For LLMs:**
-
-1. **Find the TypeScript config package** - Look for a package like `packages/typescript-config/` or similar that contains shared TypeScript configurations
-
-2. **Identify all TypeScript config files** - List all `.json` files in that package
-
-3. **For each config file that contains an `exclude` array:**
-
-   - Add `"${configDir}/eslint.config.ts"` to the exclude array
-   - Preserve all existing excludes
-   - Keep the same JSON formatting and structure
-
-4. **Also check individual package `tsconfig.json` files** - If any package has custom `exclude` arrays in their `tsconfig.json`, add the eslint config exclusion there as well
-
-**Example transformation:**
-
-```json
-// Before
+<transformation>
+<before>
+<code language="json">
 "exclude": ["${configDir}/node_modules/", "${configDir}/dist/"]
-
-// After
+</code>
+</before>
+<after>
+<code language="json">
 "exclude": ["${configDir}/node_modules/", "${configDir}/dist/", "${configDir}/eslint.config.ts"]
-```
+</code>
+</after>
+</transformation>
+</step>
 
-This prevents TypeScript from trying to compile the new ESLint configuration files.
+<step number="5">
+<name>Update Scripts and Dependencies</name>
 
-### Step 5: Update Scripts and Dependencies
-
-#### 5.1 Dependencies
-
-**For monorepos with pnpm workspaces:** No additional ESLint dependencies needed! The `eslint` package in `@repo/eslint-config` will be hoisted and available workspace-wide.
-
-**Required `.npmrc` configuration:**
-
-```
+<substep number="5.1">
+<name>Dependencies</name>
+<monorepo-setup>
+<description>For monorepos with pnpm workspaces</description>
+<note>No additional ESLint dependencies needed - packages will be hoisted from @repo/eslint-config</note>
+<npmrc-requirements>
+<code language="ini">
 auto-install-peers=true
 public-hoist-pattern[]=*eslint*
-```
+</code>
+</npmrc-requirements>
+</monorepo-setup>
+</substep>
 
-The `public-hoist-pattern[]=*eslint*` setting is what specifically allows ESLint packages to be hoisted and their binaries to be available workspace-wide.
-
-**Note:** If you encounter "eslint: command not found" errors, this is due to a pnpm `.bin` symlink issue. See the troubleshooting section below for the solution.
-
-#### 4.2 Update lint scripts
-
-If you have lint scripts, ensure they work with the new config:
-
-```json
+<substep number="5.2">
+<name>Update lint scripts</name>
+<code language="json">
 {
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   }
 }
-```
+</code>
+</substep>
 
-### Step 6: Migration Checklist
+</step>
 
-Use this checklist to ensure complete migration:
+<step number="6">
+<name>Migration Checklist</name>
+<checklist>
+- Updated packages/eslint-config/package.json with new exports and dependencies
+- Created packages/eslint-config/src/ directory structure
+- Created packages/eslint-config/src/helpers.ts
+- Created packages/eslint-config/src/default.config.ts
+- Created packages/eslint-config/src/react.config.ts
+- Created packages/eslint-config/eslint.config.ts
+- Deleted old packages/eslint-config/default.cjs
+- Updated all TypeScript configs in packages/typescript-config/ to exclude eslint.config.ts
+- Replaced root .eslintrc.cjs with eslint.config.ts
+- Replaced all package .eslintrc.cjs files with eslint.config.ts
+- Verified ESLint dependencies are properly hoisted (no additional dependencies needed)
+- Tested linting works using repository's existing commands
+- Verified auto-fix works using repository's existing commands
+</checklist>
+</step>
 
-- [ ] Updated `packages/eslint-config/package.json` with new exports and dependencies
-- [ ] Created `packages/eslint-config/src/` directory structure
-- [ ] Created `packages/eslint-config/src/helpers.ts`
-- [ ] Created `packages/eslint-config/src/default.config.ts`
-- [ ] Created `packages/eslint-config/src/react.config.ts`
-- [ ] Created `packages/eslint-config/eslint.config.ts`
-- [ ] Deleted old `packages/eslint-config/default.cjs`
-- [ ] Updated all TypeScript configs in `packages/typescript-config/` to exclude `eslint.config.ts`
-- [ ] Replaced root `.eslintrc.cjs` with `eslint.config.ts`
-- [ ] Replaced all package `.eslintrc.cjs` files with `eslint.config.ts`
-- [ ] Verified ESLint dependencies are properly hoisted (no additional dependencies needed)
-- [ ] Tested linting works using repository's existing commands
-- [ ] Verified auto-fix works using repository's existing commands
+</migration-steps>
 
-### Step 7: Common Issues and Solutions
+<troubleshooting>
+<title>Common Issues and Solutions</title>
 
-#### Issue: Import errors for @repo/eslint-config
-
-**Solution:** Ensure the package.json exports are correct and rebuild workspace dependencies:
-
-```bash
+<issue>
+<name>Import errors for @repo/eslint-config</name>
+<solution>
+<description>Ensure package.json exports are correct and rebuild workspace dependencies</description>
+<code language="bash">
 pnpm install
-```
+</code>
+</solution>
+</issue>
 
-#### Issue: "eslint: command not found" in pnpm workspaces
-
-**Solution:** This is a known pnpm issue where `.bin` symlinks don't get updated properly. Remove all node_modules and reinstall:
-
-```bash
+<issue>
+<name>eslint: command not found in pnpm workspaces</name>
+<solution>
+<description>Known pnpm issue where .bin symlinks don't get updated properly</description>
+<code language="bash">
 find . -type d -name node_modules -delete
 pnpm install
-```
+</code>
+<note>With proper dependency hoisting via .npmrc, eslint binary should be available workspace-wide</note>
+</solution>
+</issue>
 
-With proper dependency hoisting via `.npmrc` (specifically `auto-install-peers=true` and `public-hoist-pattern[]=*eslint*`), the eslint binary from `@repo/eslint-config` should be available workspace-wide without adding to root package.json.
+<issue>
+<name>TypeScript parser errors</name>
+<solution>Verify @typescript-eslint/parser version matches across all packages and tsconfig.json exists in package root</solution>
+</issue>
 
-#### Issue: TypeScript parser errors
+<issue>
+<name>Plugin resolution errors</name>
+<solution>Ensure all required ESLint plugins are installed in packages/eslint-config package, not in individual packages</solution>
+</issue>
 
-**Solution:** Verify that `@typescript-eslint/parser` version matches across all packages and that `tsconfig.json` exists in the package root.
+</troubleshooting>
 
-#### Issue: Plugin resolution errors
+<testing>
+<title>Testing the Migration</title>
 
-**Solution:** Ensure all required ESLint plugins are installed in the `packages/eslint-config` package, not in individual packages.
+<analyze-repository>
+<title>Analyze repository tooling</title>
+<llm-instructions>
+<instruction>Check package.json scripts for lint-related commands (lint, check, eslint)</instruction>
+<instruction>Note the package manager (pnpm, npm, yarn)</instruction>
+<instruction>Check for build tools (Justfile, Makefile)</instruction>
+<instruction>Check turbo.json or turbo.jsonc for lint tasks</instruction>
+<instruction>Look for other monorepo tools (Lerna, Nx)</instruction>
+</llm-instructions>
 
-### Step 8: Testing the Migration
+<command-determination>
+- If Justfile exists with lint/check commands → use `just <command>`
+- If package.json has lint scripts → use `<package-manager> run <script>`
+- If turbo.json has lint tasks → use `<package-manager> turbo <task>`
+- Otherwise → use direct ESLint commands
+</command-determination>
+</analyze-repository>
 
-After migration, test the new ESLint configuration:
+<test-steps>
+<instruction>Install dependencies using repository's package manager</instruction>
+<instruction>Run the linting commands identified above</instruction>
+<instruction>Test auto-fix if available</instruction>
+<instruction>Verify individual packages can be linted if needed</instruction>
+</test-steps>
 
-#### 8.1 Analyze repository tooling
+<verification-checklist>
+- ESLint runs without configuration errors
+- TypeScript files are properly linted
+- Import/export rules work correctly
+- Auto-fix functionality works
+- All packages can be linted individually
+</verification-checklist>
 
-**For LLMs:** Use the available tools to analyze the repository structure and determine the appropriate linting commands:
+</testing>
 
-1. **Check package.json scripts** to identify lint-related commands:
+<llm-notes>
+<title>Notes for LLMs</title>
+<guidelines>
+- Always backup existing ESLint configurations before starting
+- Check for custom rules in existing .eslintrc.cjs files and port them to new config
+- Verify package structure matches expected monorepo layout
+- Verify pnpm workspace setup - ensure .npmrc has proper hoisting configuration
+- If "eslint: command not found" - remove all node_modules and reinstall to fix pnpm .bin symlink issues
+- Test thoroughly after migration by running lint commands
+- Handle React packages separately using the React config
+- Update any CI/CD scripts that reference old ESLint configuration paths
+- Check for additional ignore patterns that may need to be added to global ignores
+</guidelines>
+<note>Migration preserves all existing functionality while providing better TypeScript integration and modern ESLint 9 features</note>
+</llm-notes>
 
-   - Look for scripts containing "lint", "check", "eslint"
-   - Note the package manager (pnpm, npm, yarn)
-
-2. **Check for build tools**:
-
-   - Look for `Justfile`, `Makefile`, or similar in the root
-   - Check `turbo.json` or `turbo.jsonc` for lint tasks
-   - Look for other monorepo tools (Lerna, Nx, etc.)
-
-3. **Determine the correct commands** based on what you find:
-   - If Justfile exists with lint/check commands → use `just <command>`
-   - If package.json has lint scripts → use `<package-manager> run <script>`
-   - If turbo.json has lint tasks → use `<package-manager> turbo <task>`
-   - Otherwise → use direct ESLint commands
-
-#### 8.2 Install dependencies and test
-
-1. **Install dependencies** using the repository's package manager
-2. **Run the linting commands** you identified above
-3. **Test auto-fix** if available
-4. **Verify individual packages** can be linted if needed
-
-#### 8.3 Verify migration success
-
-Ensure these work without errors:
-
-- [ ] ESLint runs without configuration errors
-- [ ] TypeScript files are properly linted
-- [ ] Import/export rules work correctly
-- [ ] Auto-fix functionality works
-- [ ] All packages can be linted individually
-
-## Notes for LLMs
-
-When automating this migration:
-
-1. **Always backup** existing ESLint configurations before starting
-2. **Check for custom rules** in existing `.eslintrc.cjs` files and port them to the new config
-3. **Verify package structure** matches the expected monorepo layout
-4. **Verify pnpm workspace setup** - ensure `.npmrc` has proper hoisting configuration
-5. **If "eslint: command not found"** - remove all node_modules (`find . -type d -name node_modules -delete`) and reinstall to fix pnpm .bin symlink issues
-6. **Test thoroughly** after migration by running lint commands
-7. **Handle React packages** separately using the React config
-8. **Update any CI/CD scripts** that reference the old ESLint configuration paths
-9. **Check for additional ignore patterns** that may need to be added to the global ignores
-
-The migration preserves all existing functionality while providing better TypeScript integration and modern ESLint 9 features.
+</eslint9-migration-guide>

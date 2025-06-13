@@ -1,841 +1,966 @@
-# LLM-Guided ESLint 8 to ESLint 9 Monorepo Migration
-
-## 1. Introduction & Goals
-
-    - **Purpose of this guide:** This document serves as a comprehensive, step-by-step guide for a Large Language Model (LLM) to automate the migration of a TypeScript-based monorepo from ESLint version 8 to ESLint version 9. It focuses exclusively on projects using `eslint.config.ts` for their ESLint configuration (the "flat config" model).
-
-    - **Overview of ESLint 9 changes (focus on flat config):** The most significant change in ESLint 9 is the full adoption of the "flat config" system, using an `eslint.config.ts` (or `.js`/`.mjs`, though this guide standardizes on `.ts`) file that exports an array of configuration objects. This replaces the legacy `.eslintrc.*` file formats and the `eslintConfig` key in `package.json`. Key aspects include explicit plugin imports, a different way of handling `extends`, and more granular control over configuration application through `files` and `ignores` properties within config objects.
-
-    - **Goals of the automated migration:** The primary goal is for the LLM to successfully and accurately perform the following actions:
-        1.  **Prerequisite Checks:** Verify necessary tools and assess the initial ESLint setup.
-        2.  **Dependency Management:** Update ESLint, its core plugins (`@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser`), other ESLint-related plugins, and configuration packages (e.g., `eslint-config-prettier`) to their latest ESLint 9 compatible versions across the monorepo, primarily focusing on the shared ESLint configuration package and the root `package.json`.
-        3.  **Flat Config Migration:** Convert all existing ESLint configurations (root and per-package `.eslintrc.*` or `package.json#eslintConfig`) to the new `eslint.config.ts` flat configuration format.
-        4.  **Shared Configuration Handling:** Ensure that the dedicated shared ESLint configuration package (e.g., `packages/eslint-config`) is migrated correctly to export flat configurations, typically as functions returning `defineConfig([...])` arrays, for consumption by other packages in the monorepo using `eslint.config.ts`.
-        5.  **Rule Updates & Deprecations:** Identify and address rules that have been deprecated, removed, or had their options changed in ESLint 9 or updated plugins, making necessary modifications to the `eslint.config.ts` files.
-        6.  **Verification:** Execute ESLint with the new configuration to ensure it runs without errors (config errors, not linting violations) and apply auto-fixes where appropriate.
-        7.  **Maintainability:** Produce a clean, maintainable, and type-safe ESLint setup using `eslint.config.ts` and `defineConfig` from `eslint/config`.
-        8.  **TypeScript Focus:** The migration process outlined in this guide is specifically tailored for monorepos where TypeScript is the primary language and `eslint.config.ts` is the desired configuration file format.
-
-## 2. Prerequisites & Setup
-
-    - Required tools (Node.js, pnpm/yarn/npm, jq for JSON processing, etc.)
-        - **LLM Action:** Verify these tools are available or guide the user on how to install them.
-        - Node.js: v18.18.0, v20.9.0 or later (required by ESLint v9).
-        - Package manager: pnpm, yarn, or npm (commands in this guide may assume pnpm, adjust as needed).
-        - `jq`: Useful for parsing `package.json` files from the command line if needed (optional, direct file reads are preferred).
-    - Initial workspace assessment commands (e.g., `eslint --version` globally and per package)
-        - **LLM Action:** Determine the primary ESLint version currently used in the monorepo.
-            - 1. **Check at Monorepo Root:** Execute `pnpm exec eslint --version` (or equivalent for yarn/npm) in the root of the monorepo. This is the primary indicator of the ESLint version being used for development and CLI tasks.
-            - 2. **(Optional) Check Shared ESLint Config Package:** If a dedicated shared ESLint configuration package is identified (e.g., `packages/eslint-config`, `shared/eslint-config`), examine its `package.json` to see which version of `eslint` it declares as a dependency or peerDependency. This can provide further context but the root execution is generally the most direct measure of the active version.
-            - *Note:* Avoid running `eslint --version` in every individual package, as this is usually unnecessary in a monorepo aiming for consistent tooling versions.
-        - **LLM Action:** Store this primary ESLint version for later comparison.
-        - **LLM Action:** Identify the monorepo's package manager (pnpm, yarn, npm) by checking for lock files (`pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`) or workspace configuration files.
-
-## 3. Phase 1: Discovery and Planning
-
-    - 3.1. Identifying all packages in the monorepo
-        - **LLM Action:** Parse workspace configuration to find all member packages.
-            - For `pnpm`: Read `pnpm-workspace.yaml` (e.g., `packages:` list).
-            - For `yarn`/`npm`: Read `workspaces` array in the root `package.json`.
-            - For `lerna`: Read `packages` array in `lerna.json`.
-        - **LLM Action:** Create a list of absolute or relative paths to each package directory.
-    - 3.2. Locating ESLint configurations
-        - **LLM Action:** For each identified package and for the monorepo root, search for existing ESLint configuration files:
-            - `.eslintrc.js`
-            - `.eslintrc.cjs`
-            - `.eslintrc.yaml`
-            - `.eslintrc.yml`
-            - `.eslintrc.json`
-            - `eslintConfig` key in `package.json`
-        - **LLM Action:** Record the path and format of each found configuration file.
-        - **LLM Action:** Determine if any of these configurations belong to a package that serves as a dedicated shared ESLint configuration hub for the monorepo (e.g., a package named `eslint-config`, `@repo/eslint-config`, `shared/eslint-config`, etc., often located in a `packages` or `tools` directory).
-            - *Heuristic for LLM:* Look for packages whose primary purpose seems to be exporting ESLint configurations, and which are extended or imported by other packages in the monorepo.
-    - 3.3. Identifying ESLint-related dependencies
-        - **LLM Action:**
-            1.  **Primary Location (Shared ESLint Config Package):**
-                -   If a dedicated shared ESLint configuration package was identified in step 3.2 (e.g., `packages/eslint-config`):
-                    -   Read its `package.json` file.
-                    -   Extract all dependencies and devDependencies starting with the prefixes listed below.
-            2.  **Secondary Location (Monorepo Root):**
-                -   Read the root `package.json` file of the monorepo.
-                -   Extract all dependencies and devDependencies starting with the prefixes listed below.
-            3.  **Common Prefixes for ESLint-related packages:**
-                -   `eslint` (the core library)
-                -   `eslint-plugin-`
-                -   `eslint-config-`
-                -   `@eslint/`
-                -   `@typescript-eslint/` (parser and plugin)
-                -   Other known ESLint-related packages (e.g., `eslint-import-resolver-typescript`, `eslint-plugin-react`, etc. This list might need to be expanded based on common setups or user input).
-        - **LLM Action:** Compile a comprehensive list of all *unique* ESLint-related packages and their current versions by combining the findings from the shared config package's `package.json` (if applicable) and the root `package.json`. This list will be crucial for the update phase.
-        - **LLM Rationale:** ESLint dependencies are typically centralized in a shared `eslint-config` package or at the monorepo root. Focusing on these locations is more efficient for identifying the core set of ESLint dependencies to manage and update. Individual application packages typically consume these shared configurations rather than declaring their own primary ESLint dependencies.
-    - 3.4. Creating a Migration Plan (conceptual for LLM)
-        - **LLM Thought Process:**
-            - **Shared Configs First:** Prioritize migrating shared ESLint configurations (e.g., in `packages/eslint-config`) before migrating the individual package configs that consume them.
-            - **Dependency Updates Next:** Update ESLint and its plugins/configs across all packages.
-            - **Flat Config Conversion:** Convert each ESLint configuration file to the new `eslint.config.ts` format.
-            - **Order of Operations:**
-                1. Update shared ESLint config packages' dependencies.
-                2. Migrate shared ESLint configs to flat format.
-                3. Update consuming packages' dependencies.
-                4. Migrate consuming packages' ESLint configs to flat format, importing the new shared flat configs.
-                5. Address root monorepo ESLint configuration.
-            - *LLM Guidance Note:* This "Order of Operations" is the master plan. The LLM will apply the dependency update techniques described in Phase 4 and the configuration migration techniques from Phase 5 according to this sequence and to the relevant packages (shared package first, then consuming packages).
-        - **LLM Critical Checkpoint:**
-            - **After steps 3.1, 3.2, and 3.3, verify if a dedicated shared ESLint configuration package was identified.**
-            - **If NO dedicated shared ESLint configuration package is found:**
-                - **LLM Action: ABORT MIGRATION.**
-                - Inform the user: "Migration aborted. This automated process is designed for monorepos that include a dedicated package for shared ESLint configurations (e.g., `@repo/eslint-config`). No such package was identified in this monorepo."
-            - **If YES, proceed with the migration plan.**
-
-## 4. Phase 2: Updating Dependencies
-
-    - **Goal:** Update ESLint, its core plugins, and all other ESLint-related packages to their latest versions to prepare for the flat config migration. `FlatCompat` will be used in Phase 5 for any plugins not yet supporting flat config directly.
-    - **LLM Action Guidance:** This Phase describes the *methods* for updating dependencies. The LLM must refer to the "Order of Operations" (defined in Phase 3.4) to determine *which specific* packages (the identified shared ESLint config package first, then consuming packages) these steps should be applied to and *when* in the overall migration sequence. When the Order of Operations indicates it's time to update dependencies for a package or group of packages, apply the following steps (4.1-4.4) to them:
-    - **LLM Action:** For each unique ESLint-related package identified in Phase 1 (3.3):
-        - **4.1. Determine Target Version:**
-            - For `eslint`: Target the latest ESLint v9.x.x.
-            - For all other ESLint plugins (`eslint-plugin-*`), shared configs (`eslint-config-*`), parsers (e.g., `@typescript-eslint/parser`), and related tools: Target their `latest` available version. The primary goal is to get the newest code, and compatibility with flat config will be addressed in Phase 5, using `FlatCompat` if necessary.
-            - *Rationale*: Attempting to update to the absolute latest version first simplifies the process. If a plugin is not compatible with ESLint 9 even with `FlatCompat`, or if it causes significant issues, it can be flagged for manual review and potentially pinned to an older version or replaced later.
-        - **4.2. Update Dependencies via Package Manager:**
-            - **LLM Action:** For each package identified in Phase 1 (including the monorepo root) and for each ESLint-related dependency within that package that needs updating (as determined in 4.1):
-                - Construct and execute the appropriate command for the detected package manager to update the dependency to its target version/tag (e.g., `eslint@^9.0.0`, `some-plugin@latest`).
-                - These commands will modify the respective `package.json` files by resolving tags like `@latest` to specific semantic versions.
-                - **Important:** The package manager, not the LLM directly editing the `package.json` text, must be responsible for resolving version tags (like `@latest`) and writing the final semantic version to the `package.json` file.
-                - *Example commands (LLM to adapt for detected package manager, specific packages, and dependencies to be updated):*
-                    - To update `eslint` to `^9.0.0` and `some-plugin` to its latest version in a specific package `my-app`:
-                        - `pnpm add -D eslint@^9.0.0 some-plugin@latest --filter my-app`
-                        - `yarn workspace my-app add -D eslint@^9.0.0 some-plugin@latest`
-                        - (For npm, navigate to the package directory: `cd packages/my-app && npm install -D eslint@^9.0.0 some-plugin@latest && cd -`)
-                    - If updating many dependencies within one package, they can often be grouped into a single command:
-                        - `pnpm add -D plugin1@latest plugin2@latest another-dep@^specific.version --filter my-app`
-                - **LLM Task:** Ensure these package manager commands are executed for all packages and all dependencies that require updates according to the plan from step 4.1.
-        - **4.3. Install Updated Dependencies (Consolidate & Update Lockfile):**
-            - **LLM Action:** After all individual dependencies have been updated in their respective `package.json` files using the package manager commands in step 4.2, run a general install command from the monorepo root. This ensures the lockfile (`pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`) is fully updated and all dependencies are correctly installed according to the modified `package.json` files.
-        - **4.4. Initial Verification (Optional but Recommended):**
-            - **LLM Action:** After installation, try running `eslint --version` in a few key packages or the root to ensure the core ESLint version has been updated as expected.
-
-## 5. Phase 3: Migrating to Flat Config (`eslint.config.ts`)
-
-    - **Goal:** Convert all existing ESLint configurations (root and per-package `.eslintrc.*` files or `package.json#eslintConfig`) to the new `eslint.config.ts` flat configuration format.
-    - **LLM Action Guidance:** This Phase describes the *methods* for migrating ESLint configurations. The LLM must refer to the "Order of Operations" (defined in Phase 3.4) to determine *which specific* configurations (for the identified shared ESLint config package first, then for consuming packages) these steps should be applied to and *when* in the overall migration sequence. When the Order of Operations indicates it's time to migrate a configuration, apply the following steps (5.1-5.5) to it:
-    - **Core Tooling:**
-        - `eslint.config.ts`: The new configuration file name.
-        - `@eslint/eslintrc` package: Provides `FlatCompat` utility for using legacy configurations/plugins. (Reference: [https://github.com/eslint/eslintrc#readme](https://github.com/eslint/eslintrc#readme))
-
-    - **5.1. General Principles of Flat Config:**
-        - **LLM Understanding:** The new config is an array of configuration objects, exported as the default from `eslint.config.ts`.
-        - Each object in the array can specify:
-            - `files`: Glob patterns to determine which files the configuration object applies to.
-            - `ignores`: Glob patterns for files/directories to exclude.
-            - `languageOptions`: Parser, `parserOptions`, `globals`, etc.
-            - `plugins`: Plugin objects (e.g., `import pluginName from 'eslint-plugin-name'; ... plugins: { 'plugin-prefix': pluginName }`).
-            - `rules`: Rule configurations.
-            - `processor`: For processing non-JavaScript files.
-            - `settings`: Shared settings for plugins.
-        - Configuration is applied by merging objects in the array; later objects can override earlier ones if they apply to the same files.
-        - Unlike legacy configs, `extends` is no longer a direct key. Instead, shareable configs are imported and spread into the main array.
-        - Plugins are explicitly imported and configured in the `plugins` key.
-
-    - **5.2. Key Steps for Migrating Each Configuration File (`.eslintrc.*` to `eslint.config.ts`):**
-        - **LLM Action (Repeat for each config identified in Phase 1.2, starting with shared configs):**
-            1.  **Create `eslint.config.ts`:**
-                - In the same directory as the old ESLint config file, create a new `eslint.config.ts`.
-                - Ensure it is excluded from the project's main `tsconfig.json` to avoid conflicts (as discussed, e.g., adding `"${configDir}/eslint.config.ts"` to `exclude` array in `tsconfig.json`).
-            2.  **Initialize `FlatCompat` (if needed):**
-                - **LLM Action:** If the old config uses plugins or extends configs that might not be flat-config-ready, import `FlatCompat` from `@eslint/eslintrc`.
-                - Example (`eslint.config.ts`):
-                    ```typescript
-                    import { FlatCompat } from "@eslint/eslintrc";
-                    import path from "path";
-                    import { fileURLToPath } from "url";
-                    import js from '@eslint/js'; // Required if using recommendedConfig or allConfig through compat
-
-                    const __filename = fileURLToPath(import.meta.url);
-                    const __dirname = path.dirname(__filename);
-
-                    const compat = new FlatCompat({
-                        baseDirectory: __dirname, // Essential for resolving plugins
-                        // recommendedConfig: js.configs.recommended, // Needed if using "eslint:recommended" via compat
-                        // allConfig: js.configs.all // Needed if using "eslint:all" via compat
-                    });
-                    ```
-                - For `eslint.config.ts`, `import.meta.url` can often be used directly if helper functions for `__dirname` are set up (as in `workers/packages/eslint-config/src/helpers.ts`).
-            3.  **Translate Configuration Sections:** (Detailed in 5.3)
-            4.  **Delete Old Config File:** After successful migration and verification, delete the old `.eslintrc.*` file and remove `eslintConfig` from `package.json` if present.
-
-    - **5.3. Mapping Legacy Config Keys to Flat Config (using `FlatCompat` where necessary):**
-        - **LLM Task:** For each key in the old `.eslintrc.*` file, translate it as follows:
-
-            - **`extends` (Legacy):**
-                - **Flat Config Approach:** Import the shareable config directly and spread it into the array. For configurations not yet in flat format, use `compat.extends("config-name" or "./path/to/config.js")`.
-                - Example (Direct import of flat config):
-                    ```typescript
-                    // eslint.config.ts
-                    import someSharedFlatConfig from '@repo/eslint-config/flat';
-                    import { defineConfig } from 'eslint/config';
-
-                    export default defineConfig([
-                        ...someSharedFlatConfig,
-                        // ... other configs
-                    ]);
-                    ```
-                - Example (Using `FlatCompat` for legacy extends):
-                    ```typescript
-                    // eslint.config.ts
-                    import { FlatCompat } from "@eslint/eslintrc";
-                    import path from "path";
-                    import { fileURLToPath } from "url";
-                    import js from '@eslint/js'; // Required for recommendedConfig
-                    import { defineConfig } from 'eslint/config';
-
-                    const __filename = fileURLToPath(import.meta.url);
-                    const __dirname = path.dirname(__filename);
-                    const compat = new FlatCompat({
-                        baseDirectory: __dirname,
-                        recommendedConfig: js.configs.recommended
-                    });
-
-                    export default defineConfig([
-                        ...compat.extends("eslint:recommended", "plugin:react/recommended"),
-                        // ... other configs
-                    ]);
-                    ```
-                - **Note on `eslint:recommended` / `eslint:all`:** If these are extended via `compat.extends()`, ensure `FlatCompat` is initialized with `recommendedConfig: js.configs.recommended` (from `@eslint/js`) and `allConfig: js.configs.all` respectively.
-
-            - **`plugins` (Legacy):**
-                - **Flat Config Approach:** Import the plugin and add it to the `plugins` object within a config block. For legacy plugins, `compat.plugins("plugin-name")` can be used.
-                - Example (Native flat config plugin):
-                    ```typescript
-                    // eslint.config.ts
-                    import somePlugin from 'eslint-plugin-some-plugin';
-                    import { defineConfig } from 'eslint/config';
-
-                    export default defineConfig([
-                        {
-                            plugins: { 'some-prefix': somePlugin },
-                            rules: { 'some-prefix/some-rule': 'error' }
-                        }
-                    ]);
-                    ```
-                - Example (Using `FlatCompat` for legacy plugins):
-                    ```typescript
-                    // eslint.config.ts
-                    // (FlatCompat initialized as above, assuming js from '@eslint/js' is imported for compat)
-                    import { defineConfig } from 'eslint/config';
-
-                    // Assuming compat is initialized elsewhere with baseDirectory and recommendedConfig if needed
-                    // const compat = new FlatCompat({ ... });
-
-                    export default defineConfig([
-                        ...compat.plugins("react", "jsx-a11y"),
-                        // Rules for these plugins would typically be in configs they provide (via compat.extends)
-                        // or defined in a subsequent config object.
-                    ]);
-                    ```
-                - **Special Note for `eslint-plugin-import`:** This plugin currently lacks official TypeScript types. If you are using it in an `eslint.config.ts` file, you may need to use a comment like `// @ts-expect-error eslint-plugin-import has no types` (or similar) and import it using the namespace import syntax:
-                    ```typescript
-                    // eslint.config.ts
-                    // @ts-expect-error eslint-plugin-import has no types
-                    import * as importPlugin from 'eslint-plugin-import';
-                    // ...
-                    export default defineConfig([
-                        {
-                            plugins: { 'import': importPlugin },
-                            // ... rules and settings for eslint-plugin-import, e.g.,
-                            // settings: { 'import/resolver': { typescript: {} } },
-                            // rules: { ...importPlugin.configs.recommended.rules }
-                        }
-                    ]);
-                    ```
-
-            - **`rules` (Legacy):**
-                - **Flat Config Approach:** Place directly in a config object's `rules` key. This is largely the same.
-                - Example:
-                    ```typescript
-                    // eslint.config.ts
-                    export default defineConfig([
-                        {
-                            files: ["**/*.js"],
-                            rules: {
-                                semi: ["error", "always"],
-                                'no-unused-vars': 'warn'
-                            }
-                        }
-                    ]);
-                    ```
-
-            - **`parser` & `parserOptions` (Legacy):**
-                - **Flat Config Approach:** Placed under `languageOptions.parser` and `languageOptions.parserOptions`.
-                - Example (TypeScript):
-                    ```typescript
-                    // eslint.config.ts
-                    import tsParser from '@typescript-eslint/parser';
-                    import { defineConfig } from 'eslint/config';
-
-                    export default defineConfig([
-                        {
-                            files: ["**/*.ts", "**/*.tsx"],
-                            languageOptions: {
-                                parser: tsParser,
-                                parserOptions: {
-                                    project: './tsconfig.json',
-                                    sourceType: 'module',
-                                    ecmaVersion: 2022
-                                }
-                            }
-                        }
-                    ]);
-                    ```
-
-            - **`env` & `globals` (Legacy):**
-                - **Flat Config Approach:** `env` is mapped to `languageOptions.globals` using helper objects (e.g., from the `globals` package). Direct `globals` are also placed in `languageOptions.globals`.
-                - Example:
-                    ```typescript
-                    // eslint.config.ts
-                    import globals from 'globals';
-                    import { defineConfig } from 'eslint/config';
-
-                    export default defineConfig([
-                        {
-                            languageOptions: {
-                                globals: {
-                                    ...globals.browser,
-                                    ...globals.node,
-                                    myCustomGlobal: 'readonly'
-                                }
-                            }
-                        }
-                    ]);
-                    ```
-                - `FlatCompat` also has a `compat.env()` method for translating legacy `env` settings.
-
-            - **`overrides` (Legacy):**
-                - **Flat Config Approach:** Each object in the `overrides` array becomes a separate configuration object in the top-level flat config array. The `files` property from the override block is used as the `files` property in the new config object.
-                - Example (Legacy):
-                    ```json
-                    // .eslintrc.json
-                    {
-                      "rules": { "default-rule": "error" },
-                      "overrides": [
-                        {
-                          "files": ["*.test.js"],
-                          "rules": { "test-specific-rule": "warn" }
-                        }
-                      ]
-                    }
-                    ```
-                - Example (Flat Config):
-                    ```typescript
-                    // eslint.config.ts
-                    export default defineConfig([
-                        { // Default rules
-                            rules: { 'default-rule': 'error' }
-                        },
-                        { // Override for test files
-                            files: ["*.test.js"],
-                            rules: { 'test-specific-rule': 'warn' }
-                        }
-                    ]);
-                    ```
-
-            - **`ignorePatterns` (Legacy):**
-                - **Flat Config Approach:** Placed in an `ignores` array at the top level of a config object, or globally for the entire array.
-                - Example:
-                    ```typescript
-                    // eslint.config.ts
-                    export default defineConfig([
-                        {
-                            ignores: ["dist/", "node_modules/", "**/*.bak"]
-                        },
-                        // ...other configuration objects
-                    ]);
-                    ```
-                - Global ignores can also be specified: `export default defineConfig([{ ignores: [...] }, ...otherConfigs]);` or `export default defineConfig([ { ...config, ignores: [...] } ]);`
-
-            - **`settings` (Legacy):**
-                - **Flat Config Approach:** Placed in a `settings` object within a configuration block, similar to rules. Typically used by plugins.
-                - Example:
-                    ```typescript
-                    // eslint.config.ts
-                    export default defineConfig([
-                        {
-                            settings: {
-                                'import/resolver': { typescript: {} }
-                            }
-                        }
-                    ]);
-                    ```
-
-    - 5.4. Structuring and Exporting from the Shared ESLint Configuration Package
-        - **LLM Guidance:** The identified shared ESLint configuration package (e.g., `packages/eslint-config`, which we'll call `@repo/eslint-config` for examples) *must* be migrated to export its configurations as flat config arrays, typically via exported functions.
-
-        - **Recommended Structure for the Shared Config Package (`@repo/eslint-config`):**
-            1.  **Configuration Files:** Define different base configurations in separate files within the shared package (e.g., `packages/eslint-config/src/default.config.ts`, `packages/eslint-config/src/react.config.ts`).
-            2.  **Exported Functions:** Each of these files should export a function that returns a flat config array. This function often takes `importMetaUrl` as an argument to help resolve paths for `tsconfigRootDir` or other relative resources correctly from the perspective of the *consuming* package's `eslint.config.ts`.
-
-                **LLM Note on `defineConfig` Usage:** It is crucial that the exported functions from the shared ESLint configuration package (like `getDefaultConfig` in the example below) return an array of configuration objects that is explicitly wrapped with `defineConfig` (imported from `eslint/config`). This ensures that the returned configuration array is correctly typed and structured as per ESLint 9's expectations, even before it's consumed by individual packages. This pattern, where the shared function itself handles the `defineConfig` wrapping for its output, is the standard approach this guide follows.
-
-                - Example (`packages/eslint-config/src/default.config.ts`):
-                    ```typescript
-                    import tseslint from 'typescript-eslint';
-                    import js from '@eslint/js';
-                    import { defineConfig } from 'eslint/config';
-                    // Import other necessary plugins, FlatCompat, helpers etc.
-                    // import { getTsconfigRootDir, getDirname } from './helpers'; // Assuming helpers.ts
-
-                    // LLM Instruction: Avoid adding an explicit return type to this function (e.g., `: Linter.FlatConfig[]`).
-                    // The type will be correctly inferred from the `defineConfig(...)` call, which is preferred.
-                    export function getDefaultConfig(importMetaUrl: string) {
-                        // const tsconfigRootDir = getTsconfigRootDir(importMetaUrl);
-                        // const __dirname = getDirname(importMetaUrl);
-
-                        // Manually construct the array of Linter.FlatConfig objects
-                       return defineConfig([
-                            js.configs.recommended,
-                            tseslint.configs.recommended,
-                            {
-                                files: ["**/*.{ts,tsx,mts}"],
-                                languageOptions: {
-                                    parser: tseslint.parser,
-                                    parserOptions: {
-                                        project: true,
-                                        // tsconfigRootDir, // Set based on the consuming package
-                                        sourceType: "module",
-                                    },
-                                },
-                                plugins: {
-                                    // 'import': importPlugin, // if using eslint-plugin-import
-                                },
-                                rules: {
-                                    '@typescript-eslint/no-unused-vars': 'warn',
-                                },
-                            },
-                            // ... other specific config objects for plugins, ignores, etc.
-                        ]);
-                    }
-                    ```
-            3.  **`package.json` Exports:** The `package.json` of `@repo/eslint-config` should use the `exports` field to define how these configurations are imported by consuming packages.
-                - Example (`packages/eslint-config/package.json`):
-                    ```json
-                    {
-                        "name": "@repo/eslint-config",
-                        "main": "./src/default.config.ts", // Or a CJS entry point if dual-publishing
-                        "exports": {
-                            ".": "./src/default.config.ts",
-                            "./default": "./src/default.config.ts",
-                            "./react": "./src/react.config.ts"
-                            // Potentially add ./base, ./typescript etc.
-                        },
-                        // ... other package.json fields
-                    }
-                    ```
-                - *Note:* The `"main"` field and CJS considerations in the `package.json` example above are less relevant if the monorepo and all consuming packages exclusively use ESM and `eslint.config.ts`. The `exports` map becomes the primary way to define entry points.
-
-        - **Consuming Shared Configurations in Application Packages:**
-            - In an application package (e.g., `apps/my-app/eslint.config.ts`), import the desired config function from the shared package and call it, typically passing `import.meta.url` from the *consuming* config file.
-            - Example (consuming package's `eslint.config.ts`):
-                ```typescript
-                import tseslint from 'typescript-eslint';
-                import { getDefaultConfig } from '@repo/eslint-config/default';
-                import { defineConfig } from 'eslint/config';
-                import type { Linter } from 'eslint'; // Needed for explicit typing if not inferred
-
-                // Get the base shared config array (which is already wrapped by defineConfig)
-                const baseConfigArray = getDefaultConfig(import.meta.url);
-
-                // Consuming packages construct their final array, potentially adding more configs,
-                // and wrap it with defineConfig from 'eslint/config' for type safety and explicitness.
-                const finalConfig: Linter.FlatConfig[] = [
-                    ...baseConfigArray, // Spread the shared configuration array
-                    // Add any app-specific overrides or additional configs here
-                    {
-                        files: ["src/**/*.ts"],
-                        rules: {
-                            "my-app-specific-rule": "warn"
-                        }
-                    }
-                ];
-
-                // The final configuration array should be wrapped with defineConfig from 'eslint/config'
-                // for type safety and explicitness when creating an eslint.config.ts file.
-                export default defineConfig(finalConfig);
-                ```
-
-    - 5.5. Examples:
-        - **LLM Task:** Refer to the `workers-monorepo-template` (before) and `workers` (after) project structures as concrete examples for common patterns.
-        - Basic TypeScript project (legacy `.eslintrc.js` or `.eslintrc.json` -> `eslint.config.ts` with native TS plugins and `tsParser`)
-        - Project with React/Vue/other frameworks (showing how framework-specific plugins are handled in `eslint.config.ts`, potentially with `FlatCompat` if needed).
-        - Config with overrides and complex `ignorePatterns` in `eslint.config.ts`.
-
-## 6. Phase 4: Addressing Rule Changes & Deprecations
-
-    - **Goal:** Identify and update any ESLint rules that have been deprecated, removed, or had their options changed due to the upgrade to ESLint v9 and new plugin versions. Ensure the final configuration is valid and reflects the intended linting standards.
-    - **Challenge:** This can be complex as direct replacements are not always available. The LLM might need to infer intent or flag rules for manual review.
-
-    - **6.1. Identifying Deprecated/Changed Rules:**
-        - **LLM Action (After migrating configs to flat format in Phase 3):**
-            1.  **Run ESLint:** Execute `eslint .` (or the equivalent for your package manager, targeting specific packages if necessary) across the codebase with the new `eslint.config.ts` files.
-                - *Expected Outcome:* ESLint might report errors or warnings related to:
-                    - Unknown rules (if a rule was removed).
-                    - Invalid rule options (if a rule's configuration schema changed).
-                    - Deprecation warnings for rules that are still functional but will be removed in future versions.
-            2.  **Parse ESLint Output:** Capture and analyze the output from the ESLint command.
-                - **LLM Task:** Systematically list all reported rule-specific errors and warnings. For each, note the rule name and the error message.
-            3.  **Consult Changelogs (Targeted Search):**
-                - **LLM Action:** For each problematic rule identified:
-                    - Determine if it's a core ESLint rule or from a plugin (e.g., `@typescript-eslint/some-rule`).
-                    - Perform a targeted search in the changelog of ESLint core (for core rules) or the specific plugin for information about the rule in versions leading up to and including the newly installed version.
-                    - *Search terms for LLM (conceptual):* "ESLint v9 changelog [rule-name]", "[plugin-name] changelog [rule-name] deprecated", "[plugin-name] [rule-name] new options".
-                    - Look for sections on "Breaking Changes", "Deprecations", or "New Rules/Features".
-                - **Alternative/Complement:** Some plugins or tools might offer migration guides or scripts (e.g., `eslint-plugin-unicorn` sometimes provides fixers for its own breaking changes).
-
-    - **6.2. Common Patterns for Replacing/Updating Rules:**
-        - **LLM Action (For each identified problematic rule):**
-
-            - **Rule Renamed/Moved:**
-                - *Symptom:* ESLint reports an "unknown rule" but the changelog indicates it was renamed or moved (e.g., to a different plugin or a sub-plugin like `@typescript-eslint/eslint-plugin-tslint`).
-                - *Action:* Update the rule name in `eslint.config.ts`. Ensure the new plugin (if any) is installed and configured.
-
-            - **Rule Options Changed:**
-                - *Symptom:* ESLint reports "invalid options" for a rule.
-                - *Action:* Consult the rule's documentation (via changelog or the plugin's rule documentation page) for the new valid options. Update the rule configuration in `eslint.config.ts` accordingly. This might involve restructuring options, renaming option keys, or changing option values.
-
-            - **Rule Deprecated (with direct replacement):**
-                - *Symptom:* ESLint issues a deprecation warning, and the changelog or warning message suggests a direct replacement rule.
-                - *Action:* Replace the old rule with the new rule in `eslint.config.ts`. Adjust options as needed for the new rule.
-
-            - **Rule Deprecated (functionality merged into another rule or now default):**
-                - *Symptom:* Deprecation warning; changelog indicates its functionality is now part of another (broader) rule or is default ESLint behavior.
-                - *Action:* Remove the deprecated rule. If its functionality was merged, ensure the broader rule is configured appropriately if needed.
-
-            - **Rule Deprecated (no direct replacement / functionality removed):**
-                - *Symptom:* Deprecation warning or unknown rule; changelog indicates the rule was removed without a direct one-to-one replacement.
-                - *Action (Requires more careful handling):**
-                    1.  **Understand Intent:** Try to understand *why* the rule was originally enabled. (This is hard for an LLM. It might need to look at comments near the rule in the old config or assume it was for general code quality/style).
-                    2.  **Look for Alternatives:** Search ESLint core rules or other installed plugins for rules that achieve a similar stylistic or error-prevention goal.
-                    3.  **Flag for Manual Review:** If no clear alternative is found, or if the intent is ambiguous, comment out the rule and add a specific `// TODO-LLM: Rule [old-rule-name] removed/deprecated. Please review and find alternative or confirm removal.` This flags it for human oversight.
-                    4.  **Consider Removing:** If the rule was for a very minor stylistic preference and has no obvious modern equivalent, removing it might be the simplest option after flagging.
-
-            - **Plugin Deprecated/Replaced:**
-                - *Symptom:* An entire plugin is no longer maintained, or its functionality has been superseded by a new plugin (e.g. tslint -> @typescript-eslint).
-                - *Action:*
-                    1.  Remove the old plugin from dependencies and ESLint configurations.
-                    2.  Install the new plugin (if applicable).
-                    3.  Re-evaluate the rules that were provided by the old plugin. Many might need to be re-added using equivalents from the new plugin or ESLint core.
-
-    - **6.3. Iterative Refinement:**
-        - **LLM Action:** After attempting fixes, re-run ESLint. Repeat steps 6.1 and 6.2 until ESLint runs without errors or warnings related to rule configurations.
-        - It's expected this might take a few iterations.
-
-## 7. Phase 5: Execution and Verification
-
-    - **Goal:** Ensure the new ESLint setup works correctly across the entire monorepo, apply auto-fixable changes, and identify any remaining issues for manual review or further action.
-
-    - **7.1. Running ESLint Across the Monorepo:**
-        - **LLM Action:** Execute ESLint comprehensively on all relevant files in all packages.
-            - **Command (Monorepo Root):** `pnpm exec eslint . --format stylish` (or equivalent for yarn/npm; use a machine-readable format like `--format json` if parsing the output for specific error counts or types is needed, but `stylish` is good for initial review).
-            - **Alternative (Per-Package, if needed for granularity or troubleshooting):** For each package identified in Phase 1.1, `cd` into the package directory and run `pnpm exec eslint . --format stylish`.
-        - **LLM Task:**
-            - Examine the output for any unexpected errors or a large volume of new warnings not related to rule deprecations (which should have been handled in Phase 4).
-            - If there are configuration errors (e.g., ESLint crashes, can't find plugins/parsers despite them being installed), revisit Phase 3 (Flat Config Migration) and Phase 4 (Rule Changes) for the affected packages or the root config.
-            - The goal here is a clean ESLint run, showing only actual lint violations in the code, not configuration issues.
-
-    - **7.2. Applying Auto-fixes (`eslint --fix`):**
-        - **LLM Action:** Once ESLint runs cleanly (no config errors), apply automatic fixes.
-            - **Command (Monorepo Root):** `pnpm exec eslint . --fix`
-            - **Caution for LLM:** Inform the user that `--fix` will modify files. It's critical that the codebase is under version control (Git) so changes can be reviewed and reverted if necessary.
-            - **LLM Task:** After running `--fix`, re-run `pnpm exec eslint .` (without `--fix`) to see which warnings/errors remain.
-        - **Benefit:** This can resolve many stylistic issues and some programmatic errors automatically, saving significant manual effort.
-
-    - **7.3. Strategies for Manual Review of Remaining Errors/Warnings:**
-        - **LLM Task:** Analyze the ESLint output after auto-fixes.
-            - Categorize remaining issues (e.g., complex logical errors, stylistic choices not auto-fixable, rules that were flagged with `// TODO-LLM` in Phase 4).
-            - **LLM Action: Report to User:** Present a summary of remaining ESLint issues. This report should include:
-                - File path, line number, rule ID, and message for each issue.
-                - Any `// TODO-LLM` comments that were added, indicating areas requiring human decision.
-                - A count of remaining critical errors vs. warnings.
-            - **Guidance for LLM:** Do not attempt to auto-fix complex issues that require deep semantic understanding beyond ESLint's capabilities. These are for human developers.
-
-    - **7.4. Running Tests to Catch Regressions:**
-        - **LLM Action:** Instruct the user (or attempt if given capabilities and permission) to run all automated tests (unit, integration, E2E) for the monorepo.
-            - **Command (Conceptual):** `pnpm test` (or the project-specific test command).
-        - **LLM Task:**
-            - If tests fail, this could indicate that an auto-fix or a rule change (even if ESLint reported no error) has inadvertently altered code behavior.
-            - **LLM Action: Report to User:** Clearly report any test failures. Correlating these with specific file changes made by `eslint --fix` might be possible if the number of changes is small, but generally, this requires human debugging.
-        - **Importance:** This is a critical safety net to ensure the migration and auto-fixes haven't broken functionality.
-
-    - **7.5. Final Sanity Checks (LLM Suggestions for User):**
-        - Suggest that the user manually inspect a few key files, especially those heavily modified by `--fix` or those with complex ESLint configurations.
-        - Recommend reviewing the diff of all changes made by the automated process before committing.
-
-## 8. Troubleshooting & Common Issues
-
-    - **Goal:** Provide guidance for common errors and challenges encountered during the ESLint 8 to 9 migration process.
-
-    - **8.1. `FlatCompat` Issues:**
-        - **Symptom:** Errors like `TypeError: Missing parameter 'recommendedConfig' in FlatCompat constructor` or `TypeError: Missing parameter 'allConfig' in FlatCompat constructor`.
-            - **Cause:** The `FlatCompat` instance is being used to extend `eslint:recommended` or `eslint:all` (directly or indirectly via another extended config), but it wasn't initialized with these base configurations.
-            - **LLM Fix Action:** When initializing `FlatCompat` in your `eslint.config.ts`, provide the necessary base configs from `@eslint/js`:
-                ```typescript
-                import { FlatCompat } from "@eslint/eslintrc";
-                import js from "@eslint/js";
-                import path from "path";
-                import { fileURLToPath } from "url";
-
-                const __filename = fileURLToPath(import.meta.url);
-                const __dirname = path.dirname(__filename);
-
-                const compat = new FlatCompat({
-                    baseDirectory: __dirname,
-                    recommendedConfig: js.configs.recommended, // For "eslint:recommended"
-                    allConfig: js.configs.all                  // For "eslint:all"
-                });
-                ```
-            - (Reference: [https://github.com/eslint/eslintrc#troubleshooting](https://github.com/eslint/eslintrc#troubleshooting))
-
-        - **Symptom:** Plugin not found errors when using `compat.extends("plugin:some-plugin/config-name")` or `compat.plugins("some-plugin")`.
-            - **Cause 1:** The `baseDirectory` for `FlatCompat` might not be set correctly to the directory containing the `eslint.config.ts` and thus cannot resolve the plugin relative to it.
-            - **LLM Fix Action 1:** Ensure `baseDirectory` is correctly set to the directory of the `eslint.config.ts` file where `FlatCompat` is being used. If extending a file from an npm package, use the package name directly (e.g., `compat.extends("eslint-config-some-package")`).
-            - **Cause 2:** The plugin itself might not be correctly installed or might have issues with its entry points for `FlatCompat`.
-            - **LLM Action 2:** Verify the plugin is listed in the correct `package.json` and has been installed. Double-check the plugin name and config name. If issues persist, the plugin might have deeper incompatibility with `FlatCompat` or ESLint 9.
-
-    - **8.2. TypeScript Configuration Issues (`eslint.config.ts` and `parserOptions.project`):**
-        - **Symptom:** Errors related to `parserOptions.project` not finding `tsconfig.json`, or type-aware linting rules failing unexpectedly, especially in monorepos.
-            - **Cause 1:** The `tsconfigRootDir` or `project` path in `languageOptions.parserOptions` is not correctly resolving to the `tsconfig.json` relevant to the files being linted.
-            - **LLM Fix Action 1:** For per-package `eslint.config.ts` files, ensure `parserOptions.project` is set to a path relative to that package (e.g., `./tsconfig.json` or `['./tsconfig.json', './tsconfig.node.json']`). `tsconfigRootDir` can also be helpful here.
-            - Consider using a helper function (like `getTsconfigRootDir` in the `workers` example) to correctly determine `tsconfigRootDir` based on `import.meta.url` of the `eslint.config.ts`.
-                ```typescript
-                // Example from workers/packages/eslint-config/src/default.config.ts
-                languageOptions: {
-                    parser: tseslint.parser,
-                    parserOptions: {
-                        project: true, // or specific paths like ['./tsconfig.json']
-                        tsconfigRootDir: getTsconfigRootDir(import.meta.url),
-                    },
-                },
-                ```
-            - **Cause 2:** The `eslint.config.ts` itself is being type-checked by a `tsconfig.json` that it's not compatible with (e.g., using Node.js features or different module systems not allowed by the app's `tsconfig.json`).
-            - **LLM Fix Action 2:** As detailed in Phase 3 (5.2.1), ensure `eslint.config.ts` is added to the `exclude` array of the main `tsconfig.json` files for your packages/application code. ESLint will process `eslint.config.ts` separately.
-
-    - **8.3. Plugin Incompatibility (Even with `FlatCompat`):**
-        - **Symptom:** Some older plugins might throw errors during ESLint execution even when wrapped with `FlatCompat`, or they might not behave as expected.
-            - **Cause:** The plugin might have internal workings that are deeply tied to the old ESLint configuration system or APIs that `FlatCompat` cannot fully abstract.
-            - **LLM Troubleshooting Steps:**
-                1.  **Search for Issues:** Check the plugin's GitHub repository for open issues related to ESLint 9 or flat config support.
-                2.  **Try Simpler Config:** Temporarily remove other plugins/configs to isolate if this specific plugin is the cause.
-                3.  **Look for Alternatives:** Search for alternative plugins that provide similar functionality and are ESLint 9 / flat config compatible.
-                4.  **Flag for Manual Review:** If no solution is found, flag the plugin and its rules for manual review. It might need to be temporarily disabled or replaced.
-
-    - **8.4. Performance Issues:**
-        - **Symptom:** ESLint runs significantly slower after migration.
-            - **Cause 1 (Type-Aware Rules):** If type-aware linting (`parserOptions.project`) was newly enabled or expanded, it can increase lint times. This is often a necessary trade-off for more powerful linting.
-            - **LLM Action 1:** Verify `parserOptions.project` and `tsconfigRootDir` are correctly scoped. Ensure `include` in the relevant `tsconfig.json` isn't overly broad.
-            - **Cause 2 (Inefficient Globs or Ignores):** Very complex or inefficient glob patterns in `files` or `ignores`.
-            - **LLM Action 2:** Review glob patterns for simplicity and efficiency. Ensure `node_modules`, build output directories (`dist`, `build`), and other non-source directories are globally ignored early in the configuration array.
-                ```typescript
-                // eslint.config.ts
-                import { defineConfig } from 'eslint/config';
-
-                export default defineConfig([
-                    { ignores: ["**/node_modules/", "**/dist/"] }, // Global ignores first
-                    // ... other configs
-                ]);
-                ```
-            - **Cause 3 (Specific Rules):** Some rules are inherently more performance-intensive than others.
-            - **LLM Action 3:** If slowness is extreme, use ESLint's `--debug` flag or tools like `eslint-timed` to identify if specific rules are bottlenecks. This usually requires manual investigation.
-
-    - **8.5. Incorrect `extends` Path Resolution with `FlatCompat`:**
-        - **Symptom:** `compat.extends("./relative/path/to/config.js")` fails to find the file.
-            - **Cause:** `FlatCompat` resolves relative paths from its `baseDirectory`.
-            - **LLM Fix Action:** Ensure `baseDirectory` is correctly set to the directory of the `eslint.config.ts` file where `FlatCompat` is being used. If extending a file from an npm package, use the package name directly (e.g., `compat.extends("eslint-config-some-package")`). If extending a local non-JS file (which is rare for ESLint configs but possible if `FlatCompat` were used for other JSON/YAML-like structures it might support), ensure the path is correct relative to `baseDirectory`. For ESLint legacy configs, they are typically `.js` or `.cjs`.
-
-    - **8.6. Global `ignores` Not Working as Expected:**
-        - **Symptom:** Files intended to be ignored are still being linted.
-        - **Cause:** The `ignores` property needs to be part of a configuration object. ESLint processes the array of configuration objects, and ignores apply to subsequent objects unless specified otherwise or if an object overrides ignores with `ignores: []`.
-        - **LLM Fix Action:** Ensure `ignores` are defined correctly within a configuration object. For truly global ignores, place them in the first object of the configuration array.
-            ```typescript
-            // eslint.config.ts
-            import { defineConfig } from 'eslint/config';
-
-            export default defineConfig([
-              { ignores: ["coverage/", ".turbo/", "dist/"] }, // Global ignores for all subsequent configs
-              // ... other configurations for specific files and rules
-            ]);
-            ```
-
-## Appendix
-
-    - **Goal:** Provide supplementary resources, examples, and quick reference materials to aid in the ESLint 9 migration.
-
-    - **9.1. Useful Links & Documentation:**
-        - **LLM Resource:** Refer to these links for authoritative information.
-        - **ESLint Official Documentation:**
-            - **Migrating to v9.x:** [https://eslint.org/docs/latest/use/migrate-to-9.0.0](https://eslint.org/docs/latest/use/migrate-to-9.0.0)
-            - **Configure ESLint (New Config File/Flat Config):** [https://eslint.org/docs/latest/use/configure/configuration-files-new](https://eslint.org/docs/latest/use/configure/configuration-files-new)
-            - **`FlatCompat` Utility (`@eslint/eslintrc`):** [https://github.com/eslint/eslintrc#readme](https://github.com/eslint/eslintrc#readme)
-            - **Core Rule List:** [https://eslint.org/docs/latest/rules/](https://eslint.org/docs/latest/rules/)
-        - **TypeScript ESLint Documentation:**
-            - **Website & Docs:** [https://typescript-eslint.io/getting-started](https://typescript-eslint.io/getting-started)
-            - **Plugin Rules:** [https://typescript-eslint.io/rules/](https://typescript-eslint.io/rules/)
-        - **Common Plugins (Examples - LLM should search for specific plugin docs as needed):**
-            - `eslint-plugin-import`: [https://github.com/import-js/eslint-plugin-import#readme](https://github.com/import-js/eslint-plugin-import#readme)
-            - `eslint-plugin-react`: [https://github.com/jsx-eslint/eslint-plugin-react#readme](https://github.com/jsx-eslint/eslint-plugin-react#readme)
-            - `eslint-plugin-jsx-a11y`: [https://github.com/jsx-eslint/eslint-plugin-jsx-a11y#readme](https://github.com/jsx-eslint/eslint-plugin-jsx-a11y#readme)
-            - `eslint-plugin-unused-imports`: [https://github.com/sweepline/eslint-plugin-unused-imports#readme](https://github.com/sweepline/eslint-plugin-unused-imports#readme)
-            - `eslint-config-prettier` (for disabling stylistic rules that conflict with Prettier): [https://github.com/prettier/eslint-config-prettier#readme](https://github.com/prettier/eslint-config-prettier#readme)
-
-    - **9.2. Example of a Consuming Package's `eslint.config.ts` (Complex Scenario):**
-        - **LLM Task:** This example demonstrates what a *consuming package's* `eslint.config.ts` might look like. It assumes it's importing a configuration function (e.g., `getBaseConfigFromSharedPackage`) from a shared ESLint configuration package (structured as described in Section 5.4) and then composing it with other settings.
-        ```typescript
-        // eslint.config.ts (Illustrative Example for a CONSUMING package)
-        import { defineConfig } from 'eslint/config';
-        import tseslint from 'typescript-eslint';
-        import js from "@eslint/js";
-        import { FlatCompat } from "@eslint/eslintrc";
-        import path from "path";
-        import { fileURLToPath } from "url";
-
-        // Assume this function is imported from your shared eslint-config package
-        // import { getBaseConfigFromSharedPackage } from "@repo/eslint-config";
-
-        // Core TS plugins (can also be part of the shared config)
-        // import tsParser from '@typescript-eslint/parser'; // Or individual imports
-        // import tsPlugin from '@typescript-eslint/eslint-plugin';
-
-        // Other plugins (can also be part of the shared config, or app-specific)
-        import reactPlugin from "eslint-plugin-react";
-        import reactHooksPlugin from "eslint-plugin-react-hooks";
-        import jsxA11yPlugin from "eslint-plugin-jsx-a11y";
-        // @ts-expect-error eslint-plugin-import has no official types yet
-        import * as importPlugin from 'eslint-plugin-import';
-        import unusedImportsPlugin from 'eslint-plugin-unused-imports';
-        import prettierConfig from 'eslint-config-prettier'; // Just the rules object
-
-        import globals from "globals";
-
-        // Setup for FlatCompat (might be needed for app-specific legacy plugins)
-        const __filename = fileURLToPath(import.meta.url);
-        const __dirname = path.dirname(__filename);
-        const compat = new FlatCompat({
-            baseDirectory: __dirname,
-            recommendedConfig: js.configs.recommended, // if using compat.extends('eslint:recommended')
-        });
-
-        // const baseSharedConfig = getBaseConfigFromSharedPackage(import.meta.url);
-
-        export default defineConfig([ // Using defineConfig from eslint/config
-            // Start by spreading the imported shared configuration
-            // ...baseSharedConfig,
-
-            // --- The rest of this example shows configurations that *could* be in a shared config
-            // --- or could be app-specific additions/overrides.
-            // --- If getBaseConfigFromSharedPackage() already provides these, they might not be repeated here.
-
-            // Global ignores (can also be part of shared config)
-            { ignores: ["**/dist/", "**/node_modules/", "**/.turbo/", "**/.wrangler/"] },
-
-            // ESLint Recommended (can also be part of shared config)
-            js.configs.recommended, // Single config object
-
-            // TypeScript Base Config (can also be part of shared config)
-            ...tseslint.configs.recommended,
-            {
-                files: ["**/*.{ts,tsx,mts}"], // Ensure this matches files covered by tseslint.configs.recommended
-                languageOptions: {
-                    parser: tseslint.parser, // Often implicitly set by tseslint.configs.recommended
-                    parserOptions: {
-                        project: true,
-                        tsconfigRootDir: __dirname, // For app-specific tsconfig, if not covered by shared config's `importMetaUrl` handling
-                    },
-                },
-                plugins: { // Plugins are often implicitly set by tseslint.configs.recommended
-                    // '@typescript-eslint': tseslint.plugin
-                },
+<eslint9-migration-guide>
+
+<title>LLM-Guided ESLint 8 to ESLint 9 Monorepo Migration</title>
+
+<description>Comprehensive step-by-step guide for LLMs to automate migration of TypeScript monorepos from ESLint 8 to ESLint 9 using flat config</description>
+
+<introduction>
+<purpose>
+<title>Purpose of Guide</title>
+<content>
+Document serves as comprehensive step-by-step guide for Large Language Model to automate migration of TypeScript-based monorepo from ESLint version 8 to ESLint version 9. Focus exclusively on projects using eslint.config.ts for ESLint configuration (flat config model)
+</content>
+</purpose>
+
+<eslint9-changes>
+<title>Overview of ESLint 9 Changes</title>
+<key-changes>
+- Full adoption of flat config system using eslint.config.ts file that exports array of configuration objects
+- Replaces legacy .eslintrc.* file formats and eslintConfig key in package.json
+- Explicit plugin imports required
+- Different handling of extends
+- More granular control through files and ignores properties within config objects
+</key-changes>
+</eslint9-changes>
+
+<migration-goals>
+<title>Goals of Automated Migration</title>
+<goals>
+- Prerequisite Checks: Verify necessary tools and assess initial ESLint setup
+- Dependency Management: Update ESLint and core plugins to ESLint 9 compatible versions
+- Flat Config Migration: Convert all existing ESLint configurations to new eslint.config.ts format
+- Shared Configuration Handling: Migrate dedicated shared ESLint configuration package correctly
+- Rule Updates: Address deprecated, removed, or changed rules
+- Verification: Execute ESLint to ensure it runs without configuration errors
+- Maintainability: Produce clean, maintainable, type-safe ESLint setup
+- TypeScript Focus: Tailored for monorepos where TypeScript is primary language
+</goals>
+</migration-goals>
+</introduction>
+
+<prerequisites>
+<title>Prerequisites and Setup</title>
+
+<required-tools>
+<title>Required Tools</title>
+<tools>
+- Node.js: v18.18.0, v20.9.0 or later (required by ESLint v9)
+- Package manager: pnpm, yarn, or npm (commands may assume pnpm, adjust as needed)
+- jq: Useful for parsing package.json files from command line (optional)
+</tools>
+<llm-action>Verify these tools are available or guide user on installation</llm-action>
+</required-tools>
+
+<workspace-assessment>
+<title>Initial Workspace Assessment</title>
+<commands>
+<command type="primary">
+<description>Check ESLint version at monorepo root</description>
+<code>pnpm exec eslint --version</code>
+<note>Primary indicator of ESLint version used for development and CLI tasks</note>
+</command>
+<command type="optional">
+<description>Check shared ESLint config package</description>
+<note>Examine package.json of dedicated shared ESLint configuration package if identified</note>
+</command>
+</commands>
+<llm-actions>
+- Store primary ESLint version for later comparison
+- Identify monorepo package manager by checking lock files
+- Avoid running eslint --version in every individual package
+</llm-actions>
+</workspace-assessment>
+</prerequisites>
+
+<phase-1-discovery>
+<title>Phase 1: Discovery and Planning</title>
+
+<identify-packages>
+<title>Identifying All Packages in Monorepo</title>
+<llm-actions>
+- Parse workspace configuration to find all member packages
+- For pnpm: Read pnpm-workspace.yaml packages list
+- For yarn/npm: Read workspaces array in root package.json
+- For lerna: Read packages array in lerna.json
+- Create list of absolute or relative paths to each package directory
+</llm-actions>
+</identify-packages>
+
+<locate-configs>
+<title>Locating ESLint Configurations</title>
+<search-locations>
+- .eslintrc.js
+- .eslintrc.cjs
+- .eslintrc.yaml
+- .eslintrc.yml
+- .eslintrc.json
+- eslintConfig key in package.json
+</search-locations>
+<llm-actions>
+- Search each identified package and monorepo root
+- Record path and format of each found configuration file
+- Determine if any configurations belong to dedicated shared ESLint configuration package
+- Look for packages named eslint-config, @repo/eslint-config, shared/eslint-config
+</llm-actions>
+</locate-configs>
+
+<identify-dependencies>
+<title>Identifying ESLint-related Dependencies</title>
+<locations>
+<location type="primary">
+<name>Shared ESLint Config Package</name>
+<actions>
+- Read package.json file
+- Extract all dependencies and devDependencies with ESLint-related prefixes
+</actions>
+</location>
+<location type="secondary">
+<name>Monorepo Root</name>
+<actions>
+- Read root package.json file
+- Extract all dependencies and devDependencies with ESLint-related prefixes
+</actions>
+</location>
+</locations>
+<prefixes>
+- eslint (core library)
+- eslint-plugin-
+- eslint-config-
+- @eslint/
+- @typescript-eslint/ (parser and plugin)
+- eslint-import-resolver-typescript
+- eslint-plugin-react
+</prefixes>
+<llm-action>Compile comprehensive list of unique ESLint-related packages and versions</llm-action>
+</identify-dependencies>
+
+<migration-plan>
+<title>Creating Migration Plan</title>
+<order-of-operations>
+1. Update shared ESLint config packages dependencies
+2. Migrate shared ESLint configs to flat format
+3. Update consuming packages dependencies
+4. Migrate consuming packages ESLint configs to flat format
+5. Address root monorepo ESLint configuration
+</order-of-operations>
+<critical-checkpoint>
+<condition>No dedicated shared ESLint configuration package found</condition>
+<action>ABORT MIGRATION</action>
+<message>Migration aborted. This automated process is designed for monorepos that include a dedicated package for shared ESLint configurations. No such package was identified in this monorepo.</message>
+</critical-checkpoint>
+</migration-plan>
+</phase-1-discovery>
+
+<phase-2-dependencies>
+<title>Phase 2: Updating Dependencies</title>
+
+<goal>Update ESLint, core plugins, and all ESLint-related packages to latest versions. FlatCompat will be used in Phase 5 for plugins not yet supporting flat config directly</goal>
+
+<target-versions>
+<version package="eslint">Target latest ESLint v9.x.x</version>
+<version package="others">Target latest available version for all plugins, configs, parsers</version>
+<rationale>Attempting to update to absolute latest version first simplifies process. Compatibility addressed in Phase 5 using FlatCompat if necessary</rationale>
+</target-versions>
+
+<update-process>
+<step name="determine-target">
+<title>Determine Target Version</title>
+<actions>
+- For eslint: Target latest ESLint v9.x.x
+- For all other packages: Target latest available version
+</actions>
+</step>
+
+<step name="update-via-package-manager">
+<title>Update Dependencies via Package Manager</title>
+<actions>
+- Construct appropriate command for detected package manager
+- Update dependency to target version/tag
+- Package manager resolves tags and writes final semantic version
+</actions>
+<examples>
+<example type="pnpm">
+<code>pnpm add -D eslint@^9.0.0 some-plugin@latest --filter my-app</code>
+</example>
+<example type="yarn">
+<code>yarn workspace my-app add -D eslint@^9.0.0 some-plugin@latest</code>
+</example>
+<example type="npm">
+<code>cd packages/my-app && npm install -D eslint@^9.0.0 some-plugin@latest && cd -</code>
+</example>
+</examples>
+</step>
+
+<step name="install-consolidate">
+<title>Install Updated Dependencies</title>
+<actions>
+- Run general install command from monorepo root
+- Ensure lockfile is fully updated
+- All dependencies correctly installed according to modified package.json files
+</actions>
+</step>
+
+<step name="initial-verification">
+<title>Initial Verification (Optional)</title>
+<actions>
+- Run eslint --version in key packages or root
+- Ensure core ESLint version updated as expected
+</actions>
+</step>
+</update-process>
+</phase-2-dependencies>
+
+<phase-3-flat-config>
+<title>Phase 3: Migrating to Flat Config</title>
+
+<core-tooling>
+<tool name="eslint.config.ts">New configuration file name</tool>
+<tool name="@eslint/eslintrc">Provides FlatCompat utility for legacy configurations/plugins</tool>
+</core-tooling>
+
+<flat-config-principles>
+<title>General Principles of Flat Config</title>
+<principles>
+- Config is array of configuration objects exported as default from eslint.config.ts
+- Each object can specify: files, ignores, languageOptions, plugins, rules, processor, settings
+- Configuration applied by merging objects in array
+- Later objects can override earlier ones if they apply to same files
+- extends no longer direct key - shareable configs imported and spread into main array
+- Plugins explicitly imported and configured in plugins key
+</principles>
+</flat-config-principles>
+
+<migration-steps>
+<title>Key Steps for Migration</title>
+
+<step name="create-config">
+<title>Create eslint.config.ts</title>
+<actions>
+- Create new eslint.config.ts in same directory as old config
+- Ensure excluded from project tsconfig.json to avoid conflicts
+- Add to exclude array in tsconfig.json
+</actions>
+</step>
+
+<step name="initialize-flatcompat">
+<title>Initialize FlatCompat if Needed</title>
+<condition>Old config uses plugins or extends configs not flat-config-ready</condition>
+<example>
+<code language="typescript">
+import { FlatCompat } from "@eslint/eslintrc";
+import path from "path";
+import { fileURLToPath } from "url";
+import js from '@eslint/js';
+
+const **filename = fileURLToPath(import.meta.url);
+const **dirname = path.dirname(\_\_filename);
+
+const compat = new FlatCompat({
+baseDirectory: \_\_dirname,
+// recommendedConfig: js.configs.recommended,
+// allConfig: js.configs.all
+});
+</code>
+</example>
+</step>
+
+<step name="translate-config">
+<title>Translate Configuration Sections</title>
+<note>Detailed mapping provided in subsequent sections</note>
+</step>
+
+<step name="delete-old">
+<title>Delete Old Config File</title>
+<actions>
+- Delete old .eslintrc.* file after successful migration
+- Remove eslintConfig from package.json if present
+</actions>
+</step>
+</migration-steps>
+
+<config-mapping>
+<title>Mapping Legacy Config Keys to Flat Config</title>
+
+<mapping key="extends">
+<legacy>extends</legacy>
+<flat-approach>Import shareable config directly and spread into array</flat-approach>
+<examples>
+<example type="direct-import">
+<code language="typescript">
+import someSharedFlatConfig from '@repo/eslint-config/flat';
+import { defineConfig } from 'eslint/config';
+
+export default defineConfig([
+...someSharedFlatConfig,
+// ... other configs
+]);
+</code>
+</example>
+<example type="flatcompat">
+<code language="typescript">
+import { FlatCompat } from "@eslint/eslintrc";
+import { defineConfig } from 'eslint/config';
+
+export default defineConfig([
+...compat.extends("eslint:recommended", "plugin:react/recommended"),
+// ... other configs
+]);
+</code>
+</example>
+</examples>
+</mapping>
+
+<mapping key="plugins">
+<legacy>plugins</legacy>
+<flat-approach>Import plugin and add to plugins object within config block</flat-approach>
+<examples>
+<example type="native">
+<code language="typescript">
+import somePlugin from 'eslint-plugin-some-plugin';
+import { defineConfig } from 'eslint/config';
+
+export default defineConfig([
+{
+plugins: { 'some-prefix': somePlugin },
+rules: { 'some-prefix/some-rule': 'error' }
+}
+]);
+</code>
+</example>
+<example type="import-plugin">
+<code language="typescript">
+// @ts-expect-error eslint-plugin-import has no types
+import \* as importPlugin from 'eslint-plugin-import';
+
+export default defineConfig([
+{
+plugins: { 'import': importPlugin },
+settings: { 'import/resolver': { typescript: {} } },
+rules: { ...importPlugin.configs.recommended.rules }
+}
+]);
+</code>
+</example>
+</examples>
+</mapping>
+
+<mapping key="rules">
+<legacy>rules</legacy>
+<flat-approach>Place directly in config object rules key</flat-approach>
+<example>
+<code language="typescript">
+export default defineConfig([
+    {
+        files: ["**/*.js"],
+        rules: {
+            semi: ["error", "always"],
+            'no-unused-vars': 'warn'
+        }
+    }
+]);
+</code>
+</example>
+</mapping>
+
+<mapping key="parser-options">
+<legacy>parser and parserOptions</legacy>
+<flat-approach>Placed under languageOptions.parser and languageOptions.parserOptions</flat-approach>
+<example>
+<code language="typescript">
+import tsParser from '@typescript-eslint/parser';
+import { defineConfig } from 'eslint/config';
+
+export default defineConfig([
+{
+files: ["**/*.ts", "**/*.tsx"],
+languageOptions: {
+parser: tsParser,
+parserOptions: {
+project: './tsconfig.json',
+sourceType: 'module',
+ecmaVersion: 2022
+}
+}
+}
+]);
+</code>
+</example>
+</mapping>
+
+<mapping key="env-globals">
+<legacy>env and globals</legacy>
+<flat-approach>Mapped to languageOptions.globals using helper objects</flat-approach>
+<example>
+<code language="typescript">
+import globals from 'globals';
+import { defineConfig } from 'eslint/config';
+
+export default defineConfig([
+{
+languageOptions: {
+globals: {
+...globals.browser,
+...globals.node,
+myCustomGlobal: 'readonly'
+}
+}
+}
+]);
+</code>
+</example>
+</mapping>
+
+<mapping key="overrides">
+<legacy>overrides</legacy>
+<flat-approach>Each override becomes separate configuration object in top-level array</flat-approach>
+<example>
+<code language="typescript">
+export default defineConfig([
+    { // Default rules
+        rules: { 'default-rule': 'error' }
+    },
+    { // Override for test files
+        files: ["*.test.js"],
+        rules: { 'test-specific-rule': 'warn' }
+    }
+]);
+</code>
+</example>
+</mapping>
+
+<mapping key="ignore-patterns">
+<legacy>ignorePatterns</legacy>
+<flat-approach>Placed in ignores array at top level of config object</flat-approach>
+<example>
+<code language="typescript">
+export default defineConfig([
+    {
+        ignores: ["dist/", "node_modules/", "**/*.bak"]
+    },
+    // ...other configuration objects
+]);
+</code>
+</example>
+</mapping>
+
+<mapping key="settings">
+<legacy>settings</legacy>
+<flat-approach>Placed in settings object within configuration block</flat-approach>
+<example>
+<code language="typescript">
+export default defineConfig([
+    {
+        settings: {
+            'import/resolver': { typescript: {} }
+        }
+    }
+]);
+</code>
+</example>
+</mapping>
+</config-mapping>
+
+<shared-config-structure>
+<title>Structuring Shared ESLint Configuration Package</title>
+
+<recommended-structure>
+<structure-item>
+<name>Configuration Files</name>
+<description>Define different base configurations in separate files within shared package</description>
+<examples>
+- packages/eslint-config/src/default.config.ts
+- packages/eslint-config/src/react.config.ts
+</examples>
+</structure-item>
+
+<structure-item>
+<name>Exported Functions</name>
+<description>Each file exports function returning flat config array wrapped with defineConfig</description>
+<important>Exported functions must return array explicitly wrapped with defineConfig from eslint/config</important>
+<example>
+<code language="typescript">
+import tseslint from 'typescript-eslint';
+import js from '@eslint/js';
+import { defineConfig } from 'eslint/config';
+
+export function getDefaultConfig(importMetaUrl: string) {
+return defineConfig([
+js.configs.recommended,
+tseslint.configs.recommended,
+{
+files: ["**/*.{ts,tsx,mts}"],
+languageOptions: {
+parser: tseslint.parser,
+parserOptions: {
+project: true,
+sourceType: "module",
+},
+},
+rules: {
+'@typescript-eslint/no-unused-vars': 'warn',
+},
+},
+]);
+}
+</code>
+</example>
+</structure-item>
+
+<structure-item>
+<name>Package.json Exports</name>
+<description>Use exports field to define how configurations are imported</description>
+<example>
+<code language="json">
+{
+    "name": "@repo/eslint-config",
+    "main": "./src/default.config.ts",
+    "exports": {
+        ".": "./src/default.config.ts",
+        "./default": "./src/default.config.ts",
+        "./react": "./src/react.config.ts"
+    }
+}
+</code>
+</example>
+</structure-item>
+</recommended-structure>
+
+<consuming-packages>
+<title>Consuming Shared Configurations</title>
+<example>
+<code language="typescript">
+import tseslint from 'typescript-eslint';
+import { getDefaultConfig } from '@repo/eslint-config/default';
+import { defineConfig } from 'eslint/config';
+import type { Linter } from 'eslint';
+
+const baseConfigArray = getDefaultConfig(import.meta.url);
+
+const finalConfig: Linter.FlatConfig[] = [
+...baseConfigArray,
+{
+files: ["src/**/*.ts"],
+rules: {
+"my-app-specific-rule": "warn"
+}
+}
+];
+
+export default defineConfig(finalConfig);
+</code>
+</example>
+</consuming-packages>
+</shared-config-structure>
+</phase-3-flat-config>
+
+<phase-4-rule-changes>
+<title>Phase 4: Addressing Rule Changes and Deprecations</title>
+
+<goal>Identify and update ESLint rules that have been deprecated, removed, or had options changed due to upgrade to ESLint v9 and new plugin versions</goal>
+
+<identifying-issues>
+<title>Identifying Deprecated/Changed Rules</title>
+<steps>
+<step>
+<name>Run ESLint</name>
+<action>Execute eslint . across codebase with new eslint.config.ts files</action>
+<expected-outcomes>
+- Unknown rules (if rule was removed)
+- Invalid rule options (if rule configuration schema changed)
+- Deprecation warnings for rules still functional but will be removed
+</expected-outcomes>
+</step>
+<step>
+<name>Parse ESLint Output</name>
+<action>Capture and analyze output from ESLint command</action>
+<task>Systematically list all reported rule-specific errors and warnings</task>
+</step>
+<step>
+<name>Consult Changelogs</name>
+<actions>
+- Determine if core ESLint rule or from plugin
+- Search changelog of ESLint core or specific plugin
+- Look for Breaking Changes, Deprecations, or New Rules/Features sections
+</actions>
+</step>
+</steps>
+</identifying-issues>
+
+<replacement-patterns>
+<title>Common Patterns for Replacing/Updating Rules</title>
+
+<pattern type="renamed">
+<symptom>ESLint reports unknown rule but changelog indicates renamed or moved</symptom>
+<action>Update rule name in eslint.config.ts and ensure new plugin installed</action>
+</pattern>
+
+<pattern type="options-changed">
+<symptom>ESLint reports invalid options for rule</symptom>
+<action>Consult rule documentation for new valid options and update configuration</action>
+</pattern>
+
+<pattern type="deprecated-with-replacement">
+<symptom>ESLint issues deprecation warning with suggested replacement</symptom>
+<action>Replace old rule with new rule and adjust options as needed</action>
+</pattern>
+
+<pattern type="functionality-merged">
+<symptom>Deprecation warning indicates functionality merged into another rule</symptom>
+<action>Remove deprecated rule and ensure broader rule configured appropriately</action>
+</pattern>
+
+<pattern type="no-replacement">
+<symptom>Deprecation warning or unknown rule with no direct replacement</symptom>
+<actions>
+- Understand intent of original rule
+- Search for alternative rules achieving similar goal
+- Flag for manual review with TODO-LLM comment
+- Consider removing if minor stylistic preference
+</actions>
+</pattern>
+
+<pattern type="plugin-deprecated">
+<symptom>Entire plugin no longer maintained or superseded</symptom>
+<actions>
+- Remove old plugin from dependencies
+- Install new plugin if applicable
+- Re-evaluate rules from old plugin
+</actions>
+</pattern>
+</replacement-patterns>
+
+<iterative-refinement>
+<title>Iterative Refinement</title>
+<actions>
+- Re-run ESLint after attempting fixes
+- Repeat identification and replacement steps
+- Continue until ESLint runs without configuration errors
+</actions>
+</iterative-refinement>
+</phase-4-rule-changes>
+
+<phase-5-verification>
+<title>Phase 5: Execution and Verification</title>
+
+<goal>Ensure new ESLint setup works correctly across entire monorepo, apply auto-fixable changes, identify remaining issues</goal>
+
+<execution-steps>
+<step name="run-comprehensive">
+<title>Running ESLint Across Monorepo</title>
+<command>pnpm exec eslint . --format stylish</command>
+<tasks>
+- Examine output for unexpected errors or large volume of new warnings
+- If configuration errors, revisit Phase 3 and Phase 4
+- Goal is clean ESLint run showing only actual lint violations
+</tasks>
+</step>
+
+<step name="apply-fixes">
+<title>Applying Auto-fixes</title>
+<command>pnpm exec eslint . --fix</command>
+<caution>Inform user that --fix will modify files. Ensure version control active</caution>
+<follow-up>Re-run eslint without --fix to see remaining warnings/errors</follow-up>
+</step>
+
+<step name="manual-review">
+<title>Manual Review of Remaining Issues</title>
+<actions>
+- Categorize remaining issues
+- Present summary of remaining ESLint issues
+- Include file path, line number, rule ID, and message
+- Report any TODO-LLM comments added
+- Count critical errors vs warnings
+</actions>
+<guidance>Do not attempt to auto-fix complex issues requiring deep semantic understanding</guidance>
+</step>
+
+<step name="run-tests">
+<title>Running Tests to Catch Regressions</title>
+<command>pnpm test</command>
+<importance>Critical safety net to ensure migration and auto-fixes haven't broken functionality</importance>
+<action>Report any test failures clearly</action>
+</step>
+
+<step name="final-checks">
+<title>Final Sanity Checks</title>
+<suggestions>
+- Manually inspect key files heavily modified by --fix
+- Review diff of all changes before committing
+</suggestions>
+</step>
+</execution-steps>
+</phase-5-verification>
+
+<troubleshooting>
+<title>Troubleshooting and Common Issues</title>
+
+<issue type="flatcompat-errors">
+<symptom>TypeError: Missing parameter recommendedConfig or allConfig in FlatCompat constructor</symptom>
+<cause>FlatCompat used to extend eslint:recommended or eslint:all without initialization</cause>
+<fix>
+<code language="typescript">
+import { FlatCompat } from "@eslint/eslintrc";
+import js from "@eslint/js";
+
+const compat = new FlatCompat({
+baseDirectory: \_\_dirname,
+recommendedConfig: js.configs.recommended,
+allConfig: js.configs.all
+});
+</code>
+</fix>
+</issue>
+
+<issue type="plugin-not-found">
+<symptom>Plugin not found errors when using compat.extends or compat.plugins</symptom>
+<causes>
+- baseDirectory not set correctly
+- Plugin not correctly installed
+- Plugin incompatible with FlatCompat
+</causes>
+<fixes>
+- Ensure baseDirectory correctly set to directory of eslint.config.ts
+- Verify plugin listed in package.json and installed
+- Check plugin name and config name
+</fixes>
+</issue>
+
+<issue type="typescript-config">
+<symptom>Errors related to parserOptions.project not finding tsconfig.json</symptom>
+<causes>
+- tsconfigRootDir or project path not correctly resolving
+- eslint.config.ts being type-checked by incompatible tsconfig.json
+</causes>
+<fixes>
+- Set parserOptions.project to path relative to package
+- Use helper function to determine tsconfigRootDir
+- Add eslint.config.ts to exclude array of main tsconfig.json
+</fixes>
+</issue>
+
+<issue type="plugin-incompatibility">
+<symptom>Plugins throw errors even with FlatCompat</symptom>
+<troubleshooting-steps>
+- Check plugin GitHub for ESLint 9 issues
+- Try simpler config to isolate plugin
+- Look for alternative plugins
+- Flag for manual review
+</troubleshooting-steps>
+</issue>
+
+<issue type="performance">
+<symptom>ESLint runs significantly slower after migration</symptom>
+<causes>
+- Type-aware rules newly enabled
+- Inefficient globs or ignores
+- Specific performance-intensive rules
+</causes>
+<fixes>
+- Verify parserOptions.project correctly scoped
+- Review glob patterns for efficiency
+- Ensure node_modules and build directories globally ignored
+- Use --debug flag to identify bottleneck rules
+</fixes>
+</issue>
+
+<issue type="global-ignores">
+<symptom>Files intended to be ignored still being linted</symptom>
+<cause>ignores property needs to be part of configuration object</cause>
+<fix>
+<code language="typescript">
+export default defineConfig([
+  { ignores: ["coverage/", ".turbo/", "dist/"] },
+  // ... other configurations
+]);
+</code>
+</fix>
+</issue>
+</troubleshooting>
+
+<appendix>
+<title>Appendix</title>
+
+<useful-links>
+<title>Useful Links and Documentation</title>
+<links>
+<link type="eslint-official">
+<name>Migrating to v9.x</name>
+<url>https://eslint.org/docs/latest/use/migrate-to-9.0.0</url>
+</link>
+<link type="eslint-official">
+<name>Configure ESLint (Flat Config)</name>
+<url>https://eslint.org/docs/latest/use/configure/configuration-files-new</url>
+</link>
+<link type="eslint-official">
+<name>FlatCompat Utility</name>
+<url>https://github.com/eslint/eslintrc#readme</url>
+</link>
+<link type="typescript-eslint">
+<name>TypeScript ESLint Getting Started</name>
+<url>https://typescript-eslint.io/getting-started</url>
+</link>
+<link type="plugin">
+<name>eslint-plugin-import</name>
+<url>https://github.com/import-js/eslint-plugin-import#readme</url>
+</link>
+<link type="plugin">
+<name>eslint-config-prettier</name>
+<url>https://github.com/prettier/eslint-config-prettier#readme</url>
+</link>
+</links>
+</useful-links>
+
+<complex-example>
+<title>Complex Consuming Package Example</title>
+<code language="typescript">
+import { defineConfig } from 'eslint/config';
+import tseslint from 'typescript-eslint';
+import js from "@eslint/js";
+import { FlatCompat } from "@eslint/eslintrc";
+import path from "path";
+import { fileURLToPath } from "url";
+
+import reactPlugin from "eslint-plugin-react";
+import reactHooksPlugin from "eslint-plugin-react-hooks";
+import jsxA11yPlugin from "eslint-plugin-jsx-a11y";
+// @ts-expect-error eslint-plugin-import has no official types yet
+import \* as importPlugin from 'eslint-plugin-import';
+import unusedImportsPlugin from 'eslint-plugin-unused-imports';
+import prettierConfig from 'eslint-config-prettier';
+
+import globals from "globals";
+
+const **filename = fileURLToPath(import.meta.url);
+const **dirname = path.dirname(**filename);
+const compat = new FlatCompat({
+baseDirectory: **dirname,
+recommendedConfig: js.configs.recommended,
+});
+
+export default defineConfig([
+{ ignores: ["**/dist/", "**/node_modules/", "**/.turbo/", "**/.wrangler/"] },
+
+    js.configs.recommended,
+
+    ...tseslint.configs.recommended,
+    {
+        files: ["**/*.{ts,tsx,mts}"],
+        languageOptions: {
+            parser: tseslint.parser,
+            parserOptions: {
+                project: true,
+                tsconfigRootDir: __dirname,
             },
+        },
+    },
 
-            // React Specific Config (can also be part of shared config, or app-specific)
-            {
-                files: ["**/*.{ts,tsx}"], // Focus on TS/TSX for React with TS
-                plugins: {
-                    react: reactPlugin,
-                    'react-hooks': reactHooksPlugin,
-                    'jsx-a11y': jsxA11yPlugin,
-                },
-                languageOptions: {
-                    globals: globals.browser,
-                },
-                settings: {
-                    react: { version: "detect" }, // Automatically detect React version
-                },
-                rules: {
-                    ...reactPlugin.configs.recommended.rules,
-                    ...reactHooksPlugin.configs.recommended.rules,
-                    ...jsxA11yPlugin.configs.recommended.rules,
-                    "react/react-in-jsx-scope": "off", // Not needed with new JSX transform
-                },
+    {
+        files: ["**/*.{ts,tsx}"],
+        plugins: {
+            react: reactPlugin,
+            'react-hooks': reactHooksPlugin,
+            'jsx-a11y': jsxA11yPlugin,
+        },
+        languageOptions: {
+            globals: globals.browser,
+        },
+        settings: {
+            react: { version: "detect" },
+        },
+        rules: {
+            ...reactPlugin.configs.recommended.rules,
+            ...reactHooksPlugin.configs.recommended.rules,
+            ...jsxA11yPlugin.configs.recommended.rules,
+            "react/react-in-jsx-scope": "off",
+        },
+    },
+
+    {
+        files: ["**/*.{ts,tsx,mts,js,jsx}"],
+        plugins: { 'import': importPlugin, 'unused-imports': unusedImportsPlugin },
+        settings: {
+            'import/resolver': {
+                typescript: { project: [`${__dirname}/tsconfig.json`] },
+                node: true,
             },
+        },
+        rules: {
+            'unused-imports/no-unused-imports': 'warn',
+            'import/order': ['warn', { 'newlines-between': 'always' }],
+        },
+    },
 
-            // Import Plugin (Example - assuming it supports flat config or via FlatCompat)
-            {
-                files: ["**/*.{ts,tsx,mts,js,jsx}"], // Apply to all relevant file types
-                plugins: { 'import': importPlugin, 'unused-imports': unusedImportsPlugin },
-                settings: {
-                    'import/resolver': {
-                        typescript: { project: [`${__dirname}/tsconfig.json`] }, // Ensure path is correct, make it an array
-                        node: true,
-                    },
-                },
-                rules: {
-                    // ...import plugin rules, e.g., importPlugin.configs.recommended.rules, ...importPlugin.configs.typescript.rules
-                    'unused-imports/no-unused-imports': 'warn',
-                    'import/order': ['warn', { 'newlines-between': 'always' }],
-                },
+    {
+        files: ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
+        languageOptions: {
+            globals: {
+                ...globals.jest,
             },
+        },
+        rules: {
+            "@typescript-eslint/no-explicit-any": "off",
+        },
+    },
 
-            // Example of using FlatCompat for a legacy config/plugin
-            // ...compat.extends("some-legacy-config-package"),
-            // ...compat.plugins("some-legacy-plugin"),
+    {
+        files: ["eslint.config.ts", "scripts/**/*.js"],
+        languageOptions: {
+            globals: globals.node,
+        },
+    },
 
-            // Overrides for specific files (e.g., test files)
-            {
-                files: ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"], // Focus on TS/TSX test files
-                languageOptions: {
-                    globals: {
-                        ...globals.jest, // or globals.vitest, etc.
-                    },
-                },
-                rules: {
-                    // Relax or change rules for test files
-                    "@typescript-eslint/no-explicit-any": "off",
-                },
-            },
+    prettierConfig,
 
-            // Node.js specific files (e.g., scripts, eslint.config.ts itself)
-            {
-                files: ["eslint.config.ts", "scripts/**/*.js"], // Keep .js for actual JS scripts
-                languageOptions: {
-                    globals: globals.node,
-                },
-                rules: {
-                    // Rules specific to Node.js environment
-                },
-            },
+]);
+</code>
+</complex-example>
 
-            // Prettier (must be last to override other formatting rules)
-            prettierConfig, // This is just the rules object from eslint-config-prettier
-        ]);
-        ```
+<quick-mapping>
+<title>Quick Mapping Reference</title>
+<mappings>
+<map>
+<legacy>extends</legacy>
+<flat>Spread imported configs or compat.extends()</flat>
+<note>No direct extends key</note>
+</map>
+<map>
+<legacy>plugins</legacy>
+<flat>plugins: { prefix: pluginObj } or compat.plugins()</flat>
+<note>Plugins are imported and keyed</note>
+</map>
+<map>
+<legacy>rules</legacy>
+<flat>rules: { ... }</flat>
+<note>Largely the same within config object</note>
+</map>
+<map>
+<legacy>parser</legacy>
+<flat>languageOptions: { parser: parserObj }</flat>
+</map>
+<map>
+<legacy>parserOptions</legacy>
+<flat>languageOptions: { parserOptions: { ... } }</flat>
+</map>
+<map>
+<legacy>env</legacy>
+<flat>languageOptions: { globals: { ...globals.envName } } or compat.env()</flat>
+<note>Use globals package</note>
+</map>
+<map>
+<legacy>globals</legacy>
+<flat>languageOptions: { globals: { ... } }</flat>
+</map>
+<map>
+<legacy>overrides</legacy>
+<flat>Separate objects in top-level config array using files key</flat>
+<note>Each override becomes distinct config object</note>
+</map>
+<map>
+<legacy>ignorePatterns</legacy>
+<flat>ignores: [...]</flat>
+</map>
+</mappings>
+</quick-mapping>
+</appendix>
 
-    - **9.3. Quick Mapping: Legacy to Flat Config Concepts:**
-        - **LLM Resource:** A quick lookup table.
-        | Legacy Key (`.eslintrc`) | Flat Config Concept (`eslint.config.ts`)                                   | Notes                                                                 |
-        |--------------------------|----------------------------------------------------------------------------|-----------------------------------------------------------------------|
-        | `extends`                | Spread imported configs, or `compat.extends()`                             | No direct `extends` key.                                              |
-        | `plugins`                | `plugins: { prefix: pluginObj }`, or `compat.plugins()`                    | Plugins are imported and keyed.                                       |
-        | `rules`                  | `rules: { ... }`                                                           | Largely the same, within a config object.                             |
-        | `parser`                 | `languageOptions: { parser: parserObj }`                                   |                                                                       |
-        | `parserOptions`          | `languageOptions: { parserOptions: { ... } }`                            |                                                                       |
-        | `env`                    | `languageOptions: { globals: { ...globals.envName } }`, or `compat.env()` | Use `globals` package.                                                |
-        | `globals`                | `languageOptions: { globals: { ... } }`                                    |                                                                       |
-        | `overrides`              | Separate objects in the top-level config array, using `files` key.       | Each override block becomes a distinct config object.                 |
-        | `ignorePatterns`         | `ignores: [...]`                                                           |                                                                       |
+</eslint9-migration-guide>
