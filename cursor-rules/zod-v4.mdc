@@ -4,81 +4,119 @@ globs:
 alwaysApply: false
 ---
 
+<zod-v4-guidelines>
+
 # Zod v4 Coding Guidelines
 
+<critical>
 **CRITICAL: Always import from 'zod/v4', never 'zod'**
+</critical>
 
+<core-rules>
 ## Core Rules
 
-1. **Every schema MUST have inferred type above it**
+<rule>
+**Every schema MUST have inferred type above it**
 
-   ```typescript
-   export type User = z.infer<typeof User>
-   export const User = z.object({...})
-   ```
+<example>
+```typescript
+export type User = z.infer<typeof User>
+export const User = z.object({...})
+```
+</example>
 
-   - **ALWAYS** place type above schema
-   - **ALWAYS** same name for type & schema
-   - **NEVER** use "Schema" suffix
-   - **ALWAYS** use JSDoc (`/** */`), never `//`
-   - **NO EXCEPTIONS** - even for internal/helper schemas
+- **ALWAYS** place type above schema
+- **ALWAYS** same name for type & schema
+- **NEVER** use "Schema" suffix
+- **ALWAYS** use JSDoc (`/** */`), never `//`
+- **NO EXCEPTIONS** - even for internal/helper schemas
+</rule>
 
-2. **String validations are standalone functions**
+<rule>
+**String validations are standalone functions**
 
-   ```typescript
-   // ❌ z.string().email()
-   // ✅ z.email(), z.url(), z.uuid(), z.ip()
-   ```
+<example>
+```typescript
+// ❌ z.string().email()
+// ✅ z.email(), z.url(), z.uuid(), z.ip()
+```
+</example>
+</rule>
 
-3. **Use `error` param sparingly** - Zod's defaults are excellent
+<rule>
+**Use `error` param sparingly** - Zod's defaults are excellent
 
-   ```typescript
-   // ❌ z.email({error: "Invalid email"}) // Redundant!
-   // ✅ z.email() // Zod says "Invalid email"
-   // ✅ Only for business logic:
-   z.string().check((val) => /[A-Z]/.test(val), {
-   	error: 'Must contain uppercase',
-   })
-   ```
+<example>
+```typescript
+// ❌ z.email({error: "Invalid email"}) // Redundant!
+// ✅ z.email() // Zod says "Invalid email"
+// ✅ Only for business logic:
+z.string().check((val) => /[A-Z]/.test(val), {
+	error: 'Must contain uppercase',
+})
+```
+</example>
+</rule>
 
-4. **Number changes**
+<rule>
+**Number changes**
 
-   - Use `z.number()` for general numbers
-   - `z.int()` for integers only (not `z.number().int()`)
-   - `z.int32()`, `z.float64()` for specific types
-   - Numbers finite by default
+- Use `z.number()` for general numbers
+- `z.int()` for integers only (not `z.number().int()`)
+- `z.int32()`, `z.float64()` for specific types
+- Numbers finite by default
+</rule>
 
-5. **Object types**
+<rule>
+**Object types**
 
-   - `z.object()` - strips unknowns (default)
-   - `z.strictObject()` - rejects extras
-   - `z.looseObject()` - allows extras
+- `z.object()` - strips unknowns (default)
+- `z.strictObject()` - rejects extras
+- `z.looseObject()` - allows extras
+</rule>
 
-6. **Custom validation**: Use `.check()` not `.superRefine()`
+<rule>
+**Custom validation**: Use `.check()` not `.superRefine()`
+</rule>
 
-7. **Error formatting**: `z.prettifyError()` or `z.treeifyError()`
+<rule>
+**Error formatting**: `z.prettifyError()` or `z.treeifyError()`
+</rule>
 
-8. **Functions**:
+<rule>
+**Functions**:
 
-   ```typescript
-   z.function({
-   	input: [z.string()],
-   	output: z.number(),
-   })
-   ```
+<example>
+```typescript
+z.function({
+	input: [z.string()],
+	output: z.number(),
+})
+```
+</example>
+</rule>
 
-9. **Records**: `z.record(keyType, valueType)`
+<rule>
+**Records**: `z.record(keyType, valueType)`
+</rule>
 
-10. **ISO formats**: `z.iso.datetime()`, `z.iso.date()`
+<rule>
+**ISO formats**: `z.iso.datetime()`, `z.iso.date()`
+</rule>
 
-11. **Other key features**:
-    - **Default**: `.default()` applies to output; use `.prefault()` for v3 behavior
-    - **File validation**: `z.file().min(1024).max(5*1024*1024).mime(['image/jpeg'])`
-    - **Pipe**: `z.pipe(z.string(), z.number())` for transformations
-    - **Async**: Use `.check(async (val) => {...})` for async validation
-    - **Arrays**: `z.array(z.email())` or `z.email().array()`
-    - **Optional**: `.optional()`, `.nullable()`, `.nullish()`
+<rule>
+**Other key features**:
+- **Default**: `.default()` applies to output; use `.prefault()` for v3 behavior
+- **File validation**: `z.file().min(1024).max(5*1024*1024).mime(['image/jpeg'])`
+- **Pipe**: `z.pipe(z.string(), z.number())` for transformations
+- **Async**: Use `.check(async (val) => {...})` for async validation
+- **Arrays**: `z.array(z.email())` or `z.email().array()`
+- **Optional**: `.optional()`, `.nullable()`, `.nullish()`
+</rule>
 
+</core-rules>
+
+<quick-reference>
 ## Quick Reference
 
 | v3                      | v4                          |
@@ -89,7 +127,9 @@ alwaysApply: false
 | `.format()`             | `z.treeifyError()`          |
 | `z.string().datetime()` | `z.iso.datetime()`          |
 | `.args().returns()`     | `{input:[...], output:...}` |
+</quick-reference>
 
+<example>
 ## Example
 
 ```typescript
@@ -106,3 +146,6 @@ export const UserReg = z.object({
 	age: z.number().min(18),
 })
 ```
+</example>
+
+</zod-v4-guidelines>
