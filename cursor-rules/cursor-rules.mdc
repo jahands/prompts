@@ -3,6 +3,7 @@ description: How to add Cursor rules (ALWAYS read before adding rules)
 globs:
 alwaysApply: false
 ---
+
 <cursor-rules-guide>
 
 # Cursor Rules - Organization and Format
@@ -78,13 +79,14 @@ Clear, concrete examples
 ```
 
 ### XML Tag Guidelines
+
 - Wrap the entire rule in a descriptive root tag (e.g., `<git-commit-guidelines>`)
 - Use semantic tags for major sections (e.g., `<rules>`, `<examples>`, `<best-practices>`)
 - Use `<rule>` tags for individual rules or guidelines
 - Use `<example>` tags with optional `type="good"` or `type="bad"` attributes
 - Keep tag names lowercase with hyphens for multi-word names
 - Close all tags properly to maintain valid XML structure
-</rule-format>
+  </rule-format>
 
 <best-practices>
 ## Best Practices
