@@ -41,84 +41,80 @@ alwaysApply: false
 <description>Rules must be written for LLM optimization. Prioritize machine readability over human readability.</description>
 
 <template>
-<code language="xml">
-<rule-name-guidelines>
+```xml
+<rule-name>
 
-<title>Rule Title - Brief Description</title>
-
-<description>What this rule helps with</description>
+<title>Rule Title</title>
 
 <context>
-<applies-to>Where this rule applies (files, directories, etc.)</applies-to>
+<applies-to>Where this rule applies</applies-to>
 </context>
 
-<overview>
-<content>High-level explanation of the system/pattern</content>
-</overview>
+<overview>High-level explanation</overview>
 
 <key-concepts>
-- First important concept
-- Second important concept
-- Additional concepts as needed
+- Important concept
+- Another concept
 </key-concepts>
 
 <rules>
 <rule>
 <name>Rule name</name>
 <requirements>
-- First requirement or detail
-- Second requirement or detail
-- Additional requirements
+- Requirement
+- Another requirement
 </requirements>
-</rule>
-
-<rule>
-<name>Another rule</name>
-<steps>
-1. First numbered step (when order matters)
-2. Second numbered step
-3. Third numbered step
-</steps>
 </rule>
 </rules>
 
 <examples>
 <example type="good">
 ```typescript
-// Good example code here
-```
-</example>
-<example type="bad">
-```typescript
-// Bad example code here
+// Code
 ```
 </example>
 </examples>
 
-</rule-name-guidelines>
-</code>
+</rule-name>
+```
 </template>
 
 <xml-tag-guidelines>
 
-<structure-requirements>
-- XML tags only - No markdown headers or formatting
+<formatting-rules>
+- No markdown headers (#, ##, ###)
+- No text formatting (**bold**, *italic*)
+- No emojis or Unicode symbols
+- No redundant labels
+- Use attributes for categorization
+- Consistent patterns throughout
+- Exception: Use markdown code blocks (```)
+- Exception: Use markdown tables for comparisons
+- XML tags only
 - Every section needs an XML tag
-- Use dash lists within tags to save tokens
-- No visual formatting (bold, italic, emojis)
-- Consistent nesting and clear parent-child relationships
-</structure-requirements>
+- Use dash lists within tags
+- Consistent nesting
+- Semantic names
+- Lowercase with hyphens
+- Attributes for metadata
+- Specific over generic
+- No redundant text
+- No markdown formatting inside XML
+- No visual elements
+- No generic tags like section, div, content
+- No human-oriented formatting
+</formatting-rules>
 
 <xml-benefits>
-- Unambiguous parsing - no regex needed for headers
-- Explicit hierarchy - parent-child relationships are clear
-- Consistent extraction - same path to data every time
-- No formatting ambiguity - ## vs ### doesn't matter
+- Unambiguous parsing
+- Explicit hierarchy
+- Consistent extraction
+- No formatting ambiguity
 </xml-benefits>
 
 <common-mistakes>
 - Mixing markdown headers with XML tags
-- Using XML tags for formatting (like <bold>)
+- Using XML tags for formatting
 - Creating deeply nested structures (>4 levels)
 - Inconsistent attribute naming
 </common-mistakes>
@@ -129,25 +125,6 @@ alwaysApply: false
 - Individual XML elements: ~4-5 tokens each
 - Choose lists when >3 similar items
 </token-optimization>
-
-<tag-design-principles>
-- Semantic names - Tags describe content, not formatting
-- Lowercase with hyphens - Use rule-name not RuleName or rule_name
-- Attributes for metadata - Use type="good", language="typescript"
-- Specific over generic - Use requirement not item, concept not point
-- No redundant text - Let tags convey meaning
-</tag-design-principles>
-
-<optimization-rules>
-- No markdown headers (#, ##, ###) - Use XML structure only
-- No text formatting (**bold**, *italic*) - Unnecessary for LLMs
-- No emojis or Unicode symbols - Use type attributes instead
-- No redundant labels - If tag is named "examples", don't add "Examples:" text
-- Use attributes for categorization - type="good" not separate good/bad sections
-- Consistent patterns throughout - Same structure for similar content
-- Exception: Use markdown code blocks (```) for all code examples
-- Exception: Use markdown tables for comparisons and mappings
-</optimization-rules>
 
 <list-patterns>
 <pattern type="unordered">
@@ -209,23 +186,14 @@ alwaysApply: false
 
 <pattern>
 <name>Structured comparisons</name>
-<code language="xml">
+```xml
 <comparison>
 <before>Old approach</before>
 <after>New approach</after>
 </comparison>
-</code>
+```
 </pattern>
 </common-patterns>
-
-<avoid>
-- Markdown formatting inside XML
-- Visual elements (emojis, symbols)
-- Redundant text that duplicates tag names
-- Generic tags like section, div, content
-- Inconsistent structure patterns
-- Human-oriented formatting
-</avoid>
 
 <benefits>
 - Unambiguous structure for parsing
@@ -263,13 +231,13 @@ alwaysApply: false
 
 <rule-complexity-guidelines>
 
-<principle>Use the minimum structure needed for clarity - no more, no less</principle>
+<principle>Use the minimum structure needed for clarity</principle>
 
 <simple-rules>
 <when>For straightforward behavioral rules (< 10 requirements)</when>
 <approach>
 - Single <rules> section with dash list
-- Skip sections that add no value (overview, concepts)
+- Skip sections that add no value
 - 10-30 lines total
 </approach>
 <examples>
@@ -315,22 +283,22 @@ alwaysApply: false
 <token-efficiency>
 - Simple rule with minimal XML: ~50-100 tokens
 - Over-structured simple rule: ~200-300 tokens
-- Complex rule with full structure: ~300-500 tokens (justified by content)
+- Complex rule with full structure: ~300-500 tokens
 </token-efficiency>
 </rule-complexity-guidelines>
 </rule-format>
 
 <best-practices>
-- Optimize for LLM parsing - Remove all human-oriented formatting
-- Use XML structure exclusively - No markdown headers or formatting
-- Dash lists within tags - Saves tokens while maintaining structure
-- Semantic tag names - Describe content, not presentation
-- Consistent patterns - Same structure for similar content types
-- Single-purpose rules - One topic per file
-- Regular updates - Keep rules current with codebase changes
-- Remove obsolete rules - Don't keep outdated information
-- No visual formatting - No bold, italic, or emojis
-- Let tags convey meaning - Avoid redundant text
+- Optimize for LLM parsing
+- Use XML structure exclusively
+- Dash lists within tags
+- Semantic tag names
+- Consistent patterns
+- Single-purpose rules
+- Regular updates
+- Remove obsolete rules
+- No visual formatting
+- Let tags convey meaning
 </best-practices>
 
 </cursor-rules-guide>
