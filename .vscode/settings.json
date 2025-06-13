@@ -1,9 +1,4 @@
 {
 	"editor.formatOnSave": true,
-	"editor.defaultFormatter": "esbenp.prettier-vscode",
-	"files.associations": {
-		"*.mdc": "xml",
-		"*.md": "xml",
-		"README.md": "markdown"
-	}
+	"editor.defaultFormatter": "esbenp.prettier-vscode"
 }
