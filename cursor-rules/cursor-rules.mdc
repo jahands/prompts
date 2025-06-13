@@ -116,6 +116,30 @@ alwaysApply: false
 - Consistent nesting and clear parent-child relationships
 </structure-requirements>
 
+<xml-benefits>
+<title>XML Benefits</title>
+- Unambiguous parsing - no regex needed for headers
+- Explicit hierarchy - parent-child relationships are clear
+- Consistent extraction - same path to data every time
+- No formatting ambiguity - ## vs ### doesn't matter
+</xml-benefits>
+
+<common-mistakes>
+<title>Common Mistakes</title>
+- Mixing markdown headers with XML tags
+- Using XML tags for formatting (like <bold>)
+- Creating deeply nested structures (>4 levels)
+- Inconsistent attribute naming
+</common-mistakes>
+
+<token-optimization>
+<title>Token Optimization</title>
+- XML tag pair: ~2-3 tokens
+- Dash list item: ~1 token
+- Individual XML elements: ~4-5 tokens each
+- Choose lists when >3 similar items
+</token-optimization>
+
 <tag-design-principles>
 <title>Tag Design Principles</title>
 - Semantic names - Tags describe content, not formatting
