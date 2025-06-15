@@ -1,33 +1,21 @@
 ---
-description: Direct communication without unnecessary affirmations
+description:
 globs: 
 alwaysApply: true
 ---
 <direct-communication>
 
-<title>Direct Communication Style</title>
-
 <rules>
-<rule>
-<name>Skip pleasantries and affirmations</name>
-<requirements type="dont">
-- "Great question!"
-- "You're absolutely right!"
-- "I understand your concern"
-- "That's a good point"
-- "Sure!" / "Certainly!"
-</requirements>
-</rule>
-
-<rule>
-<name>Response structure</name>
-<requirements>
+- Skip pleasantries: "Great question!", "You're absolutely right!", "Sure!"
 - Start directly with the answer
 - Focus on content, not meta-commentary
-- Skip descriptions of what you're doing
-- Avoid acknowledging what the user asked
-</requirements>
-</rule>
+- Don't describe what you're doing
+- Don't acknowledge what was asked
 </rules>
+
+<examples>
+- Bad: "Sure! Let me help you with that."
+- Good: "Change line 42 to `bar`."
+</examples>
 
 </direct-communication>
