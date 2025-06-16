@@ -23,7 +23,7 @@ alwaysApply: false
 - Design 5-7 prompts varying from simple to complex
 - Include 60%+ simple rules to test if guide prevents over-structuring
 - Use realistic user requests, not artificial examples
-- Document expected complexity level AND line count for each prompt
+- Document expected complexity level for each prompt (simple vs complex structure)
 - Include at least one borderline case to test decision-making
 </requirements>
 </step>
@@ -102,7 +102,7 @@ Write the rule to this file: /exact/path/to/test-rules/output.mdc"
 - Read each generated rule file
 - Compare actual results to expected results
 - Look for patterns across all test outputs
-- Document both quantitative (line counts) and qualitative (structure choices) findings
+- Document structural choices (which sections were included and why)
 - Form hypotheses about why agents made certain decisions
 </requirements>
 <example>
@@ -110,8 +110,8 @@ Write the rule to this file: /exact/path/to/test-rules/output.mdc"
 Example analysis:
 "All 5 agents added <context> and <overview> sections even for simple rules. 
 Hypothesis: The guide's complex template examples may be influencing agents 
-more than the warnings to keep things simple. Line counts ranged from 
-95-120 for rules that should have been 15-30 lines."
+more than the warnings to keep things simple. Simple formatting rules included 
+5+ sections when only title/rules/examples were needed."
 ```
 </example>
 </step>
@@ -149,7 +149,7 @@ more than the warnings to keep things simple. Line counts ranged from
 - Run exact same test prompts after each revision
 - Compare results to previous iterations
 - Stop when 80%+ of rules show appropriate complexity
-- Simple rules should stay under 30 lines
+- Simple rules should use minimal structure (title, rules, examples only)
 </requirements>
 </step>
 </process>
@@ -167,9 +167,9 @@ more than the warnings to keep things simple. Line counts ranged from
 </complex-prompts>
 
 <expected-outcomes>
-- Prompts 1-3: Should use simple template, 15-30 lines max
-- Prompts 4-5: May legitimately need complex structure, 80+ lines acceptable
-- Success metric: 3/3 simple rules stay simple
+- Prompts 1-3: Should use simple template (title, rules, examples only)
+- Prompts 4-5: May legitimately need complex structure (overview, concepts, categories)
+- Success metric: Simple rules don't include unnecessary sections
 </expected-outcomes>
 </test-prompt-examples>
 
