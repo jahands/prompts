@@ -71,6 +71,12 @@ Ask yourself:
 Remember: Empty sections add tokens but no value. Less structure often communicates more clearly.
 </decision-tree>
 
+<simplicity-first>
+<principle>Start with the absolute minimum. You can always add more if truly needed.</principle>
+<warning>If you're thinking "maybe I should add..." - DON'T. Only add what's essential.</warning>
+<rule-of-thumb>If your simple rule exceeds 50 lines, you're probably over-structuring it.</rule-of-thumb>
+</simplicity-first>
+
 <rule-complexity-principle>
 Use the minimum XML structure needed for clarity. Most rules only need:
 - A title
@@ -113,6 +119,14 @@ alwaysApply: false
 ```
 
 <stop-here>For most rules, you're done. Only add more sections if the rule is genuinely complex.</stop-here>
+
+<example-guidelines>
+- Keep examples concise and focused
+- One good example is often enough
+- Only add bad examples if the mistake is non-obvious
+- Each example should be <20 lines unless demonstrating something complex
+- Don't show every possible variation - trust the LLM to generalize
+</example-guidelines>
 </simple-template>
 
 <complex-template>
@@ -321,6 +335,7 @@ alwaysApply: false
 - <key-concepts>: ONLY if introducing new technical concepts
 - <categories>: ONLY if organizing 10+ related items
 - Multiple <rule> blocks: ONLY if rules have different contexts
+- Multiple examples: ONLY if showing fundamentally different patterns
 </section-guidelines>
 
 <examples-of-overuse>
@@ -359,6 +374,24 @@ function example() {
 
 </indentation-standards>
 ```
+</example>
+
+<example type="even-simpler">
+```xml
+<skip-pleasantries>
+
+<title>Skip Pleasantries in Responses</title>
+
+<rules>
+- Don't start responses with "Great question!", "You're right!", etc.
+- Get straight to the answer
+- Skip meta-commentary about the question
+- Avoid filler phrases like "Let me help you with that"
+</rules>
+
+</skip-pleasantries>
+```
+<note>Notice: No examples needed when the rule is self-explanatory!</note>
 </example>
 
 <example type="complex-appropriate">
