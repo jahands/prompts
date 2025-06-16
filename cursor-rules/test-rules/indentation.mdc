@@ -1,0 +1,82 @@
+---
+description: JavaScript/TypeScript indentation standards - always use 2 spaces, never tabs
+globs:
+alwaysApply: false
+---
+<javascript-typescript-indentation>
+
+<title>JavaScript/TypeScript Indentation Standards</title>
+
+<context>
+<applies-to>All JavaScript and TypeScript files (.js, .jsx, .ts, .tsx)</applies-to>
+</context>
+
+<rules>
+- Always use 2 spaces for indentation
+- Never use tabs for indentation
+- Configure editor to show spaces when tab key is pressed
+- Maintain consistent indentation throughout the file
+- Each nested block increases indentation by 2 spaces
+- Align multi-line statements with the opening delimiter
+</rules>
+
+<examples>
+<example type="good">
+```typescript
+function processData(items: string[]) {
+  const results = items.map((item) => {
+    if (item.length > 0) {
+      return item.toUpperCase();
+    }
+    return '';
+  });
+  
+  return results.filter((result) => 
+    result !== '' &&
+    result.length < 10
+  );
+}
+```
+</example>
+
+<example type="bad">
+```typescript
+function processData(items: string[]) {
+	const results = items.map((item) => {
+			if (item.length > 0) {
+					return item.toUpperCase();
+			}
+			return '';
+	});
+	
+	return results.filter((result) => 
+			result !== '' &&
+			result.length < 10
+	);
+}
+```
+</example>
+</examples>
+
+<configuration>
+<editor-settings>
+```json
+{
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
+  "editor.detectIndentation": false
+}
+```
+</editor-settings>
+
+<prettier-config>
+```json
+{
+  "tabWidth": 2,
+  "useTabs": false
+}
+```
+</prettier-config>
+</configuration>
+
+</javascript-typescript-indentation>

@@ -1,0 +1,177 @@
+---
+description: Rules for organizing React components - component size limits, hook extraction, and test colocation
+globs:
+alwaysApply: false
+---
+<react-component-organization>
+
+<title>React Component Organization Rules</title>
+
+<context>
+<applies-to>React components, custom hooks, and their associated test files</applies-to>
+</context>
+
+<overview>Keep React components maintainable by limiting their size, extracting custom hooks to separate files, and colocating tests with their components for better organization and discoverability.</overview>
+
+<key-concepts>
+- Component size limits for readability
+- Hook extraction for reusability
+- Test colocation for maintainability
+- Clear file naming conventions
+</key-concepts>
+
+<rules>
+
+<rule>
+<name>Component Size Limits</name>
+<requirements>
+- Keep components under 200 lines of code
+- Extract complex logic into custom hooks
+- Split large components into smaller sub-components
+- Move non-UI logic to utility functions
+- Exclude imports and type definitions from line count
+</requirements>
+</rule>
+
+<rule>
+<name>Custom Hook Extraction</name>
+<requirements>
+- Extract hooks to separate files when used by multiple components
+- Place hooks in adjacent `hooks/` directory or component-specific hook file
+- Name hook files as `use{HookName}.ts` or `use{HookName}.tsx`
+- Export hooks with named exports
+- Include JSDoc comments for complex hooks
+</requirements>
+</rule>
+
+<rule>
+<name>Test File Colocation</name>
+<requirements>
+- Place test files next to their components
+- Use naming pattern: `ComponentName.test.tsx` or `ComponentName.spec.tsx`
+- Mirror component file structure in tests
+- Keep test files in same directory as component
+- Group related test utilities in `__tests__/utils/` if needed
+</requirements>
+</rule>
+
+<rule>
+<name>File Organization Structure</name>
+<requirements>
+- Component file: `ComponentName.tsx`
+- Component test: `ComponentName.test.tsx`
+- Component-specific hook: `useComponentName.ts`
+- Shared hooks in: `hooks/useSharedHook.ts`
+- Component styles: `ComponentName.module.css` (if using CSS modules)
+</requirements>
+</rule>
+
+</rules>
+
+<examples>
+
+<example type="good">
+```typescript
+// UserProfile.tsx (150 lines)
+import React from 'react';
+import { useUserData } from './useUserData';
+import { useUserPermissions } from '../hooks/useUserPermissions';
+
+export function UserProfile({ userId }: UserProfileProps) {
+  const { data, loading, error } = useUserData(userId);
+  const permissions = useUserPermissions(userId);
+  
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage error={error} />;
+  
+  return (
+    <div className="user-profile">
+      <ProfileHeader user={data} />
+      <ProfileContent user={data} permissions={permissions} />
+    </div>
+  );
+}
+
+// useUserData.ts
+import { useState, useEffect } from 'react';
+import { fetchUser } from '../api/users';
+
+export function useUserData(userId: string) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    // Fetch logic here
+  }, [userId]);
+  
+  return { data, loading, error };
+}
+
+// UserProfile.test.tsx
+import { render, screen } from '@testing-library/react';
+import { UserProfile } from './UserProfile';
+
+describe('UserProfile', () => {
+  it('displays user information', () => {
+    render(<UserProfile userId="123" />);
+    // Test assertions
+  });
+});
+```
+</example>
+
+<example type="bad">
+```typescript
+// UserProfile.tsx (350+ lines - too large!)
+import React, { useState, useEffect } from 'react';
+
+export function UserProfile({ userId }: UserProfileProps) {
+  // 50 lines of state and hooks
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [permissions, setPermissions] = useState([]);
+  // ... more state
+  
+  // 100 lines of effects and data fetching
+  useEffect(() => {
+    // Complex data fetching logic
+  }, [userId]);
+  
+  // 50 lines of event handlers
+  const handleUpdate = () => {
+    // Complex update logic
+  };
+  
+  // 150 lines of JSX
+  return (
+    <div>
+      {/* Massive component with all logic inline */}
+    </div>
+  );
+}
+
+// Tests in completely different directory structure
+// tests/components/user/profile.test.tsx (hard to find!)
+```
+</example>
+
+</examples>
+
+<file-structure-example>
+```
+src/
+  components/
+    UserProfile/
+      UserProfile.tsx          (< 200 lines)
+      UserProfile.test.tsx     (colocated test)
+      useUserData.ts          (component-specific hook)
+      ProfileHeader.tsx       (sub-component)
+      ProfileHeader.test.tsx  (sub-component test)
+    hooks/
+      useUserPermissions.ts   (shared hook)
+      useUserPermissions.test.ts
+```
+</file-structure-example>
+
+</react-component-organization>

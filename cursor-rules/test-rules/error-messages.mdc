@@ -1,0 +1,89 @@
+---
+description: Provide contextual error messages with user intent and suggested fixes
+globs:
+alwaysApply: false
+---
+<error-message-handling>
+
+<title>Contextual Error Messages</title>
+
+<context>
+<applies-to>All error messages and failure scenarios</applies-to>
+</context>
+
+<overview>When errors occur, provide clear context about what the user was attempting and suggest actionable fixes</overview>
+
+<rules>
+<rule>
+<name>Error message structure</name>
+<requirements>
+- Always explain what the user was trying to do
+- Include the specific error that occurred
+- Provide at least one suggested fix
+- Reference relevant documentation or examples when available
+</requirements>
+</rule>
+
+<rule>
+<name>Context requirements</name>
+<requirements>
+- State the user's original intent or goal
+- Identify the step where the error occurred
+- Explain why the error happened in simple terms
+- Avoid technical jargon unless necessary
+</requirements>
+</rule>
+
+<rule>
+<name>Suggested fixes</name>
+<requirements>
+- Provide actionable steps to resolve the error
+- Order fixes from most likely to least likely
+- Include code examples when applicable
+- Mention common causes and quick checks
+</requirements>
+</rule>
+</rules>
+
+<examples>
+<example type="bad">
+```
+Error: Connection refused
+```
+</example>
+
+<example type="good">
+```
+Error: Unable to connect to the database while trying to fetch user data.
+
+What happened: The database connection was refused on port 5432.
+
+Suggested fixes:
+1. Check if the database service is running: `sudo systemctl status postgresql`
+2. Verify the connection parameters in your .env file
+3. Ensure the database port (5432) is not blocked by a firewall
+4. Try connecting manually: `psql -h localhost -p 5432 -U your_user -d your_db`
+
+Common cause: The database service may have stopped unexpectedly.
+```
+</example>
+
+<example type="good">
+```
+Error: Failed to build your React application.
+
+What happened: The build process encountered a syntax error in App.jsx on line 42.
+
+The issue: You have an unclosed JSX tag - missing closing </div> tag.
+
+To fix this:
+1. Open src/App.jsx
+2. Go to line 42
+3. Add the missing </div> tag before the component's closing brace
+
+Quick tip: Your editor's bracket matching can help identify unclosed tags.
+```
+</example>
+</examples>
+
+</error-message-handling>
