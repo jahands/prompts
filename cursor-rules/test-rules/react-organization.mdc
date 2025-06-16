@@ -1,5 +1,5 @@
 ---
-description: Guidelines for organizing React components - component size limits, hook extraction, and test colocation
+description: React component organization - component size limits, hook extraction, and test colocation
 globs:
 alwaysApply: false
 ---
@@ -9,13 +9,13 @@ alwaysApply: false
 
 <rules>
 - Keep React components under 200 lines
-- Extract complex logic into custom hooks when component exceeds 150 lines
-- Extract reusable UI logic into custom hooks in separate files
-- Name hook files with `use` prefix: `useUserData.ts`, `useFormValidation.ts`
-- Place custom hooks in adjacent `hooks/` directory or same directory as component
+- Extract custom hooks to separate files in a `hooks/` directory
+- Name hook files as `use{HookName}.ts` or `use{HookName}.tsx`
 - Colocate test files with components using `.test.tsx` or `.spec.tsx` suffix
-- Test file should be in same directory as component file
-- When splitting large components, create a component folder with index file
+- Place test files in the same directory as the component they test
+- When a component exceeds 150 lines, consider extracting sub-components
+- Group related components in feature-based directories
+- Export hooks from an index file for cleaner imports
 </rules>
 
 <examples>
@@ -24,51 +24,12 @@ alwaysApply: false
 src/
   components/
     UserProfile/
-      UserProfile.tsx        # Main component (<200 lines)
-      UserProfile.test.tsx   # Colocated test
+      UserProfile.tsx         (< 200 lines)
+      UserProfile.test.tsx    (colocated test)
+      UserAvatar.tsx         (extracted sub-component)
       hooks/
-        useUserData.ts       # Extracted custom hook
-        useUserPrefs.ts      # Another custom hook
-    Button/
-      Button.tsx            # Simple component
-      Button.test.tsx       # Colocated test
-```
-</example>
-
-<example type="good">
-```typescript
-// UserProfile.tsx
-import { useUserData } from './hooks/useUserData';
-import { useUserPrefs } from './hooks/useUserPrefs';
-
-export function UserProfile({ userId }: Props) {
-  const { data, loading, error } = useUserData(userId);
-  const { preferences, updatePreference } = useUserPrefs(userId);
-  
-  // Component logic focused on rendering (<200 lines)
-  return (
-    <div>
-      {/* UI implementation */}
-    </div>
-  );
-}
-```
-</example>
-
-<example type="good">
-```typescript
-// hooks/useUserData.ts
-export function useUserData(userId: string) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  useEffect(() => {
-    // Complex data fetching logic extracted from component
-  }, [userId]);
-  
-  return { data, loading, error };
-}
+        useUserData.ts       (extracted custom hook)
+        index.ts             (exports all hooks)
 ```
 </example>
 </examples>

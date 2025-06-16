@@ -1,63 +1,32 @@
 ---
-description: JavaScript and TypeScript files must use 2 spaces for indentation, never tabs
+description: JavaScript/TypeScript indentation standards using 2 spaces
 globs:
 alwaysApply: false
 ---
-<javascript-typescript-indentation>
+<indentation-standards>
 
-<title>JavaScript/TypeScript Indentation Standards</title>
+<title>JavaScript/TypeScript Indentation</title>
 
 <rules>
 - Always use 2 spaces for indentation
 - Never use tabs
 - Configure editors to insert spaces when tab key is pressed
 - Each nested level increases indentation by exactly 2 spaces
-- Maintain consistent indentation throughout the file
-- Line continuations should align with the opening delimiter
+- Maintain consistent indentation throughout the entire file
 </rules>
 
 <examples>
 <example type="good">
-```javascript
-function processData(items) {
-  if (items.length > 0) {
-    return items.map(item => {
-      const result = transform(item);
-      return result;
-    });
-  }
-}
-
-const config = {
-  name: 'app',
-  settings: {
-    debug: true,
-    verbose: false
-  }
-};
-```
-</example>
-
-<example type="good">
 ```typescript
-class UserService {
-  constructor(
-    private readonly database: Database,
-    private readonly logger: Logger
-  ) {}
-
-  async getUser(id: string): Promise<User> {
-    try {
-      const user = await this.database.findOne(id);
-      return user;
-    } catch (error) {
-      this.logger.error('Failed to fetch user', error);
-      throw error;
-    }
+function processData(items: string[]) {
+  if (items.length > 0) {
+    items.forEach((item) => {
+      console.log(`Processing: ${item}`);
+    });
   }
 }
 ```
 </example>
 </examples>
 
-</javascript-typescript-indentation>
+</indentation-standards>

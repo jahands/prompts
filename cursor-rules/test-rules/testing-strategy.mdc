@@ -1,5 +1,5 @@
 ---
-description: Comprehensive testing practices including unit/integration tests, naming conventions, mocking strategies, test data management, and coverage requirements
+description: Comprehensive testing practices including unit tests, integration tests, naming conventions, mocking, test data, and coverage
 globs:
 alwaysApply: false
 ---
@@ -7,222 +7,241 @@ alwaysApply: false
 
 <title>Comprehensive Testing Strategy</title>
 
-<overview>Guidelines for test structure, naming, mocking, data management, and coverage across unit and integration tests</overview>
+<context>
+<applies-to>All test files, test suites, and testing utilities across the codebase</applies-to>
+</context>
+
+<overview>Guidelines for structuring tests, managing test data, mocking dependencies, and ensuring adequate coverage across unit and integration tests</overview>
 
 <key-concepts>
+- Arrange-Act-Assert pattern
 - Test isolation and independence
-- Arrange-Act-Assert (AAA) pattern
-- Test data builders and fixtures
-- Mock boundaries and strategies
-- Coverage metrics and requirements
+- Mocking vs stubbing vs faking
+- Test data factories
+- Coverage metrics and thresholds
+- Test pyramid principles
 </key-concepts>
 
 <rules>
 <rule>
-<name>Test Structure and Organization</name>
+<name>Unit Test Structure</name>
 <requirements>
-- Follow AAA pattern: Arrange, Act, Assert with clear visual separation
-- One assertion focus per test (multiple assertions allowed for same concept)
-- Group related tests using describe/context blocks
-- Place test files adjacent to source: `module.ts` → `module.test.ts`
-- Separate unit tests from integration tests in distinct directories
+- Follow Arrange-Act-Assert (AAA) pattern
+- One assertion per test preferred
+- Each test must be independent
+- Use descriptive test names that explain what and why
+- Group related tests in describe blocks
+- Setup and teardown in beforeEach/afterEach
+- Avoid test interdependencies
+- Keep tests focused and atomic
+</requirements>
+</rule>
+
+<rule>
+<name>Integration Test Patterns</name>
+<requirements>
+- Test complete user workflows
+- Use real dependencies when possible
+- Mock only external services
+- Test database transactions end-to-end
+- Verify API contracts
+- Include error scenarios
+- Test timeout and retry behaviors
+- Clean up test data after each run
 </requirements>
 </rule>
 
 <rule>
 <name>Test Naming Conventions</name>
 <requirements>
-- Test suites: Use noun describing what is being tested
-- Test cases: Start with "should" followed by expected behavior
-- Include context in name when behavior varies by input
-- Use `it()` for individual tests, `describe()` for grouping
-- Integration tests: Prefix with scenario or user journey
-</requirements>
-</rule>
-
-<rule>
-<name>Unit Test Requirements</name>
-<requirements>
-- Test single units in isolation (functions, classes, components)
-- Mock all external dependencies (databases, APIs, file systems)
-- Execute in milliseconds, not seconds
-- No network calls, no database access, no file I/O
-- Test edge cases, error conditions, and happy paths
-</requirements>
-</rule>
-
-<rule>
-<name>Integration Test Requirements</name>
-<requirements>
-- Test interaction between multiple components
-- Use real implementations where practical, test doubles where necessary
-- Test database transactions and rollbacks
-- Verify API contracts and error responses
-- Clean up test data after each test run
+- describe blocks: Class or module name
+- it blocks: "should [expected behavior] when [condition]"
+- Test files: `*.test.ts` or `*.spec.ts`
+- Integration tests: `*.integration.test.ts`
+- E2E tests: `*.e2e.test.ts`
+- Use consistent terminology across test suite
+- Avoid abbreviations in test names
 </requirements>
 </rule>
 
 <rule>
 <name>Mocking Strategies</name>
 <requirements>
-- Mock at architectural boundaries (repositories, external services)
-- Prefer test doubles over mocking frameworks when simple
-- Use builders for complex mock data
-- Verify mock interactions only when behavior depends on it
-- Never mock the unit under test
+- Mock at the boundaries (external services, databases)
+- Prefer dependency injection for testability
+- Use test doubles appropriately: mocks for behavior, stubs for state
+- Avoid mocking internal modules
+- Create reusable mock factories
+- Type-safe mocks matching real interfaces
 - Reset mocks between tests
+- Document complex mock behaviors
 </requirements>
 </rule>
 
 <rule>
 <name>Test Data Management</name>
 <requirements>
-- Use factory functions or builders for test data creation
-- Randomize variable data, fix structural data
-- Share common test fixtures in dedicated files
-- Make test data intentions explicit through naming
-- Avoid hardcoded magic values
-- Generate minimal data needed for each test
+- Use factories for test object creation
+- Randomize test data to catch edge cases
+- Minimal data for each test case
+- Explicit about important values
+- Use builders for complex objects
+- Separate test data from test logic
+- Version controlled test fixtures
+- Avoid hard-coded values
 </requirements>
 </rule>
 
 <rule>
 <name>Coverage Requirements</name>
 <requirements>
-- Minimum 80% code coverage for new code
-- 100% coverage for critical business logic
-- Focus on branch coverage over line coverage
-- Exclude generated code and interfaces from coverage
-- Write tests for uncovered edge cases, not just for metrics
-- Integration tests supplement, don't replace unit test coverage
+- Minimum 80% code coverage
+- 100% coverage for critical paths
+- Branch coverage over line coverage
+- Exclude generated code from metrics
+- Coverage reports in CI pipeline
+- Track coverage trends over time
+- Focus on meaningful tests over coverage numbers
+- Document intentionally uncovered code
 </requirements>
 </rule>
 </rules>
 
 <examples>
-<example type="good">
+<example type="unit-test-structure">
 ```typescript
-// user.service.test.ts
 describe('UserService', () => {
-  let service: UserService;
-  let mockRepository: jest.Mocked<UserRepository>;
-  
+  let userService: UserService;
+  let mockUserRepository: jest.Mocked<UserRepository>;
+
   beforeEach(() => {
-    mockRepository = createMockUserRepository();
-    service = new UserService(mockRepository);
+    mockUserRepository = createMockUserRepository();
+    userService = new UserService(mockUserRepository);
   });
 
   describe('createUser', () => {
-    it('should create user with hashed password', async () => {
+    it('should create a new user when valid data is provided', async () => {
       // Arrange
-      const userData = buildUser({ 
-        email: 'test@example.com',
-        password: 'plaintext' 
-      });
-      mockRepository.save.mockResolvedValue(userData);
-      
+      const userData = buildUser({ email: 'test@example.com' });
+      mockUserRepository.save.mockResolvedValue(userData);
+
       // Act
-      const result = await service.createUser(userData);
-      
+      const result = await userService.createUser(userData);
+
       // Assert
-      expect(result.password).not.toBe('plaintext');
-      expect(result.password).toMatch(/^\$2[ayb]\$.{56}$/);
-      expect(mockRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          email: 'test@example.com',
-          password: expect.stringMatching(/^\$2[ayb]\$.{56}$/)
-        })
-      );
+      expect(result).toEqual(userData);
+      expect(mockUserRepository.save).toHaveBeenCalledWith(userData);
     });
 
-    it('should throw when email already exists', async () => {
+    it('should throw ValidationError when email is invalid', async () => {
       // Arrange
-      mockRepository.findByEmail.mockResolvedValue(existingUser);
-      
+      const userData = buildUser({ email: 'invalid-email' });
+
       // Act & Assert
-      await expect(service.createUser(newUserData))
-        .rejects.toThrow('Email already registered');
+      await expect(userService.createUser(userData))
+        .rejects.toThrow(ValidationError);
     });
   });
 });
 ```
 </example>
 
-<example type="integration">
+<example type="test-data-factory">
 ```typescript
-// api/users.integration.test.ts
-describe('User API Integration', () => {
-  let app: Application;
-  let testDb: TestDatabase;
-  
-  beforeAll(async () => {
-    testDb = await createTestDatabase();
-    app = createApp(testDb);
-  });
-  
-  afterAll(async () => {
-    await testDb.cleanup();
-  });
-  
-  beforeEach(async () => {
-    await testDb.truncate(['users', 'sessions']);
-  });
-
-  describe('POST /users', () => {
-    it('should create user and return 201 with user data', async () => {
-      // Arrange
-      const userData = {
-        email: 'integration@test.com',
-        password: 'SecurePass123!',
-        name: 'Test User'
-      };
-      
-      // Act
-      const response = await request(app)
-        .post('/users')
-        .send(userData);
-      
-      // Assert
-      expect(response.status).toBe(201);
-      expect(response.body).toMatchObject({
-        id: expect.any(String),
-        email: userData.email,
-        name: userData.name
-      });
-      expect(response.body).not.toHaveProperty('password');
-      
-      // Verify database state
-      const dbUser = await testDb.query('SELECT * FROM users WHERE email = ?', [userData.email]);
-      expect(dbUser).toHaveLength(1);
-    });
-  });
+// Test data factory with builder pattern
+export const buildUser = (overrides?: Partial<User>): User => ({
+  id: faker.datatype.uuid(),
+  email: faker.internet.email(),
+  name: faker.name.fullName(),
+  createdAt: faker.date.past(),
+  role: 'user',
+  ...overrides,
 });
-```
-</example>
 
-<example type="test-data-builder">
-```typescript
-// test/builders/user.builder.ts
-export function buildUser(overrides: Partial<User> = {}): User {
-  return {
-    id: faker.datatype.uuid(),
-    email: faker.internet.email(),
-    name: faker.name.fullName(),
-    createdAt: faker.date.past(),
-    role: 'user',
-    ...overrides
-  };
-}
-
-export function buildAdminUser(overrides: Partial<User> = {}): User {
-  return buildUser({ role: 'admin', ...overrides });
-}
+export const buildAdminUser = (overrides?: Partial<User>): User => 
+  buildUser({ role: 'admin', ...overrides });
 
 // Usage in tests
 const testUser = buildUser({ email: 'specific@test.com' });
-const adminUser = buildAdminUser();
+const randomUsers = Array.from({ length: 5 }, () => buildUser());
+```
+</example>
+
+<example type="integration-test">
+```typescript
+describe('POST /api/users (Integration)', () => {
+  let app: Application;
+  let testDb: TestDatabase;
+
+  beforeAll(async () => {
+    testDb = await createTestDatabase();
+    app = createApp({ database: testDb });
+  });
+
+  afterEach(async () => {
+    await testDb.cleanAll();
+  });
+
+  afterAll(async () => {
+    await testDb.disconnect();
+  });
+
+  it('should create user and send welcome email', async () => {
+    // Arrange
+    const emailService = mockEmailService();
+    const userData = { email: 'new@user.com', name: 'Test User' };
+
+    // Act
+    const response = await request(app)
+      .post('/api/users')
+      .send(userData)
+      .expect(201);
+
+    // Assert
+    const dbUser = await testDb.users.findByEmail(userData.email);
+    expect(dbUser).toBeDefined();
+    expect(response.body.id).toBe(dbUser.id);
+    expect(emailService.sendWelcomeEmail).toHaveBeenCalledWith(userData.email);
+  });
+});
 ```
 </example>
 </examples>
+
+<test-organization>
+<structure>
+```
+src/
+  components/
+    Button/
+      Button.tsx
+      Button.test.tsx
+  services/
+    UserService.ts
+    UserService.test.ts
+    UserService.integration.test.ts
+  __tests__/
+    e2e/
+      user-flow.e2e.test.ts
+    fixtures/
+      users.json
+    factories/
+      userFactory.ts
+    utils/
+      testDatabase.ts
+```
+</structure>
+</test-organization>
+
+<anti-patterns>
+- Testing implementation details instead of behavior
+- Excessive mocking leading to brittle tests
+- Shared state between tests
+- Testing framework code
+- Snapshot tests for business logic
+- Ignoring flaky tests
+- Testing private methods directly
+- Large test setups indicating design issues
+</anti-patterns>
 
 </testing-strategy>

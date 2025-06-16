@@ -1,24 +1,19 @@
 ---
-description: Enforce proper error handling for async operations with structured logging
+description: Enforces try-catch blocks for async operations with structured error logging
 globs:
 alwaysApply: false
 ---
 <async-error-handling>
 
-<title>Async Operations Error Handling</title>
+<title>Async Error Handling with Structured Logging</title>
 
 <rules>
 - Always wrap async operations in try-catch blocks
-- Never let async errors propagate without handling
-- Log all errors with structured format including:
-  - ISO timestamp (new Date().toISOString())
-  - Error type classification (e.g., 'network', 'validation', 'database')
-  - Full error message and stack trace
-  - User context (userId, sessionId, requestId when available)
-  - Operation context (function name, input parameters)
-- Use consistent error logging structure across the codebase
-- Rethrow errors after logging when appropriate for upstream handling
-- Add specific error handling for expected failure modes
+- Log errors with structured format including timestamp, error type, and user context
+- Use consistent error object structure across the application
+- Include error stack trace in development environments
+- Sanitize sensitive information before logging
+- Implement proper error recovery or propagation
 </rules>
 
 <examples>
@@ -31,50 +26,16 @@ async function fetchUserData(userId: string): Promise<User> {
   } catch (error) {
     logger.error({
       timestamp: new Date().toISOString(),
-      errorType: 'network',
+      errorType: error.name || 'UnknownError',
       message: error.message,
-      stack: error.stack,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       context: {
         userId,
         operation: 'fetchUserData',
         endpoint: `/users/${userId}`
       }
     });
-    throw new UserFetchError(`Failed to fetch user ${userId}`, { cause: error });
-  }
-}
-```
-</example>
-
-<example type="good">
-```javascript
-async function processPayment(paymentData, userContext) {
-  try {
-    const result = await paymentGateway.charge(paymentData);
-    return result;
-  } catch (error) {
-    const errorLog = {
-      timestamp: new Date().toISOString(),
-      errorType: error.code === 'INSUFFICIENT_FUNDS' ? 'payment_validation' : 'payment_processing',
-      message: error.message,
-      stack: error.stack,
-      context: {
-        userId: userContext.userId,
-        sessionId: userContext.sessionId,
-        operation: 'processPayment',
-        amount: paymentData.amount,
-        currency: paymentData.currency
-      }
-    };
-    
-    logger.error(errorLog);
-    
-    // Handle specific error cases
-    if (error.code === 'INSUFFICIENT_FUNDS') {
-      throw new InsufficientFundsError(error.message);
-    }
-    
-    throw new PaymentProcessingError('Payment processing failed', { cause: error });
+    throw new ApplicationError('Failed to fetch user data', { cause: error });
   }
 }
 ```

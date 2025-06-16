@@ -3,19 +3,19 @@ description: Naming conventions for variables, functions, classes, types, and co
 globs:
 alwaysApply: false
 ---
-
 <naming-conventions>
 
-<title>JavaScript/TypeScript Naming Conventions</title>
+<title>Naming Conventions</title>
 
 <rules>
 - Use camelCase for variables and functions
 - Use PascalCase for classes and types
 - Use UPPER_SNAKE_CASE for constants
-- Start boolean variables with is, has, or should
-- Use descriptive names that clearly indicate purpose
-- Avoid single-letter variables except in loop counters
-- Use singular names for single values, plural for arrays/collections
+- Start variable names with lowercase letters
+- Start class and type names with uppercase letters
+- Use descriptive names that convey purpose
+- Avoid single-letter variables except in loops
+- Spell out acronyms in camelCase (apiKey not APIKey)
 </rules>
 
 <examples>
@@ -23,25 +23,15 @@ alwaysApply: false
 ```typescript
 // Variables and functions - camelCase
 const userName = "John";
-const userAge = 25;
-const isActive = true;
-const hasPermission = false;
-
-function calculateTotalPrice(items: Item[]): number {
-  return items.reduce((total, item) => total + item.price, 0);
-}
+let itemCount = 0;
+function calculateTotal(items) { }
+const getUserData = () => { };
 
 // Classes and types - PascalCase
-class UserAccount {
-  constructor(private email: string) {}
-}
-
-interface PaymentMethod {
-  type: string;
-  lastFourDigits: string;
-}
-
-type OrderStatus = "pending" | "shipped" | "delivered";
+class UserAccount { }
+interface ProductDetails { }
+type OrderStatus = "pending" | "shipped";
+enum PaymentMethod { }
 
 // Constants - UPPER_SNAKE_CASE
 const MAX_RETRY_ATTEMPTS = 3;
