@@ -10,42 +10,37 @@ alwaysApply: false
 
 <rules>
 - Always wrap async operations in try-catch blocks
-- Never use unhandled async operations or floating promises
-- Log all errors with structured logging that includes:
-  - ISO timestamp (`new Date().toISOString()`)
-  - Error type (error.name or custom classification)
-  - User context (user ID, session ID, request ID)
-  - Stack trace for debugging
-  - Operation context (function name, API endpoint, etc.)
-- Use async/await syntax over Promise.then().catch()
-- Handle errors at the appropriate level - don't catch and re-throw without adding context
-- For critical operations, implement retry logic with exponential backoff
-- Always return meaningful error responses to clients
+- Log all errors with structured logging format
+- Include timestamp in ISO 8601 format
+- Include error type classification (e.g., NetworkError, ValidationError, DatabaseError)
+- Include user context when available (user ID, session ID, request ID)
+- Preserve original error stack traces
+- Use consistent error logging utility/service
+- Never swallow errors silently
+- Re-throw errors after logging when propagation is needed
 </rules>
 
 <examples>
 <example type="good">
 ```typescript
-async function fetchUserData(userId: string, requestId: string): Promise<User> {
+async function fetchUserData(userId: string, sessionId: string): Promise<UserData> {
   try {
     const response = await api.get(`/users/${userId}`);
     return response.data;
   } catch (error) {
     logger.error({
       timestamp: new Date().toISOString(),
-      errorType: error.name || 'UnknownError',
+      errorType: error instanceof NetworkError ? 'NetworkError' : 'UnknownError',
       message: error.message,
       stack: error.stack,
       context: {
         userId,
-        requestId,
+        sessionId,
         operation: 'fetchUserData',
         endpoint: `/users/${userId}`
       }
     });
-    
-    // Re-throw with additional context for upstream handling
-    throw new UserFetchError(`Failed to fetch user ${userId}`, { cause: error });
+    throw error;
   }
 }
 ```
@@ -53,72 +48,25 @@ async function fetchUserData(userId: string, requestId: string): Promise<User> {
 
 <example type="good">
 ```javascript
-// With retry logic for critical operations
-async function saveTransaction(transaction, userId, sessionId) {
-  const maxRetries = 3;
-  let lastError;
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const result = await db.transactions.create(transaction);
-      return result;
-    } catch (error) {
-      lastError = error;
-      
-      logger.error({
-        timestamp: new Date().toISOString(),
-        errorType: error.code || error.name,
-        message: error.message,
-        stack: error.stack,
-        context: {
-          userId,
-          sessionId,
-          operation: 'saveTransaction',
-          transactionId: transaction.id,
-          attempt,
-          maxRetries
-        }
-      });
-      
-      if (attempt < maxRetries) {
-        // Exponential backoff: 1s, 2s, 4s
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt - 1) * 1000));
-      }
-    }
-  }
-  
-  throw new TransactionError('Failed to save transaction after retries', { 
-    cause: lastError,
-    attempts: maxRetries 
-  });
-}
-```
-</example>
-
-<example type="bad">
-```typescript
-// Missing try-catch
-async function deleteUser(userId: string) {
-  const user = await db.users.findById(userId);
-  await user.delete();
-  return { success: true };
-}
-
-// Insufficient error logging
-async function updateProfile(userId: string, data: any) {
+async function processPayment(paymentData, requestId) {
   try {
-    return await db.users.update(userId, data);
+    const result = await paymentService.process(paymentData);
+    return result;
   } catch (error) {
-    console.log('Error:', error); // Missing structured logging
-    throw error;
+    await errorLogger.log({
+      timestamp: new Date().toISOString(),
+      errorType: classifyError(error),
+      message: error.message,
+      stack: error.stack,
+      context: {
+        userId: paymentData.userId,
+        requestId,
+        operation: 'processPayment',
+        amount: paymentData.amount
+      }
+    });
+    throw new ProcessingError('Payment processing failed', { cause: error });
   }
-}
-
-// Floating promise
-function processQueue() {
-  queue.forEach(item => {
-    processItem(item); // Missing await and try-catch
-  });
 }
 ```
 </example>

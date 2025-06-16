@@ -1,5 +1,5 @@
 ---
-description: JavaScript/TypeScript indentation standards using 2 spaces
+description: JavaScript/TypeScript indentation standards - always use 2 spaces, never tabs
 globs:
 alwaysApply: false
 ---
@@ -13,7 +13,6 @@ alwaysApply: false
 - Configure editors to insert spaces when tab key is pressed
 - Each nested level increases indentation by exactly 2 spaces
 - Maintain consistent indentation throughout the entire file
-- Use 2 spaces for continuation lines
 </rules>
 
 <examples>
@@ -21,45 +20,22 @@ alwaysApply: false
 ```typescript
 function processData(items: string[]) {
   if (items.length > 0) {
-    return items.map(item => {
-      const processed = item.trim();
-      return processed.toUpperCase();
+    items.forEach((item) => {
+      console.log(item);
     });
   }
-  
-  return [];
 }
 
 class UserService {
-  constructor(
-    private readonly database: Database,
-    private readonly logger: Logger
-  ) {}
-  
-  async getUser(id: string): Promise<User> {
-    try {
-      const user = await this.database.findById(id);
-      return user;
-    } catch (error) {
-      this.logger.error('Failed to get user', error);
-      throw error;
-    }
-  }
-}
-```
-</example>
+  private users: User[] = [];
 
-<example type="bad">
-```typescript
-function processData(items: string[]) {
-	if (items.length > 0) {  // Using tabs
-		return items.map(item => {
-    const processed = item.trim();  // Inconsistent spacing
-			return processed.toUpperCase();  // Mixed tabs and spaces
-		});
-	}
-	
-	return [];
+  async getUser(id: string): Promise<User> {
+    const user = this.users.find(u => u.id === id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return user;
+  }
 }
 ```
 </example>

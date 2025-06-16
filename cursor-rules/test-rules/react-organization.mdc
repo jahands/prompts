@@ -1,5 +1,5 @@
 ---
-description: React component organization - component size limits, hook extraction, and test colocation
+description: React component organization - size limits, hook extraction, and test colocation
 globs:
 alwaysApply: false
 ---
@@ -8,44 +8,48 @@ alwaysApply: false
 <title>React Component Organization</title>
 
 <rules>
-- Keep React components under 200 lines
-- Extract custom hooks to separate files when logic exceeds 30 lines
+- Keep components under 200 lines of code
+- Extract custom hooks to separate files when they exceed 20 lines
 - Extract complex logic into custom hooks for reusability
 - Colocate test files with components using `.test.tsx` or `.spec.tsx` suffix
-- Place hook files in same directory as components that use them
-- Name hook files with `use` prefix (e.g., `useAuth.ts`, `useProductData.ts`)
-- Split large components into smaller sub-components
-- Keep component files focused on rendering logic
-- Move business logic to hooks or utility functions
+- Place hooks in a `hooks/` subdirectory within the component's folder
+- Split large components into smaller, focused sub-components
+- Keep component files focused on rendering and UI logic
 </rules>
+
+<file-structure>
+```
+components/
+  UserProfile/
+    UserProfile.tsx         # Main component (<200 lines)
+    UserProfile.test.tsx    # Colocated tests
+    hooks/
+      useUserData.ts       # Extracted custom hook
+      useUserData.test.ts  # Hook tests
+    components/
+      Avatar.tsx           # Sub-component
+      Avatar.test.tsx      # Sub-component tests
+```
+</file-structure>
 
 <examples>
 <example type="good">
-```
-src/
-  components/
-    ProductCard/
-      ProductCard.tsx          // < 200 lines
-      ProductCard.test.tsx     // Colocated test
-      useProductActions.ts     // Extracted hook
-      ProductCardSkeleton.tsx  // Sub-component
-```
-</example>
-
-<example type="good">
 ```typescript
-// ProductCard.tsx (focused on rendering)
-import { useProductActions } from './useProductActions';
+// UserProfile.tsx (under 200 lines)
+import { useUserData } from './hooks/useUserData';
+import { Avatar } from './components/Avatar';
 
-export function ProductCard({ product }: Props) {
-  const { addToCart, isLoading } = useProductActions(product.id);
+export function UserProfile({ userId }: Props) {
+  const { user, loading, error } = useUserData(userId);
+  
+  if (loading) return <Spinner />;
+  if (error) return <ErrorMessage error={error} />;
   
   return (
-    <div className="product-card">
-      <h3>{product.name}</h3>
-      <button onClick={addToCart} disabled={isLoading}>
-        Add to Cart
-      </button>
+    <div className="user-profile">
+      <Avatar user={user} />
+      <h2>{user.name}</h2>
+      <p>{user.bio}</p>
     </div>
   );
 }
@@ -54,21 +58,20 @@ export function ProductCard({ product }: Props) {
 
 <example type="good">
 ```typescript
-// useProductActions.ts (extracted logic)
-export function useProductActions(productId: string) {
-  const [isLoading, setIsLoading] = useState(false);
-  const cart = useCart();
+// hooks/useUserData.ts (extracted hook)
+export function useUserData(userId: string) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   
-  const addToCart = async () => {
-    setIsLoading(true);
-    try {
-      await cart.add(productId);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useEffect(() => {
+    fetchUser(userId)
+      .then(setUser)
+      .catch(setError)
+      .finally(() => setLoading(false));
+  }, [userId]);
   
-  return { addToCart, isLoading };
+  return { user, loading, error };
 }
 ```
 </example>
