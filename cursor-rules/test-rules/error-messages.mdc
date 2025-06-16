@@ -1,89 +1,55 @@
 ---
-description: Provide contextual error messages with user intent and suggested fixes
+description: Provide contextual error messages that explain what the user was trying to do and suggest fixes
 globs:
 alwaysApply: false
 ---
-<error-message-handling>
+<error-message-context>
 
-<title>Contextual Error Messages</title>
-
-<context>
-<applies-to>All error messages and failure scenarios</applies-to>
-</context>
-
-<overview>When errors occur, provide clear context about what the user was attempting and suggest actionable fixes</overview>
+<title>Error Message Context and Fix Suggestions</title>
 
 <rules>
-<rule>
-<name>Error message structure</name>
-<requirements>
-- Always explain what the user was trying to do
-- Include the specific error that occurred
-- Provide at least one suggested fix
-- Reference relevant documentation or examples when available
-</requirements>
-</rule>
-
-<rule>
-<name>Context requirements</name>
-<requirements>
-- State the user's original intent or goal
-- Identify the step where the error occurred
-- Explain why the error happened in simple terms
-- Avoid technical jargon unless necessary
-</requirements>
-</rule>
-
-<rule>
-<name>Suggested fixes</name>
-<requirements>
-- Provide actionable steps to resolve the error
-- Order fixes from most likely to least likely
-- Include code examples when applicable
-- Mention common causes and quick checks
-</requirements>
-</rule>
+- Always include what the user was attempting to accomplish when an error occurs
+- Provide the specific action or command that triggered the error
+- Include relevant context like file paths, function names, or variable values
+- Suggest at least one concrete fix or next step to resolve the error
+- Frame suggestions as actionable steps the user can take
+- Reference documentation or resources when applicable
+- Never assume the user knows why the error occurred
+- Keep error explanations concise but complete
 </rules>
 
 <examples>
-<example type="bad">
+<example type="good">
 ```
-Error: Connection refused
+Error: Cannot read property 'length' of undefined
+
+Context: While trying to process the user list in getUserCount(), the 'users' array was undefined.
+
+Suggested fix: Check if the 'users' array exists before accessing its length:
+if (users && users.length) {
+  return users.length;
+}
 ```
 </example>
 
 <example type="good">
 ```
-Error: Unable to connect to the database while trying to fetch user data.
+Error: Permission denied when running 'npm install'
 
-What happened: The database connection was refused on port 5432.
+Context: You were trying to install dependencies for the project in /usr/local/project.
 
 Suggested fixes:
-1. Check if the database service is running: `sudo systemctl status postgresql`
-2. Verify the connection parameters in your .env file
-3. Ensure the database port (5432) is not blocked by a firewall
-4. Try connecting manually: `psql -h localhost -p 5432 -U your_user -d your_db`
-
-Common cause: The database service may have stopped unexpectedly.
+1. Run with sudo: `sudo npm install`
+2. Change npm's default directory to avoid permission issues
+3. Check if you have write permissions to the current directory
 ```
 </example>
 
-<example type="good">
+<example type="bad">
 ```
-Error: Failed to build your React application.
-
-What happened: The build process encountered a syntax error in App.jsx on line 42.
-
-The issue: You have an unclosed JSX tag - missing closing </div> tag.
-
-To fix this:
-1. Open src/App.jsx
-2. Go to line 42
-3. Add the missing </div> tag before the component's closing brace
-
-Quick tip: Your editor's bracket matching can help identify unclosed tags.
+Error: TypeError: Cannot read property 'length' of undefined
 ```
 </example>
 </examples>
 
-</error-message-handling>
+</error-message-context>

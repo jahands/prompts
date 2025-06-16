@@ -3,102 +3,49 @@ description: Enforce try-catch blocks for async operations with structured error
 globs:
 alwaysApply: false
 ---
+
 <async-error-handling>
 
-<title>Async Error Handling with Structured Logging</title>
-
-<context>
-<applies-to>All asynchronous operations in JavaScript/TypeScript codebases</applies-to>
-</context>
-
-<overview>Ensure robust error handling for async operations using try-catch blocks and structured logging that captures timestamp, error type, and user context</overview>
-
-<key-concepts>
-- Async operations must always be wrapped in try-catch
-- Error logging must include structured metadata
-- User context should be preserved in error logs
-- Errors should be typed when possible
-</key-concepts>
+<title>Async Operations Error Handling</title>
 
 <rules>
-<rule>
-<name>Try-catch for async operations</name>
-<requirements>
-- Every async function must have try-catch block
-- Every await statement must be within a try block
-- Promise chains must have .catch() handlers
-- Top-level async calls must handle errors
-</requirements>
-</rule>
-
-<rule>
-<name>Structured error logging</name>
-<requirements>
-- Include ISO timestamp in all error logs
-- Log error type/name explicitly
-- Include user context (userId, sessionId, etc.)
-- Log stack trace for debugging
-- Use consistent log structure across application
-</requirements>
-</rule>
-
-<rule>
-<name>Error context preservation</name>
-<requirements>
-- Pass user context through error handlers
-- Include operation name in logs
-- Log request/response data when relevant
-- Preserve correlation IDs for tracing
-</requirements>
-</rule>
+- Always wrap async operations in try-catch blocks
+- Never use unhandled async operations or floating promises
+- Log all errors with structured logging that includes:
+  - ISO timestamp (`new Date().toISOString()`)
+  - Error type (error.name or custom classification)
+  - User context (user ID, session ID, request ID)
+  - Stack trace for debugging
+  - Operation context (function name, API endpoint, etc.)
+- Use async/await syntax over Promise.then().catch()
+- Handle errors at the appropriate level - don't catch and re-throw without adding context
+- For critical operations, implement retry logic with exponential backoff
+- Always return meaningful error responses to clients
 </rules>
-
-<logging-structure>
-<required-fields>
-- `timestamp`: ISO 8601 format
-- `level`: error/warn/info
-- `errorType`: Error constructor name or custom type
-- `message`: Human-readable error description
-- `userId`: Current user identifier
-- `sessionId`: Current session identifier
-- `operationName`: What operation failed
-- `stackTrace`: Full error stack
-</required-fields>
-
-<optional-fields>
-- `correlationId`: Request tracking ID
-- `requestData`: Sanitized request payload
-- `metadata`: Additional context object
-</optional-fields>
-</logging-structure>
 
 <examples>
 <example type="good">
 ```typescript
-async function fetchUserData(userId: string, sessionId: string): Promise<User> {
-  const logger = getLogger();
-  const operationName = 'fetchUserData';
-  
+async function fetchUserData(userId: string, requestId: string): Promise<User> {
   try {
     const response = await api.get(`/users/${userId}`);
     return response.data;
   } catch (error) {
     logger.error({
       timestamp: new Date().toISOString(),
-      level: 'error',
-      errorType: error.constructor.name,
-      message: `Failed to fetch user data for userId: ${userId}`,
-      userId,
-      sessionId,
-      operationName,
-      stackTrace: error.stack,
-      metadata: {
-        endpoint: `/users/${userId}`,
-        httpStatus: error.response?.status
+      errorType: error.name || 'UnknownError',
+      message: error.message,
+      stack: error.stack,
+      context: {
+        userId,
+        requestId,
+        operation: 'fetchUserData',
+        endpoint: `/users/${userId}`
       }
     });
     
-    throw new UserFetchError('Unable to retrieve user data', { cause: error });
+    // Re-throw with additional context for upstream handling
+    throw new UserFetchError(`Failed to fetch user ${userId}`, { cause: error });
   }
 }
 ```
@@ -106,29 +53,44 @@ async function fetchUserData(userId: string, sessionId: string): Promise<User> {
 
 <example type="good">
 ```javascript
-// Promise chain with proper error handling
-function processPayment(payment, userContext) {
-  return validatePayment(payment)
-    .then(validatedPayment => chargeCard(validatedPayment))
-    .then(charge => recordTransaction(charge))
-    .catch(error => {
-      console.error({
+// With retry logic for critical operations
+async function saveTransaction(transaction, userId, sessionId) {
+  const maxRetries = 3;
+  let lastError;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await db.transactions.create(transaction);
+      return result;
+    } catch (error) {
+      lastError = error;
+      
+      logger.error({
         timestamp: new Date().toISOString(),
-        level: 'error',
-        errorType: error.name || 'UnknownError',
-        message: 'Payment processing failed',
-        userId: userContext.userId,
-        sessionId: userContext.sessionId,
-        operationName: 'processPayment',
-        stackTrace: error.stack,
-        metadata: {
-          paymentId: payment.id,
-          amount: payment.amount
+        errorType: error.code || error.name,
+        message: error.message,
+        stack: error.stack,
+        context: {
+          userId,
+          sessionId,
+          operation: 'saveTransaction',
+          transactionId: transaction.id,
+          attempt,
+          maxRetries
         }
       });
       
-      throw error;
-    });
+      if (attempt < maxRetries) {
+        // Exponential backoff: 1s, 2s, 4s
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt - 1) * 1000));
+      }
+    }
+  }
+  
+  throw new TransactionError('Failed to save transaction after retries', { 
+    cause: lastError,
+    attempts: maxRetries 
+  });
 }
 ```
 </example>
@@ -136,31 +98,30 @@ function processPayment(payment, userContext) {
 <example type="bad">
 ```typescript
 // Missing try-catch
-async function updateProfile(data: ProfileData) {
-  const result = await api.post('/profile', data);
-  return result.data;
+async function deleteUser(userId: string) {
+  const user = await db.users.findById(userId);
+  await user.delete();
+  return { success: true };
 }
 
-// Unstructured error logging
-async function deleteAccount(userId: string) {
+// Insufficient error logging
+async function updateProfile(userId: string, data: any) {
   try {
-    await api.delete(`/users/${userId}`);
-  } catch (e) {
-    console.log('Error: ' + e.message); // Missing structured logging
-    throw e;
+    return await db.users.update(userId, data);
+  } catch (error) {
+    console.log('Error:', error); // Missing structured logging
+    throw error;
   }
+}
+
+// Floating promise
+function processQueue() {
+  queue.forEach(item => {
+    processItem(item); // Missing await and try-catch
+  });
 }
 ```
 </example>
 </examples>
-
-<implementation-tips>
-- Create a centralized logger utility with structured logging methods
-- Use error boundary components in React applications
-- Implement global error handlers for unhandled rejections
-- Consider using error tracking services (Sentry, Rollbar)
-- Sanitize sensitive data before logging
-- Use TypeScript error types for better error handling
-</implementation-tips>
 
 </async-error-handling>
