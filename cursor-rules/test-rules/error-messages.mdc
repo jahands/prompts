@@ -1,47 +1,45 @@
 ---
-description: Provide contextual error messages with user intent and suggested fixes
+description: Error message formatting with context and suggested fixes
 globs:
 alwaysApply: false
 ---
-<error-message-context>
+<error-message-guidelines>
 
-<title>Error Messages with Context and Solutions</title>
+<title>Error Messages with Context and Fixes</title>
 
 <rules>
-- Always explain what the user was trying to accomplish when an error occurs
-- Include the specific action or operation that failed
-- Provide the actual error message or relevant details
-- Suggest at least one concrete fix or workaround
-- Frame suggestions as actionable steps the user can take
-- Avoid generic "something went wrong" messages
-- Include relevant context like file paths, function names, or configuration values
+- Always include what the user was trying to accomplish when an error occurs
+- Provide the specific error details and why it happened
+- Suggest at least one actionable fix or next step
+- Reference the exact location (file, line, function) where applicable
+- Use clear language avoiding technical jargon unless necessary
+- Format error messages consistently with context → error → suggestion structure
 </rules>
 
 <examples>
 <example type="good">
 ```
-Error: Failed to connect to database while trying to fetch user profile data.
-
-Connection refused on localhost:5432
-
-To fix this:
-1. Check if PostgreSQL is running: `sudo systemctl status postgresql`
-2. Verify the connection settings in your .env file
-3. Ensure the database exists: `psql -U postgres -c "\l"`
+Error: Failed to save user preferences
+Context: You were trying to update notification settings
+Problem: The database connection timed out after 30 seconds
+Fix: Try again in a few moments, or check your network connection
 ```
 </example>
 
 <example type="good">
-```
-Error: Cannot import module 'axios' while setting up API client in src/services/api.ts
-
-Module not found: Error: Can't resolve 'axios'
-
-To fix this:
-- Install the missing dependency: `npm install axios`
-- Or if using yarn: `yarn add axios`
+```typescript
+// When catching errors in code
+try {
+  await updateUserProfile(data);
+} catch (error) {
+  throw new Error(
+    `Failed to update profile with email "${data.email}". ` +
+    `Database returned: ${error.message}. ` +
+    `Please verify the email format and try again.`
+  );
+}
 ```
 </example>
 </examples>
 
-</error-message-context>
+</error-message-guidelines>

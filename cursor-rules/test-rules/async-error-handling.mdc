@@ -1,5 +1,5 @@
 ---
-description: Enforces try-catch blocks for async operations with structured error logging
+description: Enforce proper error handling for async operations with structured logging
 globs:
 alwaysApply: false
 ---
@@ -9,47 +9,38 @@ alwaysApply: false
 
 <rules>
 - Always wrap async operations in try-catch blocks
-- Log errors with structured format including timestamp, error type, and user context
-- Never let async errors silently fail
-- Include operation context in error logs
-- Use consistent error structure across the application
-- Preserve original error stack traces
-- Log to appropriate channels based on error severity
+- Never let async errors propagate without handling
+- Log all errors with structured format including:
+  - ISO timestamp (new Date().toISOString())
+  - Error type classification (e.g., 'network', 'validation', 'database')
+  - Full error message and stack trace
+  - User context (userId, sessionId, requestId when available)
+  - Operation context (function name, input parameters)
+- Use consistent error logging structure across the codebase
+- Rethrow errors after logging when appropriate for upstream handling
+- Add specific error handling for expected failure modes
 </rules>
-
-<error-structure>
-- `timestamp`: ISO 8601 format timestamp
-- `errorType`: Error constructor name or custom type
-- `message`: Human-readable error description
-- `stack`: Full stack trace
-- `userId`: Current user identifier if available
-- `sessionId`: Current session identifier
-- `operation`: Name of the operation that failed
-- `context`: Additional relevant data
-</error-structure>
 
 <examples>
 <example type="good">
 ```typescript
-async function fetchUserData(userId: string) {
+async function fetchUserData(userId: string): Promise<User> {
   try {
     const response = await api.get(`/users/${userId}`);
     return response.data;
   } catch (error) {
     logger.error({
       timestamp: new Date().toISOString(),
-      errorType: error.constructor.name,
-      message: error.message || 'Failed to fetch user data',
+      errorType: 'network',
+      message: error.message,
       stack: error.stack,
-      userId: userId,
-      sessionId: getSessionId(),
-      operation: 'fetchUserData',
       context: {
-        endpoint: `/users/${userId}`,
-        statusCode: error.response?.status
+        userId,
+        operation: 'fetchUserData',
+        endpoint: `/users/${userId}`
       }
     });
-    throw error;
+    throw new UserFetchError(`Failed to fetch user ${userId}`, { cause: error });
   }
 }
 ```
@@ -57,26 +48,33 @@ async function fetchUserData(userId: string) {
 
 <example type="good">
 ```javascript
-async function processPayment(order) {
+async function processPayment(paymentData, userContext) {
   try {
-    const result = await paymentGateway.charge(order);
+    const result = await paymentGateway.charge(paymentData);
     return result;
   } catch (error) {
-    logger.error({
+    const errorLog = {
       timestamp: new Date().toISOString(),
-      errorType: error.constructor.name,
-      message: error.message || 'Payment processing failed',
+      errorType: error.code === 'INSUFFICIENT_FUNDS' ? 'payment_validation' : 'payment_processing',
+      message: error.message,
       stack: error.stack,
-      userId: order.userId,
-      sessionId: getSessionId(),
-      operation: 'processPayment',
       context: {
-        orderId: order.id,
-        amount: order.total,
-        gateway: 'stripe'
+        userId: userContext.userId,
+        sessionId: userContext.sessionId,
+        operation: 'processPayment',
+        amount: paymentData.amount,
+        currency: paymentData.currency
       }
-    });
-    throw new PaymentError('Payment processing failed', error);
+    };
+    
+    logger.error(errorLog);
+    
+    // Handle specific error cases
+    if (error.code === 'INSUFFICIENT_FUNDS') {
+      throw new InsufficientFundsError(error.message);
+    }
+    
+    throw new PaymentProcessingError('Payment processing failed', { cause: error });
   }
 }
 ```

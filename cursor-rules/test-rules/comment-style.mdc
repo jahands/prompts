@@ -1,5 +1,5 @@
 ---
-description: Guide for writing meaningful comments that explain why, not what
+description: Guide for writing meaningful comments that explain why code exists rather than what it does
 globs:
 alwaysApply: false
 ---
@@ -8,12 +8,12 @@ alwaysApply: false
 <title>Write Comments That Explain Why, Not What</title>
 
 <rules>
-- Avoid comments that describe what the code does (code should be self-documenting)
-- Write comments that explain why a decision was made
-- Document non-obvious business logic and edge cases
-- Explain workarounds and their reasons
-- Remove comments that merely restate the code
-- Prefer descriptive variable and function names over explanatory comments
+- Avoid comments that describe what the code does (the code should be self-documenting)
+- Write comments that explain why something is done, especially for non-obvious decisions
+- Document business logic, workarounds, and edge cases
+- Use descriptive variable and function names instead of explanatory comments
+- Comment complex algorithms only if the why isn't clear from context
+- Document assumptions and constraints that aren't obvious from the code
 </rules>
 
 <examples>
@@ -24,33 +24,32 @@ counter++;
 
 // Check if user is admin
 if (user.role === 'admin') {
-  // Enable admin features
-  enableAdminFeatures();
+  // Allow access
+  return true;
 }
 
 // Loop through items
-items.forEach(item => {
-  // Process each item
+for (const item of items) {
+  // Process item
   processItem(item);
-});
+}
 ```
 </example>
 
 <example type="good">
 ```javascript
-// Retry counter for API calls - max 3 attempts per company policy
-counter++;
+// Reset after 1000 to prevent integer overflow in legacy systems
+counter = counter >= 1000 ? 0 : counter + 1;
 
-// Admin check required here due to legacy permission system
-// TODO: Remove after migration to RBAC in Q2 2024
+// Business requirement: only admins can access financial reports
 if (user.role === 'admin') {
-  enableAdminFeatures();
+  return true;
 }
 
-// Process items in sequence to avoid rate limiting (API allows 10/sec)
-items.forEach(item => {
+// Process items in reverse order to maintain compatibility with v1 API
+for (const item of items.reverse()) {
   processItem(item);
-});
+}
 ```
 </example>
 </examples>
