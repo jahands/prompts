@@ -1,0 +1,201 @@
+---
+description: Guidelines for designing RESTful APIs including resource naming, HTTP methods, status codes, error handling, pagination, and versioning
+globs:
+alwaysApply: false
+---
+<restful-api-design>
+
+<title>RESTful API Design Guidelines</title>
+
+<resource-naming>
+<rules>
+- Use plural nouns for collections: `/users`, `/products`, `/orders`
+- Use lowercase letters with hyphens for multi-word resources: `/user-profiles`, `/shopping-carts`
+- Nest resources to show relationships: `/users/{userId}/orders`
+- Avoid verbs in URIs - let HTTP methods indicate actions
+- Use query parameters for filtering: `/products?category=electronics&price_max=500`
+- Keep URIs under 2000 characters
+- Avoid deep nesting beyond 3 levels
+</rules>
+
+<examples>
+<example type="good">
+```
+GET    /users              # List all users
+GET    /users/123          # Get specific user
+POST   /users              # Create new user
+PUT    /users/123          # Update entire user
+PATCH  /users/123          # Update user partially
+DELETE /users/123          # Delete user
+GET    /users/123/orders   # Get user's orders
+```
+</example>
+</examples>
+</resource-naming>
+
+<http-methods>
+<rules>
+- GET: Retrieve resource(s) - must be idempotent
+- POST: Create new resources - not idempotent
+- PUT: Full update/replace - idempotent
+- PATCH: Partial update - idempotent
+- DELETE: Remove resource - idempotent
+- HEAD: Get headers only (no body)
+- OPTIONS: Get allowed methods
+- Never use GET for state changes
+- Use POST for complex queries that exceed URL limits
+</rules>
+
+<method-safety>
+- Safe methods (no side effects): GET, HEAD, OPTIONS
+- Unsafe methods (modify state): POST, PUT, PATCH, DELETE
+- Idempotent methods: GET, PUT, DELETE, HEAD, OPTIONS, PATCH
+- Non-idempotent: POST
+</method-safety>
+</http-methods>
+
+<status-codes>
+<success-codes>
+- `200 OK`: Successful GET, PUT, PATCH
+- `201 Created`: Successful POST with resource creation
+- `202 Accepted`: Request accepted for async processing
+- `204 No Content`: Successful DELETE or action with no response body
+</success-codes>
+
+<client-error-codes>
+- `400 Bad Request`: Invalid request format or parameters
+- `401 Unauthorized`: Missing or invalid authentication
+- `403 Forbidden`: Authenticated but not authorized
+- `404 Not Found`: Resource doesn't exist
+- `405 Method Not Allowed`: HTTP method not supported
+- `409 Conflict`: Request conflicts with current state
+- `422 Unprocessable Entity`: Valid format but semantic errors
+- `429 Too Many Requests`: Rate limit exceeded
+</client-error-codes>
+
+<server-error-codes>
+- `500 Internal Server Error`: Generic server error
+- `502 Bad Gateway`: Invalid response from upstream
+- `503 Service Unavailable`: Server temporarily unavailable
+- `504 Gateway Timeout`: Upstream timeout
+</server-error-codes>
+</status-codes>
+
+<error-response-format>
+<structure>
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "details": [
+      {
+        "field": "email",
+        "code": "INVALID_FORMAT",
+        "message": "Email format is invalid"
+      }
+    ],
+    "timestamp": "2024-01-15T10:30:00Z",
+    "traceId": "abc123def456"
+  }
+}
+```
+</structure>
+
+<requirements>
+- Use consistent error structure across all endpoints
+- Include machine-readable error codes
+- Provide human-readable messages
+- Add field-level details for validation errors
+- Include timestamp and trace ID for debugging
+- Never expose internal implementation details
+- Localize error messages based on Accept-Language header
+</requirements>
+</error-response-format>
+
+<pagination>
+<offset-based>
+```
+GET /users?offset=20&limit=10
+
+Response headers:
+X-Total-Count: 150
+Link: <https://api.example.com/users?offset=0&limit=10>; rel="first",
+      <https://api.example.com/users?offset=10&limit=10>; rel="prev",
+      <https://api.example.com/users?offset=30&limit=10>; rel="next",
+      <https://api.example.com/users?offset=140&limit=10>; rel="last"
+```
+</offset-based>
+
+<cursor-based>
+```
+GET /users?cursor=eyJpZCI6MTAwfQ&limit=10
+
+Response:
+{
+  "data": [...],
+  "pagination": {
+    "cursor": "eyJpZCI6MTEwfQ",
+    "hasMore": true,
+    "count": 10
+  }
+}
+```
+</cursor-based>
+
+<rules>
+- Default limit: 20-50 items
+- Maximum limit: 100-200 items
+- Include total count in headers or response
+- Provide navigation links (first, prev, next, last)
+- Use cursor-based for large datasets or real-time data
+- Use offset-based for stable, smaller datasets
+- Return empty array for out-of-range requests
+</rules>
+</pagination>
+
+<versioning>
+<strategies>
+- URI versioning: `/v1/users` (most visible, cache-friendly)
+- Header versioning: `Accept: application/vnd.api+json;version=1`
+- Query parameter: `/users?version=1` (easy testing, poor caching)
+- Media type: `Accept: application/vnd.api.v1+json`
+</strategies>
+
+<best-practices>
+- Use URI versioning for public APIs
+- Version at the API level, not individual endpoints
+- Maintain at least 2 versions concurrently
+- Announce deprecation 6-12 months in advance
+- Include deprecation headers: `Sunset: Sat, 31 Dec 2024 23:59:59 GMT`
+- Document migration guides between versions
+- Start with v1, not v1.0 or v0
+</best-practices>
+</versioning>
+
+<additional-guidelines>
+<content-negotiation>
+- Support JSON as default format
+- Use `Accept` header for format negotiation
+- Return `406 Not Acceptable` for unsupported formats
+- Use `Content-Type` header in responses
+</content-negotiation>
+
+<security-headers>
+- Always use HTTPS
+- Include `X-Content-Type-Options: nosniff`
+- Add `X-Frame-Options: DENY`
+- Set `X-Request-ID` for request tracking
+- Implement CORS properly for browser access
+</security-headers>
+
+<performance>
+- Enable gzip compression
+- Support conditional requests (ETag, Last-Modified)
+- Implement caching headers appropriately
+- Use field filtering: `/users?fields=id,name,email`
+- Support batch operations for bulk actions
+</performance>
+</additional-guidelines>
+
+</restful-api-design>

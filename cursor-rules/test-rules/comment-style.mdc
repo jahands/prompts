@@ -1,0 +1,58 @@
+---
+description: Guide for writing meaningful comments that explain why, not what
+globs:
+alwaysApply: false
+---
+<comment-style>
+
+<title>Write Comments That Explain Why, Not What</title>
+
+<rules>
+- Avoid comments that describe what the code does (code should be self-documenting)
+- Write comments that explain why a decision was made
+- Document non-obvious business logic and edge cases
+- Explain workarounds and their reasons
+- Remove comments that merely restate the code
+- Prefer descriptive variable and function names over explanatory comments
+</rules>
+
+<examples>
+<example type="bad">
+```javascript
+// Increment counter
+counter++;
+
+// Check if user is admin
+if (user.role === 'admin') {
+  // Enable admin features
+  enableAdminFeatures();
+}
+
+// Loop through items
+items.forEach(item => {
+  // Process each item
+  processItem(item);
+});
+```
+</example>
+
+<example type="good">
+```javascript
+// Retry counter for API calls - max 3 attempts per company policy
+counter++;
+
+// Admin check required here due to legacy permission system
+// TODO: Remove after migration to RBAC in Q2 2024
+if (user.role === 'admin') {
+  enableAdminFeatures();
+}
+
+// Process items in sequence to avoid rate limiting (API allows 10/sec)
+items.forEach(item => {
+  processItem(item);
+});
+```
+</example>
+</examples>
+
+</comment-style>

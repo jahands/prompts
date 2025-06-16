@@ -1,51 +1,45 @@
 ---
-description: Provide contextual error messages that explain what the user was trying to do and suggest fixes
+description: Provide contextual error messages with user intent and suggested fixes
 globs:
 alwaysApply: false
 ---
 <error-message-context>
 
-<title>Contextual Error Messages</title>
+<title>Error Messages with Context and Solutions</title>
 
 <rules>
-- Always include what the user was attempting to do when an error occurs
-- Provide the specific error message and its meaning
-- Suggest at least one concrete fix or next step
-- Reference the exact file, line, or command that caused the error
-- Use clear, non-technical language for the context explanation
-- Include relevant code snippets when showing fixes
+- Always explain what the user was trying to accomplish when an error occurs
+- Include the specific action or operation that failed
+- Provide the actual error message or relevant details
+- Suggest at least one concrete fix or workaround
+- Frame suggestions as actionable steps the user can take
+- Avoid generic "something went wrong" messages
+- Include relevant context like file paths, function names, or configuration values
 </rules>
 
 <examples>
 <example type="good">
 ```
-Error while trying to install dependencies for your React project:
+Error: Failed to connect to database while trying to fetch user profile data.
 
-npm ERR! code ENOENT
-npm ERR! syscall open
-npm ERR! path /Users/john/project/package.json
-
-This error occurred because npm couldn't find a package.json file in your project directory.
+Connection refused on localhost:5432
 
 To fix this:
-1. Make sure you're in the correct project directory
-2. If this is a new project, run: npm init -y
-3. If package.json exists elsewhere, navigate to that directory first
+1. Check if PostgreSQL is running: `sudo systemctl status postgresql`
+2. Verify the connection settings in your .env file
+3. Ensure the database exists: `psql -U postgres -c "\l"`
 ```
 </example>
 
 <example type="good">
 ```
-Error while attempting to create a new Git commit:
+Error: Cannot import module 'axios' while setting up API client in src/services/api.ts
 
-fatal: not a git repository (or any of the parent directories): .git
-
-You tried to commit changes, but this directory isn't initialized as a Git repository yet.
+Module not found: Error: Can't resolve 'axios'
 
 To fix this:
-- Run: git init
-- Then add your files: git add .
-- Finally create your commit: git commit -m "Initial commit"
+- Install the missing dependency: `npm install axios`
+- Or if using yarn: `yarn add axios`
 ```
 </example>
 </examples>

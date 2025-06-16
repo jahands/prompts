@@ -1,5 +1,5 @@
 ---
-description: JavaScript/TypeScript indentation standards - always use 2 spaces, never tabs
+description: Enforce 2-space indentation in JavaScript and TypeScript files
 globs:
 alwaysApply: false
 ---
@@ -20,17 +20,17 @@ alwaysApply: false
 ```typescript
 function processData(items: string[]) {
   if (items.length > 0) {
-    items.forEach((item) => {
+    for (const item of items) {
       console.log(item);
-    });
+    }
   }
 }
 
 class UserService {
-  private users: User[] = [];
-
+  constructor(private db: Database) {}
+  
   async getUser(id: string): Promise<User> {
-    const user = this.users.find(u => u.id === id);
+    const user = await this.db.users.findOne({ id });
     if (!user) {
       throw new Error('User not found');
     }

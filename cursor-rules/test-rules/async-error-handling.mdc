@@ -1,43 +1,52 @@
 ---
-description: Enforce try-catch blocks for async operations with structured error logging
+description: Enforces try-catch blocks for async operations with structured error logging
 globs:
 alwaysApply: false
 ---
-
 <async-error-handling>
 
 <title>Async Operations Error Handling</title>
 
 <rules>
 - Always wrap async operations in try-catch blocks
-- Log all errors with structured logging format
-- Include timestamp in ISO 8601 format
-- Include error type classification (e.g., NetworkError, ValidationError, DatabaseError)
-- Include user context when available (user ID, session ID, request ID)
+- Log errors with structured format including timestamp, error type, and user context
+- Never let async errors silently fail
+- Include operation context in error logs
+- Use consistent error structure across the application
 - Preserve original error stack traces
-- Use consistent error logging utility/service
-- Never swallow errors silently
-- Re-throw errors after logging when propagation is needed
+- Log to appropriate channels based on error severity
 </rules>
+
+<error-structure>
+- `timestamp`: ISO 8601 format timestamp
+- `errorType`: Error constructor name or custom type
+- `message`: Human-readable error description
+- `stack`: Full stack trace
+- `userId`: Current user identifier if available
+- `sessionId`: Current session identifier
+- `operation`: Name of the operation that failed
+- `context`: Additional relevant data
+</error-structure>
 
 <examples>
 <example type="good">
 ```typescript
-async function fetchUserData(userId: string, sessionId: string): Promise<UserData> {
+async function fetchUserData(userId: string) {
   try {
     const response = await api.get(`/users/${userId}`);
     return response.data;
   } catch (error) {
     logger.error({
       timestamp: new Date().toISOString(),
-      errorType: error instanceof NetworkError ? 'NetworkError' : 'UnknownError',
-      message: error.message,
+      errorType: error.constructor.name,
+      message: error.message || 'Failed to fetch user data',
       stack: error.stack,
+      userId: userId,
+      sessionId: getSessionId(),
+      operation: 'fetchUserData',
       context: {
-        userId,
-        sessionId,
-        operation: 'fetchUserData',
-        endpoint: `/users/${userId}`
+        endpoint: `/users/${userId}`,
+        statusCode: error.response?.status
       }
     });
     throw error;
@@ -48,24 +57,26 @@ async function fetchUserData(userId: string, sessionId: string): Promise<UserDat
 
 <example type="good">
 ```javascript
-async function processPayment(paymentData, requestId) {
+async function processPayment(order) {
   try {
-    const result = await paymentService.process(paymentData);
+    const result = await paymentGateway.charge(order);
     return result;
   } catch (error) {
-    await errorLogger.log({
+    logger.error({
       timestamp: new Date().toISOString(),
-      errorType: classifyError(error),
-      message: error.message,
+      errorType: error.constructor.name,
+      message: error.message || 'Payment processing failed',
       stack: error.stack,
+      userId: order.userId,
+      sessionId: getSessionId(),
+      operation: 'processPayment',
       context: {
-        userId: paymentData.userId,
-        requestId,
-        operation: 'processPayment',
-        amount: paymentData.amount
+        orderId: order.id,
+        amount: order.total,
+        gateway: 'stripe'
       }
     });
-    throw new ProcessingError('Payment processing failed', { cause: error });
+    throw new PaymentError('Payment processing failed', error);
   }
 }
 ```

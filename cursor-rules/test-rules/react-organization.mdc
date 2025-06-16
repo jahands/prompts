@@ -1,5 +1,5 @@
 ---
-description: React component organization - size limits, hook extraction, and test colocation
+description: Keep React components organized - limit component size, extract hooks, colocate tests
 globs:
 alwaysApply: false
 ---
@@ -8,71 +8,43 @@ alwaysApply: false
 <title>React Component Organization</title>
 
 <rules>
-- Keep components under 200 lines of code
-- Extract custom hooks to separate files when they exceed 20 lines
-- Extract complex logic into custom hooks for reusability
-- Colocate test files with components using `.test.tsx` or `.spec.tsx` suffix
-- Place hooks in a `hooks/` subdirectory within the component's folder
-- Split large components into smaller, focused sub-components
-- Keep component files focused on rendering and UI logic
+- Keep components under 200 lines
+- Extract custom hooks to separate files in the same directory
+- Name hook files with `use` prefix: `useMyHook.ts`
+- Colocate test files with components: `Component.test.tsx`
+- Split large components into smaller sub-components
+- Place sub-components in the same file if under 50 lines
+- Extract sub-components to separate files if over 50 lines
+- Group related files in component-specific directories
 </rules>
-
-<file-structure>
-```
-components/
-  UserProfile/
-    UserProfile.tsx         # Main component (<200 lines)
-    UserProfile.test.tsx    # Colocated tests
-    hooks/
-      useUserData.ts       # Extracted custom hook
-      useUserData.test.ts  # Hook tests
-    components/
-      Avatar.tsx           # Sub-component
-      Avatar.test.tsx      # Sub-component tests
-```
-</file-structure>
 
 <examples>
 <example type="good">
 ```typescript
-// UserProfile.tsx (under 200 lines)
-import { useUserData } from './hooks/useUserData';
-import { Avatar } from './components/Avatar';
+// UserProfile/UserProfile.tsx (150 lines)
+import { useUserData } from './useUserData';
+import { UserAvatar } from './UserAvatar';
 
 export function UserProfile({ userId }: Props) {
-  const { user, loading, error } = useUserData(userId);
-  
-  if (loading) return <Spinner />;
-  if (error) return <ErrorMessage error={error} />;
+  const userData = useUserData(userId);
   
   return (
-    <div className="user-profile">
-      <Avatar user={user} />
-      <h2>{user.name}</h2>
-      <p>{user.bio}</p>
+    <div>
+      <UserAvatar user={userData} />
+      {/* component logic */}
     </div>
   );
 }
-```
-</example>
 
-<example type="good">
-```typescript
-// hooks/useUserData.ts (extracted hook)
+// UserProfile/useUserData.ts
 export function useUserData(userId: string) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  
-  useEffect(() => {
-    fetchUser(userId)
-      .then(setUser)
-      .catch(setError)
-      .finally(() => setLoading(false));
-  }, [userId]);
-  
-  return { user, loading, error };
+  // hook logic
 }
+
+// UserProfile/UserProfile.test.tsx
+describe('UserProfile', () => {
+  // tests
+});
 ```
 </example>
 </examples>

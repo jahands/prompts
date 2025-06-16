@@ -1,5 +1,5 @@
 ---
-description: Guidelines for implementing dependency injection in TypeScript, including injection patterns and circular dependency resolution
+description: TypeScript dependency injection patterns, injection types, and circular dependency resolution
 globs:
 alwaysApply: false
 ---
@@ -10,68 +10,67 @@ alwaysApply: false
 <overview>Guidelines for implementing DI patterns, choosing between constructor and property injection, and resolving circular dependencies in TypeScript applications</overview>
 
 <key-concepts>
-- Inversion of Control (IoC) - classes depend on abstractions
-- Constructor injection for required dependencies
-- Property injection for optional dependencies
-- Circular dependency detection and resolution
-- DI container configuration patterns
+- Inversion of Control (IoC) - Dependencies are provided rather than created
+- Constructor Injection - Dependencies passed through constructor parameters
+- Property Injection - Dependencies assigned to class properties
+- Circular Dependencies - Two or more classes that depend on each other
+- DI Container - Manages object creation and dependency resolution
 </key-concepts>
 
 <rules>
 <rule>
 <name>Constructor Injection (Default Approach)</name>
 <requirements>
-- Use for all required dependencies
-- Declare dependencies as readonly private properties
-- Always inject interfaces, never concrete implementations
-- List dependencies in order: framework services, application services, repositories
-- Validate required dependencies in constructor
-- Maximum 5 constructor parameters (refactor if more needed)
+- Use constructor injection for all required dependencies
+- Mark injected dependencies with `private readonly` or `public readonly`
+- Always inject interfaces or abstract classes, never concrete implementations
+- Order parameters: required dependencies first, optional dependencies last
+- Use parameter decorators for DI container integration (e.g., `@inject()`)
 </requirements>
 </rule>
 
 <rule>
-<name>Property Injection</name>
+<name>Property Injection (Limited Use)</name>
 <requirements>
-- Use only for truly optional dependencies
-- Mark with `@Optional()` decorator when using DI frameworks
-- Initialize with sensible defaults
-- Never use for core business logic dependencies
-- Document why property injection was chosen
-</requirements>
-</rule>
-
-<rule>
-<name>Circular Dependency Resolution</name>
-<requirements>
-- Detect cycles early with TypeScript compiler or DI framework tools
-- First approach: Extract shared interface to break cycle
-- Second approach: Use factory pattern or provider
-- Third approach: Lazy injection with `() => Service` pattern
-- Last resort: Refactor to eliminate circular dependency
-- Never use `forwardRef` without documenting why
+- Only use for truly optional dependencies
+- Mark properties with appropriate decorators (e.g., `@inject()`)
+- Initialize with sensible defaults or null object pattern
+- Document why property injection was chosen over constructor injection
+- Never use for core dependencies
 </requirements>
 </rule>
 
 <rule>
 <name>Interface Design for DI</name>
 <requirements>
-- Create focused interfaces with single responsibility
-- Use interface segregation - clients shouldn't depend on unused methods
+- Define clear interfaces for all injectable services
+- Keep interfaces focused and single-purpose
+- Use interface segregation principle (ISP)
 - Place interfaces in separate files from implementations
-- Name interfaces without `I` prefix (use `UserService` not `IUserService`)
-- Export interfaces from index files for clean imports
+- Use `I` prefix or `Interface` suffix consistently
+</requirements>
+</rule>
+
+<rule>
+<name>Circular Dependency Resolution</name>
+<requirements>
+- Detect circular dependencies early using TypeScript compiler or linting tools
+- First approach: Extract shared functionality to a third service
+- Second approach: Use interface segregation to break the cycle
+- Third approach: Introduce an event system or mediator pattern
+- Last resort: Use lazy injection with factories or providers
+- Document any remaining circular dependencies with clear justification
 </requirements>
 </rule>
 
 <rule>
 <name>DI Container Configuration</name>
 <requirements>
-- Register dependencies at application root
-- Use symbolic tokens for non-class dependencies
-- Configure lifecycle: singleton, transient, or scoped
-- Validate all dependencies are registered at startup
-- Use factory functions for complex initialization
+- Register all dependencies at application startup
+- Use appropriate scopes (singleton, transient, scoped)
+- Configure containers in dedicated modules
+- Avoid service locator pattern except at composition root
+- Use factory functions for complex object creation
 </requirements>
 </rule>
 </rules>
@@ -79,60 +78,46 @@ alwaysApply: false
 <examples>
 <example type="good">
 ```typescript
-// user.service.interface.ts
-export interface UserService {
-  findById(id: string): Promise<User>;
-  create(data: CreateUserDto): Promise<User>;
+// interfaces/user-service.interface.ts
+export interface IUserService {
+  getUser(id: string): Promise<User>;
+  updateUser(id: string, data: Partial<User>): Promise<User>;
 }
 
-// email.service.interface.ts  
-export interface EmailService {
-  sendEmail(to: string, subject: string, body: string): Promise<void>;
+// interfaces/logger.interface.ts
+export interface ILogger {
+  log(message: string): void;
+  error(message: string, error?: Error): void;
 }
 
-// user.service.ts
-export class UserServiceImpl implements UserService {
+// services/user.service.ts
+import { injectable, inject } from 'inversify';
+import { IUserService } from '../interfaces/user-service.interface';
+import { ILogger } from '../interfaces/logger.interface';
+import { IUserRepository } from '../interfaces/user-repository.interface';
+
+@injectable()
+export class UserService implements IUserService {
   constructor(
-    private readonly userRepository: UserRepository,
-    private readonly emailService: EmailService,
-    private readonly logger: Logger
-  ) {
-    // Validate required dependencies
-    if (!userRepository) throw new Error('UserRepository is required');
-    if (!emailService) throw new Error('EmailService is required');
-    if (!logger) throw new Error('Logger is required');
-  }
-
-  async create(data: CreateUserDto): Promise<User> {
-    const user = await this.userRepository.save(data);
-    await this.emailService.sendEmail(user.email, 'Welcome', 'Welcome to our app');
-    this.logger.info(`User created: ${user.id}`);
-    return user;
-  }
-}
-```
-</example>
-
-<example type="property-injection">
-```typescript
-// analytics.service.ts
-export class UserServiceImpl implements UserService {
-  // Required dependencies via constructor
-  constructor(
-    private readonly userRepository: UserRepository,
-    private readonly validator: Validator
+    @inject('IUserRepository') private readonly userRepository: IUserRepository,
+    @inject('ILogger') private readonly logger: ILogger,
+    @inject('ICache') private readonly cache?: ICache // Optional dependency
   ) {}
 
-  // Optional dependency via property injection
-  @Optional()
-  private analyticsService?: AnalyticsService;
-
-  async create(data: CreateUserDto): Promise<User> {
-    const user = await this.userRepository.save(data);
+  async getUser(id: string): Promise<User> {
+    this.logger.log(`Fetching user ${id}`);
     
-    // Only use if available
-    if (this.analyticsService) {
-      await this.analyticsService.track('user.created', { userId: user.id });
+    // Check cache if available
+    if (this.cache) {
+      const cached = await this.cache.get(`user:${id}`);
+      if (cached) return cached;
+    }
+    
+    const user = await this.userRepository.findById(id);
+    
+    // Cache if available
+    if (this.cache && user) {
+      await this.cache.set(`user:${id}`, user);
     }
     
     return user;
@@ -141,88 +126,144 @@ export class UserServiceImpl implements UserService {
 ```
 </example>
 
-<example type="circular-dependency-resolution">
+<example type="good">
 ```typescript
-// Problem: Circular dependency between UserService and OrderService
+// Resolving circular dependency by extracting shared interface
+// Before: UserService -> NotificationService -> UserService (circular)
 
-// Solution 1: Extract shared interface
-// shared.interfaces.ts
-export interface UserProvider {
-  findById(id: string): Promise<User>;
+// interfaces/user-query.interface.ts
+export interface IUserQuery {
+  getUser(id: string): Promise<User>;
+  getUserEmail(id: string): Promise<string>;
 }
 
-export interface OrderProvider {
-  findByUserId(userId: string): Promise<Order[]>;
+// interfaces/user-command.interface.ts
+export interface IUserCommand {
+  updateUser(id: string, data: Partial<User>): Promise<User>;
+  deleteUser(id: string): Promise<void>;
 }
 
-// user.service.ts
-export class UserServiceImpl implements UserService, UserProvider {
+// Now NotificationService depends only on IUserQuery, breaking the cycle
+@injectable()
+export class NotificationService implements INotificationService {
   constructor(
-    private readonly orderProvider: OrderProvider // Use interface, not concrete class
-  ) {}
-}
-
-// Solution 2: Lazy injection
-export class UserServiceImpl implements UserService {
-  constructor(
-    @Inject(forwardRef(() => OrderService))
-    private readonly orderService: OrderService
-  ) {}
-}
-
-// Solution 3: Factory pattern
-export class UserServiceImpl implements UserService {
-  private orderService?: OrderService;
-
-  constructor(
-    private readonly serviceFactory: ServiceFactory
+    @inject('IUserQuery') private readonly userQuery: IUserQuery,
+    @inject('IEmailService') private readonly emailService: IEmailService
   ) {}
 
-  private getOrderService(): OrderService {
-    if (!this.orderService) {
-      this.orderService = this.serviceFactory.createOrderService();
-    }
-    return this.orderService;
+  async notifyUser(userId: string, message: string): Promise<void> {
+    const email = await this.userQuery.getUserEmail(userId);
+    await this.emailService.send(email, message);
   }
 }
 ```
 </example>
 
-<example type="di-container-setup">
+<example type="good">
 ```typescript
-// di-container.ts
-import { Container } from 'inversify';
+// Property injection for optional cross-cutting concerns
+@injectable()
+export class ProductService implements IProductService {
+  @inject('ILogger') @optional()
+  private logger?: ILogger;
 
-const container = new Container();
+  @inject('IMetrics') @optional()
+  private metrics?: IMetrics;
 
-// Singleton services
-container.bind<Logger>(TYPES.Logger).to(LoggerImpl).inSingletonScope();
-container.bind<DatabaseConnection>(TYPES.Database).to(PostgresConnection).inSingletonScope();
+  constructor(
+    @inject('IProductRepository') private readonly repository: IProductRepository
+  ) {}
 
-// Transient services (new instance each time)
-container.bind<EmailService>(TYPES.EmailService).to(EmailServiceImpl).inTransientScope();
+  async getProduct(id: string): Promise<Product> {
+    const startTime = Date.now();
+    
+    try {
+      this.logger?.log(`Fetching product ${id}`);
+      const product = await this.repository.findById(id);
+      
+      this.metrics?.record('product.fetch', Date.now() - startTime);
+      
+      return product;
+    } catch (error) {
+      this.logger?.error(`Failed to fetch product ${id}`, error);
+      throw error;
+    }
+  }
+}
+```
+</example>
 
-// Request-scoped services
-container.bind<UserContext>(TYPES.UserContext).to(UserContextImpl).inRequestScope();
+<example type="good">
+```typescript
+// Lazy injection for circular dependencies (last resort)
+@injectable()
+export class OrderService implements IOrderService {
+  constructor(
+    @inject('Factory<IPaymentService>') private readonly paymentServiceFactory: () => IPaymentService,
+    @inject('IOrderRepository') private readonly repository: IOrderRepository
+  ) {}
 
-// Factory binding for complex initialization
-container.bind<UserService>(TYPES.UserService).toFactory((context) => {
-  const logger = context.container.get<Logger>(TYPES.Logger);
-  const db = context.container.get<DatabaseConnection>(TYPES.Database);
-  const config = context.container.get<Config>(TYPES.Config);
-  
-  return new UserServiceImpl(
-    new UserRepository(db),
-    context.container.get<EmailService>(TYPES.EmailService),
-    logger,
-    config.userServiceOptions
-  );
-});
+  async processOrder(orderId: string): Promise<void> {
+    const order = await this.repository.findById(orderId);
+    
+    // Lazy resolution of PaymentService
+    const paymentService = this.paymentServiceFactory();
+    await paymentService.processPayment(order);
+  }
+}
+```
+</example>
 
-// Validate all bindings at startup
-container.get<UserService>(TYPES.UserService); // Will throw if dependencies missing
+<example type="bad">
+```typescript
+// Bad: Injecting concrete implementation
+export class UserService {
+  constructor(
+    private readonly repository: PostgresUserRepository, // Wrong: concrete class
+    private readonly logger: ConsoleLogger // Wrong: concrete class
+  ) {}
+}
+
+// Bad: Using property injection for required dependencies
+export class ProductService {
+  @inject('IProductRepository')
+  private repository!: IProductRepository; // Wrong: required dependency as property
+
+  async getProduct(id: string): Promise<Product> {
+    // This could fail if repository is not injected
+    return this.repository.findById(id);
+  }
+}
+
+// Bad: Service locator pattern
+export class OrderService {
+  async processOrder(orderId: string): Promise<void> {
+    // Wrong: pulling dependencies from container directly
+    const repository = Container.get<IOrderRepository>('IOrderRepository');
+    const paymentService = Container.get<IPaymentService>('IPaymentService');
+    
+    const order = await repository.findById(orderId);
+    await paymentService.processPayment(order);
+  }
+}
 ```
 </example>
 </examples>
+
+<testing-considerations>
+- Use test doubles (mocks, stubs) for all injected dependencies
+- Create builder patterns or factories for test object creation
+- Test DI container configuration separately
+- Verify circular dependency detection in unit tests
+- Use integration tests to verify actual wiring
+</testing-considerations>
+
+<common-pitfalls>
+- Over-injecting: Not every class needs DI
+- Under-abstracting: Creating interfaces for simple value objects
+- Mixing concerns: Business logic in DI configuration
+- Hidden dependencies: Using service locator anti-pattern
+- Complex containers: Over-configuring for simple applications
+</common-pitfalls>
 
 </dependency-injection>
