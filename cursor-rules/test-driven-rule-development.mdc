@@ -1,0 +1,183 @@
+---
+description: Guide for iteratively testing and improving LLM rules through sub-agent testing
+globs:
+alwaysApply: false
+---
+
+<test-driven-rule-development>
+
+<title>Test-Driven Rule Development</title>
+
+<rules>
+- Create test scenarios before finalizing any rule guide
+- Use sub-agents to test rules exactly as real users would
+- Commit both test results and guide changes for version history
+- Analyze patterns in generated output to identify guide weaknesses
+- Iterate until rules consistently produce desired simplicity
+</rules>
+
+<process>
+<step>
+<name>1. Create Test Scenarios</name>
+<requirements>
+- Design 5-7 prompts varying from simple to complex
+- Include 60%+ simple rules to test if guide prevents over-structuring
+- Use realistic user requests, not artificial examples
+- Document expected complexity level AND line count for each prompt
+- Include at least one borderline case to test decision-making
+</requirements>
+</step>
+
+<step>
+<name>2. Get User Approval</name>
+<requirements>
+- Present all test prompts to user for review
+- Show the complete sub-agent prompt template with placeholders
+- Demonstrate how the template will be filled for at least one example
+- Wait for user confirmation before proceeding
+- Allow user to modify prompts or template if needed
+</requirements>
+<example>
+```
+"Here are the 5 prompts I plan to give to sub-agents to test the guide:
+
+1. **Simple formatting rule**:
+   'Write a rule for always using 2 spaces for indentation...'
+
+2. **Communication behavior rule**:
+   'Write a rule that tells the LLM to...'
+
+[... list all prompts ...]
+
+**Template for each sub-agent:**
+```
+You need to write an LLM rule. First, read the rule-writing guidelines at [INSERT EXACT PATH TO GUIDE HERE], then create a rule following those guidelines.
+
+Your task: [INSERT SPECIFIC RULE REQUEST HERE]
+
+Write the rule to this file: [INSERT EXACT OUTPUT PATH HERE]
+```
+
+**Important**: Fill in all placeholders with exact paths before sending to sub-agents. Sub-agents should receive fully specified paths, not placeholders.
+
+**Example of how prompt #1 will look when sent to sub-agent:**
+```
+You need to write an LLM rule. First, read the rule-writing guidelines at /Users/jh/.dotfiles/.cursor/rules/cursor-rules.mdc, then create a rule following those guidelines.
+
+Your task: Write a rule for always using 2 spaces for indentation in JavaScript/TypeScript files, never tabs
+
+Write the rule to this file: /Users/jh/.dotfiles/.cursor/rules/test-rules/indentation.mdc
+```
+
+Should I proceed with these prompts?"
+```
+</example>
+</step>
+
+<step>
+<name>3. Run Tests After Approval</name>
+<requirements>
+- Create test directory: `.cursor/rules/test-rules/`
+- Fill in all path placeholders with exact, absolute paths
+- Use Task tool to spawn sub-agents
+- Instruct agents to read guide file and create rules
+- Have agents write to test files for easy review
+- Run all tests in parallel for efficiency
+</requirements>
+<example>
+```
+Task prompt to sub-agent (with all placeholders filled):
+"You need to write an LLM rule. First, read the rule-writing guidelines at /exact/path/to/guide.mdc, then create a rule following those guidelines.
+
+Your task: [specific rule request from test scenario]
+
+Write the rule to this file: /exact/path/to/test-rules/output.mdc"
+```
+</example>
+</step>
+
+<step>
+<name>4. Analyze Results</name>
+<requirements>
+- Read each generated rule file
+- Compare actual results to expected results
+- Look for patterns across all test outputs
+- Document both quantitative (line counts) and qualitative (structure choices) findings
+- Form hypotheses about why agents made certain decisions
+</requirements>
+<example>
+```
+Example analysis:
+"All 5 agents added <context> and <overview> sections even for simple rules. 
+Hypothesis: The guide's complex template examples may be influencing agents 
+more than the warnings to keep things simple. Line counts ranged from 
+95-120 for rules that should have been 15-30 lines."
+```
+</example>
+</step>
+
+<step>
+<name>5. Commit Test Results</name>
+<requirements>
+- Stage test files AND the guide being tested
+- Include analysis in commit message
+- Use descriptive commit: "test: [iteration] - [key findings]"
+- Delete test files after commit to prepare for next iteration
+</requirements>
+</step>
+
+<step>
+<name>6. Revise Guide Based on Data</name>
+<requirements>
+- Analyze why agents made the choices they did
+- Look for patterns in what was ignored or misunderstood
+- Consider both content changes and structural changes
+- Test hypotheses about what might influence behavior
+- Focus on root causes, not just symptoms
+</requirements>
+<revision-principles>
+- Structural changes often work better than adding warnings
+- What you show in examples heavily influences output
+- Order and prominence of information matters
+- Sometimes less guidance produces better results than more
+</revision-principles>
+</step>
+
+<step>
+<name>7. Repeat Until Satisfied</name>
+<requirements>
+- Run exact same test prompts after each revision
+- Compare results to previous iterations
+- Stop when 80%+ of rules show appropriate complexity
+- Simple rules should stay under 30 lines
+</requirements>
+</step>
+</process>
+
+<test-prompt-examples>
+<simple-prompts>
+1. "Write a rule for always using 2 spaces for indentation in JavaScript/TypeScript files, never tabs"
+2. "Write a rule that tells the LLM to skip pleasantries and get straight to the answer"
+3. "Write a rule for using const instead of let when variables won't be reassigned"
+</simple-prompts>
+
+<complex-prompts>
+4. "Write a rule for implementing dependency injection in TypeScript classes, including when to use constructor injection vs property injection, and how to handle circular dependencies"
+5. "Write a rule for organizing a monorepo with multiple packages, including build orchestration, dependency management, and versioning strategy"
+</complex-prompts>
+
+<expected-outcomes>
+- Prompts 1-3: Should use simple template, 15-30 lines max
+- Prompts 4-5: May legitimately need complex structure, 80+ lines acceptable
+- Success metric: 3/3 simple rules stay simple
+</expected-outcomes>
+</test-prompt-examples>
+
+<anti-patterns>
+- Testing with only complex scenarios (biases toward accepting complexity)
+- Adding more warnings without structural changes
+- Not comparing results between iterations
+- Accepting "good enough" when simple rules are still over-structured
+</anti-patterns>
+
+</test-driven-rule-development>
