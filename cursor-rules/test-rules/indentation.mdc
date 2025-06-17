@@ -1,0 +1,32 @@
+---
+description: JavaScript/TypeScript indentation standards using 2 spaces
+globs:
+alwaysApply: false
+---
+<indentation-standards>
+
+<title>JavaScript/TypeScript Indentation</title>
+
+<rules>
+- Always use 2 spaces for indentation
+- Never use tabs
+- Configure editors to insert spaces when tab key is pressed
+- Each nested level increases indentation by exactly 2 spaces
+- Maintain consistent indentation throughout the entire file
+</rules>
+
+<examples>
+<example type="good">
+```typescript
+function processData(items: string[]) {
+  if (items.length > 0) {
+    items.forEach((item) => {
+      console.log(`Processing: ${item}`);
+    });
+  }
+}
+```
+</example>
+</examples>
+
+</indentation-standards>

@@ -1,0 +1,38 @@
+---
+description: Provide contextual error messages with user intent and suggested fixes
+globs:
+alwaysApply: false
+---
+<error-message-context>
+
+<title>Error Message Context and Fixes</title>
+
+<rules>
+- Always include what the user was trying to accomplish when an error occurs
+- Provide the specific action or command that caused the error
+- Explain why the error happened in the context of the user's goal
+- Suggest at least one concrete fix or workaround
+- Format error context as: "While trying to [user intent], [what went wrong]"
+- Include any relevant file paths, function names, or variable names
+- If multiple solutions exist, prioritize the simplest fix first
+- Reference the exact error message but translate technical jargon
+</rules>
+
+<examples>
+<example type="good">
+```
+Error: Cannot read property 'name' of undefined
+
+While trying to display user information, the code attempted to access a 'name' property on an undefined user object at line 42 in UserProfile.tsx.
+
+Suggested fix: Add a null check before accessing the property:
+if (user && user.name) {
+  return <h1>{user.name}</h1>;
+}
+
+This error likely occurred because the user data hasn't loaded yet or the API returned null.
+```
+</example>
+</examples>
+
+</error-message-context>

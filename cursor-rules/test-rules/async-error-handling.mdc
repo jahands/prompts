@@ -1,0 +1,45 @@
+---
+description: Enforces try-catch blocks for async operations with structured error logging
+globs:
+alwaysApply: false
+---
+<async-error-handling>
+
+<title>Async Error Handling with Structured Logging</title>
+
+<rules>
+- Always wrap async operations in try-catch blocks
+- Log errors with structured format including timestamp, error type, and user context
+- Use consistent error object structure across the application
+- Include error stack trace in development environments
+- Sanitize sensitive information before logging
+- Implement proper error recovery or propagation
+</rules>
+
+<examples>
+<example type="good">
+```typescript
+async function fetchUserData(userId: string): Promise<User> {
+  try {
+    const response = await api.get(`/users/${userId}`);
+    return response.data;
+  } catch (error) {
+    logger.error({
+      timestamp: new Date().toISOString(),
+      errorType: error.name || 'UnknownError',
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      context: {
+        userId,
+        operation: 'fetchUserData',
+        endpoint: `/users/${userId}`
+      }
+    });
+    throw new ApplicationError('Failed to fetch user data', { cause: error });
+  }
+}
+```
+</example>
+</examples>
+
+</async-error-handling>

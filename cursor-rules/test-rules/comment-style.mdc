@@ -1,0 +1,63 @@
+---
+description: Guide for writing meaningful comments that explain why code exists rather than what it does
+globs:
+alwaysApply: false
+---
+
+<comment-style>
+
+<title>Write Comments That Explain Why, Not What</title>
+
+<rules>
+- Avoid comments that describe what the code does
+- Write comments that explain why the code exists or why it's written a certain way
+- Document business logic, edge cases, and non-obvious decisions
+- Skip comments for self-explanatory code
+- Prefer meaningful variable and function names over comments
+- Document workarounds, hacks, or temporary solutions with TODO/FIXME
+- Explain complex algorithms or mathematical formulas
+- Add context for external dependencies or API quirks
+</rules>
+
+<examples>
+<example type="bad">
+```javascript
+// Increment counter by 1
+counter++;
+
+// Check if user is logged in
+if (user.isAuthenticated) {
+  // Set the session
+  session.set(user);
+}
+
+// Loop through all items
+items.forEach(item => {
+  // Process each item
+  processItem(item);
+});
+```
+</example>
+
+<example type="good">
+```javascript
+// User requested 3 retries before considering the operation failed
+counter++;
+
+// Legacy API requires authentication check before session access
+if (user.isAuthenticated) {
+  session.set(user);
+}
+
+// Process items sequentially to avoid rate limiting from external API
+items.forEach(item => {
+  processItem(item);
+});
+
+// Workaround for Safari bug #12345 - will be fixed in v16
+const offset = isSafari ? 2 : 0;
+```
+</example>
+</examples>
+
+</comment-style>

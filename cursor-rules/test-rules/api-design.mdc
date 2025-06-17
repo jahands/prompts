@@ -1,0 +1,183 @@
+---
+description: RESTful API design patterns including resource naming, HTTP methods, status codes, error handling, pagination, and versioning
+globs:
+alwaysApply: false
+---
+<restful-api-design>
+
+<title>RESTful API Design Standards</title>
+
+<overview>Comprehensive guidelines for designing RESTful APIs following industry best practices and REST architectural constraints</overview>
+
+<key-concepts>
+- Resource-oriented architecture
+- Stateless communication
+- Uniform interface
+- HATEOAS (Hypermedia as the Engine of Application State)
+- Idempotency
+</key-concepts>
+
+<rules>
+<rule>
+<name>Resource Naming Conventions</name>
+<requirements>
+- Use plural nouns for collections: `/users`, `/products`, `/orders`
+- Use kebab-case for multi-word resources: `/user-profiles`, `/order-items`
+- Nest resources to show relationships: `/users/{id}/orders`
+- Keep nesting shallow (max 3 levels)
+- Use query parameters for filtering: `/products?category=electronics`
+- Avoid verbs in endpoints (use HTTP methods instead)
+- Use consistent naming across the API
+</requirements>
+</rule>
+
+<rule>
+<name>HTTP Method Usage</name>
+<requirements>
+- `GET` - Retrieve resources (safe, idempotent)
+- `POST` - Create new resources (not idempotent)
+- `PUT` - Full update/replace resource (idempotent)
+- `PATCH` - Partial update resource (idempotent)
+- `DELETE` - Remove resource (idempotent)
+- `HEAD` - Get headers only (same as GET without body)
+- `OPTIONS` - Get allowed methods for resource
+</requirements>
+</rule>
+
+<rule>
+<name>Status Code Standards</name>
+<requirements>
+- `200 OK` - Successful GET, PUT, PATCH
+- `201 Created` - Successful POST with Location header
+- `204 No Content` - Successful DELETE or action with no response body
+- `400 Bad Request` - Client error, invalid request format
+- `401 Unauthorized` - Missing or invalid authentication
+- `403 Forbidden` - Authenticated but not authorized
+- `404 Not Found` - Resource doesn't exist
+- `409 Conflict` - Request conflicts with current state
+- `422 Unprocessable Entity` - Valid format but semantic errors
+- `500 Internal Server Error` - Server-side error
+</requirements>
+</rule>
+
+<rule>
+<name>Error Response Format</name>
+<requirements>
+- Use consistent error structure across all endpoints
+- Include error code, message, and details
+- Provide actionable error messages
+- Include request ID for debugging
+- Add field-level errors for validation
+- Use RFC 7807 Problem Details format when appropriate
+</requirements>
+</rule>
+
+<rule>
+<name>Pagination Strategies</name>
+<requirements>
+- Use offset-based for simple use cases: `?offset=20&limit=10`
+- Use cursor-based for large datasets: `?cursor=eyJpZCI6MTAwfQ&limit=10`
+- Include pagination metadata in response
+- Default to reasonable page sizes (20-50 items)
+- Set maximum page size limits (100-500 items)
+- Return total count when feasible
+- Include navigation links (first, last, next, prev)
+</requirements>
+</rule>
+
+<rule>
+<name>API Versioning Approaches</name>
+<requirements>
+- URL path versioning: `/api/v1/users` (most visible)
+- Header versioning: `API-Version: 1` (cleaner URLs)
+- Accept header: `Accept: application/vnd.api+json;version=1`
+- Query parameter: `/users?version=1` (avoid if possible)
+- Use semantic versioning for version numbers
+- Maintain backward compatibility within major versions
+- Deprecate versions gracefully with notices
+</requirements>
+</rule>
+</rules>
+
+<examples>
+<example type="good">
+```http
+# Create a new user
+POST /api/v1/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com"
+}
+
+# Response
+HTTP/1.1 201 Created
+Location: /api/v1/users/123
+Content-Type: application/json
+
+{
+  "id": "123",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+
+# Get paginated orders for a user
+GET /api/v1/users/123/orders?cursor=eyJpZCI6NDU2fQ&limit=20
+
+# Response
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "data": [
+    {
+      "id": "789",
+      "user_id": "123",
+      "total": 99.99,
+      "status": "completed"
+    }
+  ],
+  "pagination": {
+    "cursor": "eyJpZCI6Nzg5fQ",
+    "has_next": true,
+    "has_prev": true,
+    "total": 156
+  },
+  "links": {
+    "self": "/api/v1/users/123/orders?cursor=eyJpZCI6NDU2fQ&limit=20",
+    "next": "/api/v1/users/123/orders?cursor=eyJpZCI6Nzg5fQ&limit=20",
+    "prev": "/api/v1/users/123/orders?cursor=eyJpZCI6MTIzfQ&limit=20"
+  }
+}
+
+# Error response with field validation
+POST /api/v1/users
+Content-Type: application/json
+
+{
+  "name": "J",
+  "email": "invalid-email"
+}
+
+# Response
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/json
+
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "The request contains invalid fields",
+    "request_id": "req_abc123",
+    "fields": {
+      "name": ["Name must be at least 2 characters long"],
+      "email": ["Email must be a valid email address"]
+    }
+  }
+}
+```
+</example>
+</examples>
+
+</restful-api-design>

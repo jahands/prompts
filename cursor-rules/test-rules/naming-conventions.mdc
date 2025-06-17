@@ -1,0 +1,44 @@
+---
+description: Naming conventions for variables, functions, classes, types, and constants
+globs:
+alwaysApply: false
+---
+<naming-conventions>
+
+<title>Naming Conventions</title>
+
+<rules>
+- Use camelCase for variables and functions
+- Use PascalCase for classes and types
+- Use UPPER_SNAKE_CASE for constants
+- Start variable names with lowercase letters
+- Start class and type names with uppercase letters
+- Use descriptive names that convey purpose
+- Avoid single-letter variables except in loops
+- Spell out acronyms in camelCase (apiKey not APIKey)
+</rules>
+
+<examples>
+<example type="good">
+```typescript
+// Variables and functions - camelCase
+const userName = "John";
+let itemCount = 0;
+function calculateTotal(items) { }
+const getUserData = () => { };
+
+// Classes and types - PascalCase
+class UserAccount { }
+interface ProductDetails { }
+type OrderStatus = "pending" | "shipped";
+enum PaymentMethod { }
+
+// Constants - UPPER_SNAKE_CASE
+const MAX_RETRY_ATTEMPTS = 3;
+const API_BASE_URL = "https://api.example.com";
+const DEFAULT_TIMEOUT_MS = 5000;
+```
+</example>
+</examples>
+
+</naming-conventions>

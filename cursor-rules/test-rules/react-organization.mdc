@@ -1,0 +1,37 @@
+---
+description: React component organization - component size limits, hook extraction, and test colocation
+globs:
+alwaysApply: false
+---
+<react-component-organization>
+
+<title>React Component Organization</title>
+
+<rules>
+- Keep React components under 200 lines
+- Extract custom hooks to separate files in a `hooks/` directory
+- Name hook files as `use{HookName}.ts` or `use{HookName}.tsx`
+- Colocate test files with components using `.test.tsx` or `.spec.tsx` suffix
+- Place test files in the same directory as the component they test
+- When a component exceeds 150 lines, consider extracting sub-components
+- Group related components in feature-based directories
+- Export hooks from an index file for cleaner imports
+</rules>
+
+<examples>
+<example type="good">
+```
+src/
+  components/
+    UserProfile/
+      UserProfile.tsx         (< 200 lines)
+      UserProfile.test.tsx    (colocated test)
+      UserAvatar.tsx         (extracted sub-component)
+      hooks/
+        useUserData.ts       (extracted custom hook)
+        index.ts             (exports all hooks)
+```
+</example>
+</examples>
+
+</react-component-organization>
