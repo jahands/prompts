@@ -1,0 +1,73 @@
+---
+description: How to add a GitHub Actions runner for jahands/* repositories
+globs:
+alwaysApply: false
+---
+<github-actions-runners>
+
+<title>GitHub Actions Runners - jahands/* repositories</title>
+
+<location>servers/cicd/stacks/gha-jahands.yml</location>
+
+<overview>
+This stack manages GitHub Actions self-hosted runners for all jahands/* repositories using a shared architecture.
+</overview>
+
+<architecture>
+<shared-resources>
+- Single cache server and tool cache volume shared across all repos
+</shared-resources>
+<per-repository>
+- Each repo gets its own runner service and auth service for security isolation
+</per-repository>
+<current-repos>
+- apps-monorepo (2 replicas)
+- workers-packages (5 replicas)
+</current-repos>
+</architecture>
+
+<service-naming>
+<conventions>
+- Runner service: `{repo-name}` (e.g., `apps-monorepo`, `workers-packages`)
+- Auth service: `auth-{repo-name}` (e.g., `auth-apps-monorepo`, `auth-workers-packages`)
+- Shared cache: `cache-server`
+</conventions>
+</service-naming>
+
+<adding-repository>
+<context>When asked to "add a new gha runner for jahands/some-repo", the LLM should:</context>
+
+<steps>
+1. Review the existing runners in `servers/cicd/stacks/gha-jahands.yml` to understand:
+   - Service configuration patterns
+   - Image versions and configuration
+   - Environment variables and volumes
+   - Auth service setup
+
+2. Add new services following the established patterns:
+   - Use consistent naming (`{repo-name}` and `auth-{repo-name}`)
+   - Match the existing comment separator formatting (ensure proper alignment with equal signs)
+   - Place new services before the shared cache server section
+   - Add auth volume under the "# auth" section
+   - Update the "Current repositories:" list at the top with the new repo and replica count
+</steps>
+</adding-repository>
+
+<key-requirements>
+- Use hyphens in service names, not underscores
+- Default to 2 replicas unless specified otherwise
+- Maintain consistent formatting with existing services
+- Each repo needs both a runner and auth service
+- All runners share the cache server and tool cache
+- Comment separators must be properly aligned:
+  - Use exactly 32 `#` characters for the border
+  - Center the text with equal padding of `=` characters
+  - Format: `# ================================ #`
+  - Format: `# ===== {text} runners ====== #` (adjust `=` count to center)
+</key-requirements>
+
+<example>
+<description>For "jahands/my-new-app", services would be named `my-new-app` and `auth-my-new-app`, following the patterns of existing services in the stack.</description>
+</example>
+
+</github-actions-runners>
