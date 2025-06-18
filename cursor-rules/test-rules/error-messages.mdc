@@ -1,38 +1,36 @@
 ---
-description: Provide contextual error messages with user intent and suggested fixes
+description: Provide helpful error messages with context and suggested fixes
 globs:
 alwaysApply: false
 ---
-<error-message-context>
-
-<title>Error Message Context and Fixes</title>
+<error-messages-with-context>
 
 <rules>
-- Always include what the user was trying to accomplish when an error occurs
-- Provide the specific action or command that caused the error
-- Explain why the error happened in the context of the user's goal
-- Suggest at least one concrete fix or workaround
-- Format error context as: "While trying to [user intent], [what went wrong]"
-- Include any relevant file paths, function names, or variable names
-- If multiple solutions exist, prioritize the simplest fix first
-- Reference the exact error message but translate technical jargon
+- Include what the user was trying to accomplish when the error occurred
+- Specify exactly what went wrong in clear, non-technical language
+- Always suggest at least one concrete fix or next step
+- Include relevant file paths, variable names, or commands in the error message
+- Avoid generic error messages like "Something went wrong" or "Invalid input"
+- If the error is due to missing dependencies, specify exactly what needs to be installed
+- For syntax errors, show the problematic line with context
+- For configuration errors, indicate which file and setting needs adjustment
 </rules>
 
 <examples>
 <example type="good">
 ```
-Error: Cannot read property 'name' of undefined
+Error: Failed to connect to database while trying to fetch user profile.
 
-While trying to display user information, the code attempted to access a 'name' property on an undefined user object at line 42 in UserProfile.tsx.
+What went wrong: The PostgreSQL connection timed out after 30 seconds.
 
-Suggested fix: Add a null check before accessing the property:
-if (user && user.name) {
-  return <h1>{user.name}</h1>;
-}
-
-This error likely occurred because the user data hasn't loaded yet or the API returned null.
+Suggested fixes:
+1. Check if PostgreSQL is running: `sudo systemctl status postgresql`
+2. Verify your connection settings in `.env`:
+   - DATABASE_HOST should be 'localhost' or your server IP
+   - DATABASE_PORT should be 5432 (default)
+3. Test the connection manually: `psql -h localhost -U your_username -d your_database`
 ```
 </example>
 </examples>
 
-</error-message-context>
+</error-messages-with-context>

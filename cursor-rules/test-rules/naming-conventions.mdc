@@ -5,38 +5,48 @@ alwaysApply: false
 ---
 <naming-conventions>
 
-<title>Naming Conventions</title>
-
 <rules>
-- Use camelCase for variables and functions
-- Use PascalCase for classes and types
-- Use UPPER_SNAKE_CASE for constants
-- Start variable names with lowercase letters
-- Start class and type names with uppercase letters
-- Use descriptive names that convey purpose
-- Avoid single-letter variables except in loops
-- Spell out acronyms in camelCase (apiKey not APIKey)
+- Use camelCase for variables and functions: `myVariable`, `getUserData()`
+- Use PascalCase for classes and types: `UserAccount`, `ResponseType`
+- Use UPPER_SNAKE_CASE for constants: `MAX_RETRY_COUNT`, `API_TIMEOUT`
+- Boolean variables should start with `is`, `has`, or `should`: `isLoading`, `hasPermission`
+- Array names should be plural: `users`, `items`, `selectedOptions`
+- Function names should be verbs or verb phrases: `calculateTotal()`, `fetchUserData()`
+- Class names should be nouns: `Customer`, `OrderManager`, `DatabaseConnection`
 </rules>
 
 <examples>
 <example type="good">
 ```typescript
-// Variables and functions - camelCase
-const userName = "John";
-let itemCount = 0;
-function calculateTotal(items) { }
-const getUserData = () => { };
-
-// Classes and types - PascalCase
-class UserAccount { }
-interface ProductDetails { }
-type OrderStatus = "pending" | "shipped";
-enum PaymentMethod { }
-
-// Constants - UPPER_SNAKE_CASE
-const MAX_RETRY_ATTEMPTS = 3;
-const API_BASE_URL = "https://api.example.com";
+// Constants
+const MAX_CONNECTIONS = 100;
 const DEFAULT_TIMEOUT_MS = 5000;
+
+// Variables and functions
+const userName = "John";
+const isAuthenticated = true;
+const activeUsers = [];
+
+function getUserById(userId: string) {
+  return database.findUser(userId);
+}
+
+// Classes and types
+class UserService {
+  private connectionPool: ConnectionPool;
+  
+  async createUser(userData: UserData): Promise<User> {
+    // Implementation
+  }
+}
+
+interface UserData {
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+type UserRole = 'admin' | 'user' | 'guest';
 ```
 </example>
 </examples>

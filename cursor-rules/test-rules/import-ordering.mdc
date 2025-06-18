@@ -1,20 +1,18 @@
 ---
-description: Rules for organizing imports in JavaScript/TypeScript files with proper grouping and spacing
+description: Organize imports with external packages first, internal modules second, relative imports last, with blank lines between groups
 globs:
 alwaysApply: false
 ---
 <import-ordering>
 
-<title>Import Organization Rules</title>
-
 <rules>
-- Group imports into three categories in this order: external packages, internal modules, relative imports
-- Place external packages (from node_modules) first
-- Place internal modules (absolute imports from project) second
-- Place relative imports (starting with ./ or ../) last
-- Add exactly one blank line between each import group
-- Sort imports alphabetically within each group
-- Keep imports from the same package together
+- External packages (from node_modules) must come first
+- Internal/absolute imports (from project root) come second
+- Relative imports (starting with . or ..) come last
+- Each group must be separated by a blank line
+- Within each group, maintain alphabetical order
+- No blank lines within groups
+- Remove unused imports
 </rules>
 
 <examples>
@@ -24,19 +22,16 @@ alwaysApply: false
 import React from 'react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import lodash from 'lodash';
 
-// Internal modules
-import { ApiClient } from '@/services/api';
-import { UserService } from '@/services/user';
-import { authConfig } from '@/config/auth';
-import { logger } from '@/utils/logger';
+// Internal/absolute imports
+import { API_ENDPOINT } from '@/config/constants';
+import { UserService } from '@/services/UserService';
+import { formatDate } from '@/utils/date';
 
 // Relative imports
 import { Button } from './components/Button';
-import { Header } from './components/Header';
-import { formatDate } from '../utils/date';
-import styles from './styles.module.css';
+import { Header } from './Header';
+import styles from './App.module.css';
 ```
 </example>
 </examples>

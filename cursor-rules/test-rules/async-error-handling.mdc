@@ -1,20 +1,30 @@
 ---
-description: Enforces try-catch blocks for async operations with structured error logging
+description: Enforce try-catch blocks for async operations with structured error logging
 globs:
 alwaysApply: false
 ---
 <async-error-handling>
 
-<title>Async Error Handling with Structured Logging</title>
+<title>Structured Error Handling for Async Operations</title>
 
 <rules>
-- Always wrap async operations in try-catch blocks
+- Wrap all async operations in try-catch blocks
+- Never let async errors propagate unhandled
 - Log errors with structured format including timestamp, error type, and user context
-- Use consistent error object structure across the application
-- Include error stack trace in development environments
-- Sanitize sensitive information before logging
-- Implement proper error recovery or propagation
+- Use consistent error logging format across the application
+- Include stack traces in development, sanitize in production
+- Log to appropriate channels based on severity
 </rules>
+
+<logging-format>
+- `timestamp`: ISO 8601 format (e.g., 2024-01-15T10:30:45.123Z)
+- `errorType`: Error class name or custom error type
+- `message`: Human-readable error description
+- `userId`: Current user identifier if available
+- `sessionId`: Current session identifier
+- `context`: Operation-specific data (request ID, endpoint, etc.)
+- `stack`: Stack trace (development only)
+</logging-format>
 
 <examples>
 <example type="good">
@@ -26,16 +36,19 @@ async function fetchUserData(userId: string): Promise<User> {
   } catch (error) {
     logger.error({
       timestamp: new Date().toISOString(),
-      errorType: error.name || 'UnknownError',
-      message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      errorType: error.constructor.name,
+      message: `Failed to fetch user data`,
+      userId,
+      sessionId: getCurrentSession().id,
       context: {
-        userId,
-        operation: 'fetchUserData',
-        endpoint: `/users/${userId}`
-      }
+        endpoint: `/users/${userId}`,
+        method: 'GET',
+        requestId: getRequestId()
+      },
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
-    throw new ApplicationError('Failed to fetch user data', { cause: error });
+    
+    throw new UserFetchError(`Unable to retrieve user ${userId}`, error);
   }
 }
 ```
