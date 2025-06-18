@@ -1,52 +1,78 @@
-Task: Improve the cursor-rules.mdc guide using test-driven development
+<start-test-driven-improvement>
 
-Please follow the test-driven rule development process outlined in cursor-rules/test-driven-rule-development.mdc.
+<title>Start Test-Driven Rule Improvement</title>
 
-Starting point: The cursor-rules guide to improve is already at cursor-rules/cursor-rules.mdc in your repository.
+<task>
+Improve cursor-rules.mdc using test-driven development to ensure it produces appropriately structured rules - simple concepts should have simple rules, complex concepts can have complex rules.
+</task>
 
-Setup:
+<required-files>
+- cursor-rules/test-driven-rule-development.mdc - Complete process to follow
+- docs/cursor-rules-requirements.md - Success criteria and evaluation metrics  
+- docs/test-rules.md - The 10 standard test prompts
+- cursor-rules/cursor-rules.mdc - The guide you're improving
+</required-files>
 
-1. Work with the existing file at cursor-rules/cursor-rules.mdc
-2. Create test outputs at cursor-rules/test-rules/ (or another test directory of your choosing)
-3. Commit both the guide and test results together for version history
+<process-overview>
+Follow the 8-step process in cursor-rules/test-driven-rule-development.mdc:
+1. Clean test directory (CRITICAL - prevents contamination)
+2. Create test scenarios (use the 10 prompts from docs/test-rules.md)
+3. Get user approval (skip if using standard prompts)
+4. Run tests after approval
+5. Analyze results
+6. Commit test results
+7. Revise guide based on data
+8. Repeat until satisfied
+</process-overview>
 
-Goal: The guide should help LLMs write appropriately structured rules - simple concepts should have simple rules, complex concepts can have complex rules. The structure should
-match the complexity of the content.
+<specific-guidance>
+<test-directory>
+- Location: cursor-rules/test-rules/
+- MUST clean before starting: rm -rf cursor-rules/test-rules/
+</test-directory>
 
-Current problem: When tested today, LLMs consistently over-structured simple rules. For example, a basic indentation rule received unnecessary <context>, <overview>, and
-<key-concepts> sections when a simple title and rules list would have been sufficient.
+<sub-agent-template>
+```
+You need to write an LLM rule. First, read the rule-writing guidelines at /Users/jh/src/prompts/cursor-rules/cursor-rules.mdc, then create a rule following those guidelines.
 
-Hypothesis to test: The guide may be inadvertently encouraging complexity by:
+Your task: [INSERT SPECIFIC RULE REQUEST FROM TEST PROMPTS]
 
-1. Showing complex template examples prominently
-2. Including sections like "overview" and "context" in examples that get copied even when not needed
-3. Not being forceful enough about starting with the simplest possible structure
+Write the rule to this file: /Users/jh/src/prompts/cursor-rules/test-rules/[FILENAME].mdc
+```
+</sub-agent-template>
 
-Suggested test prompts to use:
+<evaluation>
+- Use ALL criteria from docs/cursor-rules-requirements.md
+- Follow the analysis format specified there
+- Apply the line count targets and structure requirements
+- Check against the specific rule evaluations
+- Use the provided analysis checklist
+</evaluation>
+</specific-guidance>
 
-1. "Write a rule for always using 2 spaces for indentation in JavaScript/TypeScript files, never tabs"
-2. "Write a rule that tells the LLM to always provide error messages with context about what the user was trying to do and suggest a fix"
-3. "Write a rule for implementing dependency injection in TypeScript classes, including when to use constructor injection vs property injection, and how to handle circular
-   dependencies"
-4. "Write a rule that says to always use try-catch blocks for async operations and to log errors with structured logging that includes timestamp, error type, and user context"
-5. "Write a rule for organizing React components - keep components under 200 lines, extract hooks to separate files, and colocate tests with components"
+<current-state>
+- Iterations completed: 6
+- Current success rate: 90%
+- Recent improvements: Simple template first, strong example warnings, decision tree
+- Continue if: Requirements change or success drops below 80%
+</current-state>
 
-Expected outcomes:
+<common-issues>
+- Simple rules with unnecessary <context>, <overview>, or <key-concepts>
+- Multiple examples for basic formatting rules  
+- Indentation rules with 2+ examples when 1 suffices
+- Line counts over 60 for simple rules
+- Complex template used for simple concepts
+</common-issues>
 
-- Rules 1-2 should need only basic structure (title, rules list, maybe examples)
-- Rules 3-5 might legitimately benefit from additional sections like key-concepts or categories
-- Success = rule structure matches content complexity
+<begin>
+1. Read all required files
+2. Clean test directory completely
+3. Run the 10 standard test prompts
+4. Analyze using requirements criteria
+5. Commit results with analysis
+6. Revise guide if needed
+7. Repeat until 80%+ success
+</begin>
 
-Potential improvements to explore:
-
-- Move complex examples to the end or remove them entirely
-- Show the simplest possible template as the default
-- Add explicit "STOP HERE" guidance after basic structure
-- Consider showing "bad" over-structured examples as deterrents
-- Test whether less guidance produces better results than more warnings
-
-Please begin by:
-
-1. Reading the test-driven rule development guide
-2. Reviewing the current cursor-rules.mdc file
-3. Showing me your test prompts before running the first iteration
+</start-test-driven-improvement>
