@@ -51,9 +51,9 @@ Write the rule to this file: /Users/jh/src/prompts/cursor-rules/test-rules/[FILE
 </specific-guidance>
 
 <current-state>
-- Iterations completed: 6
+- Iterations completed: 7
 - Current success rate: 90%
-- Recent improvements: Simple template first, strong example warnings, decision tree
+- Recent improvements: Simple template first, strong example warnings, decision tree, title guidance
 - Continue if: Requirements change or success drops below 80%
 </current-state>
 
