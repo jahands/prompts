@@ -18,7 +18,28 @@ alwaysApply: false
 
 <process>
 <step>
-<name>1. Create Test Scenarios</name>
+<name>1. Clean Test Directory</name>
+<requirements>
+- Check if test-rules directory exists with files from previous sessions
+- Delete ALL existing test files to prevent contamination
+- Sub-agents must not see rules from previous test runs
+- Create fresh empty test directory
+- This step is CRITICAL - existing rules will taint results
+</requirements>
+<example>
+```bash
+# Check for existing test files
+ls -la .cursor/rules/test-rules/
+
+# If directory exists with files, clean it completely
+rm -rf .cursor/rules/test-rules/
+mkdir -p .cursor/rules/test-rules/
+```
+</example>
+</step>
+
+<step>
+<name>2. Create Test Scenarios</name>
 <requirements>
 - Design 5-7 prompts varying from simple to complex
 - Include 60%+ simple rules to test if guide prevents over-structuring
@@ -29,7 +50,7 @@ alwaysApply: false
 </step>
 
 <step>
-<name>2. Get User Approval</name>
+<name>3. Get User Approval</name>
 <requirements>
 - Present all test prompts to user for review
 - Show the complete sub-agent prompt template with placeholders
@@ -75,7 +96,7 @@ Should I proceed with these prompts?"
 </step>
 
 <step>
-<name>3. Run Tests After Approval</name>
+<name>4. Run Tests After Approval</name>
 <requirements>
 - Create test directory: `.cursor/rules/test-rules/`
 - Fill in all path placeholders with exact, absolute paths
@@ -97,7 +118,7 @@ Write the rule to this file: /exact/path/to/test-rules/output.mdc"
 </step>
 
 <step>
-<name>4. Analyze Results</name>
+<name>5. Analyze Results</name>
 <requirements>
 - Read each generated rule file
 - Compare actual results to expected results
@@ -117,7 +138,7 @@ more than the warnings to keep things simple. Simple formatting rules included
 </step>
 
 <step>
-<name>5. Commit Test Results</name>
+<name>6. Commit Test Results</name>
 <requirements>
 - Stage test files AND the guide being tested
 - Include analysis in commit message
@@ -127,7 +148,7 @@ more than the warnings to keep things simple. Simple formatting rules included
 </step>
 
 <step>
-<name>6. Revise Guide Based on Data</name>
+<name>7. Revise Guide Based on Data</name>
 <requirements>
 - Analyze why agents made the choices they did
 - Look for patterns in what was ignored or misunderstood
@@ -144,7 +165,7 @@ more than the warnings to keep things simple. Simple formatting rules included
 </step>
 
 <step>
-<name>7. Repeat Until Satisfied</name>
+<name>8. Repeat Until Satisfied</name>
 <requirements>
 - Run exact same test prompts after each revision
 - Compare results to previous iterations
