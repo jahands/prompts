@@ -20,21 +20,21 @@ alwaysApply: false
 </rules>
 
 <good-candidates>
-- **Test Implementation**: Writing comprehensive test suites after identifying what needs testing
-- **Codebase Analysis**: Systematic file analysis with specific goals (e.g., "find all places X pattern is used")
-- **Build & Validation**: Running test suites, builds, and reporting results
-- **Solution Implementation**: Coding changes after architectural decisions are made
-- **Documentation Updates**: Writing/updating docs when content requirements are clear
-- **Pattern Detection**: Finding all instances of specific code patterns across the codebase
-- **Refactoring Tasks**: Mechanical code changes following established patterns
+- Test Implementation: Writing comprehensive test suites after identifying what needs testing
+- Codebase Analysis: Systematic file analysis with specific goals (e.g., "find all places X pattern is used")
+- Build & Validation: Running test suites, builds, and reporting results
+- Solution Implementation: Coding changes after architectural decisions are made
+- Documentation Updates: Writing/updating docs when content requirements are clear
+- Pattern Detection: Finding all instances of specific code patterns across the codebase
+- Refactoring Tasks: Mechanical code changes following established patterns
 </good-candidates>
 
 <stay-in-main-thread>
-- **Problem Diagnosis**: Requires iterative thinking and user feedback
-- **Design Decisions**: Architectural choices and solution approaches
-- **Conceptual Breakthroughs**: Understanding complex system relationships
-- **User Interaction**: Back-and-forth clarification and requirement gathering
-- **Creative Problem Solving**: Novel approaches to complex issues
+- Problem Diagnosis: Requires iterative thinking and user feedback
+- Design Decisions: Architectural choices and solution approaches
+- Conceptual Breakthroughs: Understanding complex system relationships
+- User Interaction: Back-and-forth clarification and requirement gathering
+- Creative Problem Solving: Novel approaches to complex issues
 </stay-in-main-thread>
 
 <decision-criteria>
@@ -46,11 +46,9 @@ alwaysApply: false
 - Are you implementing a solution that's already been designed? → Use sub-agent
 </decision-criteria>
 
-<examples>
-<example type="good-delegation">
-**After discovering a bug in argument processing:**
+<example>
+After discovering a bug in argument processing:
 "I've identified that the convertArgsToFigArgs function incorrectly processes non-positional arguments. Please implement the fix by removing lines 609-641 that add non-positional arguments, update the function signature for convertArgsToFigOptions to accept positionalArgs parameter, and add comprehensive tests to verify the fix works correctly."
 </example>
-</examples>
 
 </sub-agent-usage>
