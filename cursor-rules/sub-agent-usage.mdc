@@ -1,0 +1,56 @@
+---
+description: Guidelines for when to use sub-agents to reduce main thread context usage while maintaining productivity
+globs:
+alwaysApply: false
+---
+
+<sub-agent-usage>
+
+<title>When to Use Sub-Agents for Task Delegation</title>
+
+<rules>
+- Use sub-agents for well-defined, mechanical tasks after creative problem-solving is complete
+- Delegate comprehensive test writing once you know what to test
+- Use sub-agents for systematic codebase analysis when the analysis goal is clear
+- Delegate build validation, test running, and compilation verification
+- Use sub-agents for implementing solutions after design decisions are made
+- Keep complex debugging, problem diagnosis, and design decisions in main thread
+- Delegate file creation/modification tasks with clear specifications
+- Use sub-agents when token usage in main thread is high but task is routine
+</rules>
+
+<good-candidates>
+- **Test Implementation**: Writing comprehensive test suites after identifying what needs testing
+- **Codebase Analysis**: Systematic file analysis with specific goals (e.g., "find all places X pattern is used")
+- **Build & Validation**: Running test suites, builds, and reporting results
+- **Solution Implementation**: Coding changes after architectural decisions are made
+- **Documentation Updates**: Writing/updating docs when content requirements are clear
+- **Pattern Detection**: Finding all instances of specific code patterns across the codebase
+- **Refactoring Tasks**: Mechanical code changes following established patterns
+</good-candidates>
+
+<stay-in-main-thread>
+- **Problem Diagnosis**: Requires iterative thinking and user feedback
+- **Design Decisions**: Architectural choices and solution approaches
+- **Conceptual Breakthroughs**: Understanding complex system relationships
+- **User Interaction**: Back-and-forth clarification and requirement gathering
+- **Creative Problem Solving**: Novel approaches to complex issues
+</stay-in-main-thread>
+
+<decision-criteria>
+- Can the task be completed with a clear, specific prompt? → Use sub-agent
+- Does the task require back-and-forth with the user? → Stay in main thread
+- Is the task mechanical but produces lots of output? → Use sub-agent
+- Does the task require creative thinking or novel approaches? → Stay in main thread
+- Are you reading/analyzing large files just to extract specific info? → Use sub-agent
+- Are you implementing a solution that's already been designed? → Use sub-agent
+</decision-criteria>
+
+<examples>
+<example type="good-delegation">
+**After discovering a bug in argument processing:**
+"I've identified that the convertArgsToFigArgs function incorrectly processes non-positional arguments. Please implement the fix by removing lines 609-641 that add non-positional arguments, update the function signature for convertArgsToFigOptions to accept positionalArgs parameter, and add comprehensive tests to verify the fix works correctly."
+</example>
+</examples>
+
+</sub-agent-usage>
