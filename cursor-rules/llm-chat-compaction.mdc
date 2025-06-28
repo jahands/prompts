@@ -1,0 +1,128 @@
+---
+description: Guidelines for compacting LLM chat threads to preserve context when copying to new threads
+globs:
+alwaysApply: false
+---
+<llm-chat-compaction>
+
+
+<title>LLM Chat Thread Compaction</title>
+
+
+When chat threads become too long or need to be copied to a new thread, compact them to preserve essential context while reducing token usage. The XML tags here are delimiters for guidance—do not reproduce them in the generated summary.
+
+<rules>
+- **Precedence:** Rules are listed in priority order; when two rules conflict, the earlier rule wins.
+- **Brevity over strict chronology:** Keep the narrative in logical chronological order but consolidate redundant iterations or dead-ends unless they add learning value.
+- Extract and summarise **key decisions**, each with a one-line rationale.
+- **Preserve user requirements and acceptance criteria verbatim** (keep the earliest complete version if repeated).
+- **Include final working solutions**—code, commands, configuration—in full.
+- Provide **before/after code states** *only* when the combined diff is ≤ 50 lines; otherwise summarise the change and reference the file or commit.
+- **Error messages:** keep the first occurrence and the final resolved occurrence of each unique error; include at most the first 10 lines followed by an ellipsis.
+- **Configuration & dependencies:** list every change with exact names and versions.
+- **Redact sensitive data** such as API keys, secrets, and PII, replacing them with `[REDACTED]`.
+- **Token budget:** target ≤ 800 tokens for the entire compaction; if this limit is exceeded, drop the lowest-priority items defined in <what-to-omit> until within budget.
+- **Validation:** ensure every markdown code-fence (```) is properly opened and closed to avoid rendering issues.
+</rules>
+
+
+<compaction-structure>
+<structure>
+```markdown
+## Thread Summary
+- Original goal: [user's initial request]
+- Final outcome: [what was achieved]
+- Key context: [important environmental/project details]
+- Compacted on: [YYYY‑MM‑DD]
+
+
+Decisions Made
+	•	[Decision 1 with brief rationale]
+	•	[Decision 2 with brief rationale]
+
+Code Changes
+
+[Component/File Name]
+
+Before:
+
+[relevant code snippet]
+
+After:
+
+[updated code snippet]
+
+Issues Encountered and Resolved
+	•	Issue: [description]
+Resolution: [what fixed it]
+
+Current State
+	•	[What’s working]
+	•	[What still needs attention]
+	•	[Next steps if any]
+
+</structure>
+</compaction-structure>
+
+<preservation-priorities>
+- User's original requirements: ALWAYS preserve verbatim
+- Working code solutions: Include in full
+- Configuration changes: Document all modifications
+- Dependencies added/removed: List with versions
+- Design decisions: Summarize with rationale
+- Debugging insights: Keep non-obvious solutions
+- Environmental specifics: Note any platform/version dependencies
+</preservation-priorities>
+
+<what-to-omit>
+- LLM thinking process and explanations
+- Failed approaches that led nowhere and are not referenced in the rationale
+- Redundant file reads and searches
+- Intermediate debugging steps with no insight
+- Repetitive status updates
+- Tool invocation details unless directly relevant
+- Meta‑discussions about the conversation itself
+</what-to-omit>
+
+<example>
+```markdown
+## Thread Summary
+- Original goal: Add authentication to React app
+- Final outcome: Implemented JWT auth with refresh tokens
+- Key context: React 18, TypeScript, Express backend
+
+## Decisions Made
+- JWT over session auth for scalability
+- Refresh token rotation for security
+- HttpOnly cookies for token storage
+
+## Code Changes
+### AuthContext.tsx
+**Added authentication context provider with token management**
+```typescript
+export const AuthProvider: FC<{children: ReactNode}> = ({children}) => {
+  const [user, setUser] = useState<User | null>(null);
+  // ... full implementation
+}
+
+useAuth.ts
+
+Custom hook for authentication operations
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  // ... full implementation
+}
+
+Issues Encountered and Resolved
+	•	Issue: CORS errors with credentials
+Resolution: Added credentials: 'include' to fetch options and configured CORS middleware
+
+Current State
+	•	Login/logout working with secure token storage
+	•	Auto-refresh implemented with 5‑minute buffer
+	•	Need to add password reset flow
+
+</example>
+
+</llm-chat-compaction>
