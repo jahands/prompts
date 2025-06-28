@@ -1,5 +1,5 @@
 ---
-description: Guidelines for compacting LLM chat threads to preserve context when copying to new threads
+description: Guidelines for compacting/summarizing LLM chat threads to preserve context when copying to new threads
 globs:
 alwaysApply: false
 ---
