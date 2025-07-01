@@ -1,0 +1,160 @@
+---
+description: TanStack Start best practices emphasizing client-first architecture, type safety, and modern React patterns
+globs:
+alwaysApply: false
+---
+<tanstack-start-best-practices>
+
+<title>TanStack Start - Client-First Full-Stack React Framework</title>
+
+<core-philosophy>
+- Client-first with server enhancement (not server-first like Next.js)
+- Explicit over implicit - no magic, full control
+- Type safety from database to UI through compile-time guarantees
+- Progressive enhancement - works without JS, better with it
+- URL as the source of truth for application state
+</core-philosophy>
+
+<when-to-use-what>
+<decision-tree>
+Is it data from an API/database?
+  → Use route loader + TanStack Query
+
+Is it a mutation (create/update/delete)?
+  → Use server function + useMutation
+
+Is it UI state that should be shareable?
+  → Use search params in the URL
+
+Is it temporary UI state (form inputs, toggles)?
+  → Use useState/useReducer locally
+
+Is it derived from other state?
+  → Calculate it during render (useMemo if expensive)
+
+Does it need to sync with external systems?
+  → Use useEffect (this is the ONLY valid use case)
+</decision-tree>
+</when-to-use-what>
+
+<routing-principles>
+- Routes are the primary unit of code organization
+- Each route is a mini-application with its own data requirements
+- Loaders run isomorphically (server on first load, client on navigation)
+- File naming: `$param.tsx` for dynamics, `_layout.tsx` for layouts
+- Search params are first-class citizens with full TypeScript support
+</routing-principles>
+
+<data-fetching-patterns>
+<rule>
+<name>Route loaders are the only place for data fetching</name>
+<why>Prevents waterfalls, enables streaming SSR, provides automatic caching</why>
+<requirements>
+- Define data needs at route level, not component level
+- Return query options for TanStack Query integration
+- Let Suspense handle loading states automatically
+- Loaders can access route params, search params, and context
+</requirements>
+</rule>
+
+<example type="pattern">
+```typescript
+// Route defines data requirements
+export const Route = createFileRoute('/products/$category')({
+  loader: ({ context: { queryClient }, params }) =>
+    queryClient.ensureQueryData({
+      queryKey: ['products', params.category],
+      queryFn: () => fetchProducts(params.category),
+    }),
+})
+
+// Component just consumes data
+function ProductList() {
+  const { category } = Route.useParams()
+  const { data } = useSuspenseQuery({
+    queryKey: ['products', category],
+  })
+  // No loading state needed - Suspense handles it
+}
+```
+</example>
+</data-fetching-patterns>
+
+<state-management-principles>
+- Server state is not client state - don't mix them
+- URL state > Context > Component state (in order of preference)
+- One source of truth per piece of data
+- Mutations should be optimistic by default
+- Form state can be local until submission
+</state-management-principles>
+
+<server-functions>
+<rule>
+<name>Server functions for all mutations and server-only logic</name>
+<why>Type-safe RPC, automatic validation, progressive enhancement</why>
+<requirements>
+- Always validate inputs with schemas
+- Return meaningful responses for optimistic updates
+- Handle both FormData (no-JS) and JSON submissions
+- Never expose sensitive operations to client bundles
+</requirements>
+</rule>
+</server-functions>
+
+<react-patterns>
+- Components are pure functions - no side effects during render
+- Effects are escape hatches, not go-to solutions
+- Suspense boundaries at route level for best streaming
+- Error boundaries colocated with Suspense boundaries
+- Prefer composition over prop drilling or context
+- CSS handles animations, not JavaScript state machines
+</react-patterns>
+
+<performance-guidelines>
+- Code splits at route boundaries automatically
+- Lazy load below-the-fold components
+- Preload likely next navigations
+- Stream HTML as soon as possible
+- Keep client bundles small for edge deployment
+- Use platform capabilities (KV, R2) over custom solutions
+</performance-guidelines>
+
+<type-safety-requirements>
+- Every route param must be validated
+- Search params need schema validation
+- Server function inputs/outputs fully typed
+- No `any` types in route definitions
+- Leverage inference over explicit types
+</type-safety-requirements>
+
+<anti-patterns-to-avoid>
+- useEffect for data fetching
+- Multiple useState for related data
+- Client-side routing logic
+- Manual loading state management
+- Storing server data in component state
+- Context for server data distribution
+- Effects for computed values
+- Manual API endpoint creation
+</anti-patterns-to-avoid>
+
+<modern-react-integration>
+- Embrace Suspense for async operations
+- Use streaming SSR for better perceived performance
+- Server functions align with React Server Actions
+- Prepare for RSC by keeping client/server boundaries clear
+- Use React 19's improved hydration patterns
+</modern-react-integration>
+
+<best-practices>
+- Start with URL state before reaching for client state
+- Make invalid states impossible through types
+- Test with MSW to mock server functions
+- Profile bundle sizes regularly
+- Use platform-specific optimizations when deploying
+- Design for progressive enhancement
+- Keep business logic in server functions
+- Let the framework handle the hard parts
+</best-practices>
+
+</tanstack-start-best-practices>
