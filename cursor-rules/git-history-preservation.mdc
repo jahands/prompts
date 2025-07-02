@@ -1,0 +1,70 @@
+---
+description: Guidelines for preserving git history when refactoring files into multiple modules
+globs:
+alwaysApply: false
+---
+
+<git-history-preservation>
+
+<title>Preserve Git History During File Refactoring</title>
+
+<rules>
+- Use `git mv` when extracting existing code to new files to preserve history
+- Commit file moves before making content modifications
+- Verify history preservation with `git log --follow filename`
+- For new code that doesn't exist yet, `create_file` is appropriate
+- Content extraction tools (`sed`, manual copy-paste) break git history tracking
+- Heavy content modification in the same commit as `git mv` can confuse git's rename detection
+</rules>
+
+<approaches>
+<single-extraction>
+1. `git mv source.ts target.ts`
+2. `git commit -m "move source to target"`
+3. Edit target.ts to contain only extracted functionality
+4. Create new source.ts with remaining code and imports to target
+5. `git commit -m "extract functionality to separate module"`
+</single-extraction>
+
+<multiple-extractions>
+- **Option A (Copy approach):** `git mv` → `cp` to create multiple copies → commit moves → edit each copy
+- **Option B (Sequential):** Extract one module at a time using single-extraction approach
+- **Option C (Filter-branch):** Use `git filter-branch` for complex history rewriting (advanced)
+</multiple-extractions>
+</approaches>
+
+<verification>
+- Run `git log --follow --oneline target.ts` to verify history
+- Should show original commits like `feat: add original functionality`
+- TypeScript compilation should pass
+- All functionality should work identically
+</verification>
+
+<common-mistakes>
+- Using content extraction tools without `git mv` first
+- Modifying file content heavily in the same commit as the move
+- Assuming `create_file` is wrong when creating genuinely new code
+- Not verifying that git can follow the history after refactoring
+</common-mistakes>
+
+<examples>
+<example type="good">
+```bash
+# Step 1: Move and commit
+git mv large-file.ts specific-module.ts
+git commit -m "refactor: move large-file.ts to specific-module.ts"
+
+# Step 2: Extract content and recreate original
+# Edit specific-module.ts to contain only relevant functions
+# Create new large-file.ts with imports
+git add -A
+git commit -m "refactor: extract specific functionality"
+
+# Verify history preserved
+git log --follow --oneline specific-module.ts
+# Shows: original commits from large-file.ts
+```
+</example>
+</examples>
+
+</git-history-preservation>
