@@ -1,5 +1,5 @@
 ---
-description: Mermaid diagram styling rules for dark mode with accessibility and consistency guidelines
+description: Mermaid diagram styling rules with accessibility and consistency guidelines
 globs:
 alwaysApply: false
 ---
@@ -14,7 +14,7 @@ alwaysApply: false
 
 <color-palette>
 - Core algorithms: fill:#1a365d, stroke:#63b3ed, stroke-width:2px, color:#e2e8f0
-- Main algorithms: fill:#1a202c, stroke:#68d391, stroke-width:2px, color:#e2e8f0  
+- Main algorithms: fill:#1a202c, stroke:#68d391, stroke-width:2px, color:#e2e8f0
 - Helper functions: fill:#4a5568, stroke:#a0aec0, stroke-width:2px, color:#e2e8f0
 - Approximation algorithms: fill:#2d3748, stroke:#f6ad55, stroke-width:2px, color:#e2e8f0
 - Theoretical results: fill:#553c9a, stroke:#d6bcfa, stroke-width:2px, color:#e2e8f0
@@ -39,7 +39,7 @@ alwaysApply: false
 graph TD
     A[Primary Algorithm] --> B[Secondary Algorithm]
     C[Helper Function] --> A
-    
+
     style A fill:#1a365d,stroke:#63b3ed,stroke-width:2px,color:#e2e8f0
     style B fill:#1a202c,stroke:#68d391,stroke-width:2px,color:#e2e8f0
     style C fill:#4a5568,stroke:#a0aec0,stroke-width:2px,color:#e2e8f0
