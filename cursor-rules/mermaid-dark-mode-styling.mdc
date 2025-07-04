@@ -1,0 +1,60 @@
+---
+description: Mermaid diagram styling rules for dark mode with accessibility and consistency guidelines
+globs:
+alwaysApply: false
+---
+
+<mermaid-dark-mode-styling>
+
+<title>Mermaid Diagram Dark Mode Styling Standards</title>
+
+<context>
+<applies-to>All Mermaid diagrams in academic and technical documentation</applies-to>
+</context>
+
+<color-palette>
+- Core algorithms: fill:#1a365d, stroke:#63b3ed, stroke-width:2px, color:#e2e8f0
+- Main algorithms: fill:#1a202c, stroke:#68d391, stroke-width:2px, color:#e2e8f0  
+- Helper functions: fill:#4a5568, stroke:#a0aec0, stroke-width:2px, color:#e2e8f0
+- Approximation algorithms: fill:#2d3748, stroke:#f6ad55, stroke-width:2px, color:#e2e8f0
+- Theoretical results: fill:#553c9a, stroke:#d6bcfa, stroke-width:2px, color:#e2e8f0
+- Final outputs: fill:#2f855a, stroke:#9ae6b4, stroke-width:2px, color:#e2e8f0
+</color-palette>
+
+<rules>
+- Always use stroke-width:2px for visibility and accessibility
+- Use light text (#e2e8f0) on all dark backgrounds for readability
+- Maintain contrast ratio of at least 4.5:1 for WCAG AA compliance
+- Include descriptive legends with consistent styling
+- Use semantic color coding where algorithm types have distinct colors
+- Apply explicit styling to all nodes, don't rely on defaults
+- Group related functions in logical clusters
+- Use dotted lines (-..->) for theoretical relationships
+- Use solid lines (-->) for direct algorithmic dependencies
+</rules>
+
+<examples>
+<example type="good">
+```mermaid
+graph TD
+    A[Primary Algorithm] --> B[Secondary Algorithm]
+    C[Helper Function] --> A
+    
+    style A fill:#1a365d,stroke:#63b3ed,stroke-width:2px,color:#e2e8f0
+    style B fill:#1a202c,stroke:#68d391,stroke-width:2px,color:#e2e8f0
+    style C fill:#4a5568,stroke:#a0aec0,stroke-width:2px,color:#e2e8f0
+```
+</example>
+</examples>
+
+</mermaid-dark-mode-styling>
+
+</rules>
+</maintenance-standards>
+
+</mermaid-dark-mode-styling>
+
+</rules>
+</maintenance-standards>
+
+</mermaid-dark-mode-styling>
