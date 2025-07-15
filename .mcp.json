@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "context7": {
+      "type": "stdio",
+      "command": "bunx",
+      "args": [
+        "@upstash/context7-mcp@latest"
+      ],
+      "env": {}
+    }
+  }
+}
