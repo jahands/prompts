@@ -48,7 +48,7 @@ export const User = z.object({...})
 // WRONG: z.email({error: "Invalid email"}) // Redundant!
 // RIGHT: z.email() // Zod says "Invalid email"
 // RIGHT: Only for business logic:
-z.string().check((val) => /[A-Z]/.test(val), {
+z.string().refine((val) => /[A-Z]/.test(val), {
 	error: 'Must contain uppercase',
 })
 ```
@@ -76,13 +76,13 @@ z.string().check((val) => /[A-Z]/.test(val), {
 
 <rule>
 <name>Custom Validation</name>
-<requirement>Use .check() not .superRefine()</requirement>
+<requirement>Use .check() for advanced validation, .refine() for simple validation</requirement>
 <migration-steps>
-- `val` → `ctx.value`
-- `ctx.addIssue()` → `ctx.issues.push()`
-- `z.ZodIssueCode.custom` → `'custom'`
+- .superRefine() → .check() for advanced validation with multiple issues
+- In .check(): `val` → `ctx.value`, `ctx.addIssue()` → `ctx.issues.push()`
+- `z.ZodIssueCode.custom` → `'custom'` string
 - Add `input: ctx.value` to issue object
-- Use .check() for detailed errors, .refine() for simple validation
+- Use .refine() for simple boolean validation with single error
 </migration-steps>
 </rule>
 
@@ -160,7 +160,7 @@ export const UserReg = z.object({
 	password: z
 		.string()
 		.min(8)
-		.check((pwd) => /[A-Z]/.test(pwd) && /\d/.test(pwd), { error: 'Need uppercase & number' }),
+		.refine((pwd) => /[A-Z]/.test(pwd) && /\d/.test(pwd), { error: 'Need uppercase & number' }),
 	age: z.number().min(18),
 })
 
