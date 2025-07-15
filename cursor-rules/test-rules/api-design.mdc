@@ -1,5 +1,5 @@
 ---
-description: RESTful API design standards including resource naming, HTTP methods, status codes, error handling, pagination, and versioning
+description: RESTful API design patterns including resource naming, HTTP methods, status codes, error handling, pagination, and versioning
 globs:
 alwaysApply: false
 ---
@@ -7,84 +7,34 @@ alwaysApply: false
 
 <title>RESTful API Design Standards</title>
 
-<overview>Comprehensive guidelines for designing consistent, scalable RESTful APIs that follow industry best practices</overview>
-
-<key-concepts>
-- Resource-oriented architecture
-- HTTP method semantics
-- Stateless communication
-- Uniform interface constraints
-- HATEOAS (Hypermedia as the Engine of Application State)
-</key-concepts>
-
 <resource-naming>
-
 <rules>
 - Use plural nouns for collections: `/users`, `/products`, `/orders`
-- Use singular nouns for singletons: `/user/profile`, `/cart`
-- Use lowercase with hyphens for multi-word resources: `/shopping-carts`
+- Use kebab-case for multi-word resources: `/user-profiles`, `/shopping-carts`
 - Nest resources to show relationships: `/users/{id}/orders`
-- Avoid verbs in endpoints - let HTTP methods define actions
-- Keep nesting shallow (max 3 levels deep)
-- Use query parameters for filtering: `/products?category=electronics`
+- Avoid verbs in endpoints - let HTTP methods convey actions
+- Keep nesting shallow (max 3 levels): `/shops/{id}/products/{id}/reviews`
 </rules>
-
-<examples>
-<example type="good">
-```
-GET    /users              # List all users
-GET    /users/123          # Get specific user
-POST   /users              # Create new user
-PUT    /users/123          # Update entire user
-PATCH  /users/123          # Update partial user
-DELETE /users/123          # Delete user
-GET    /users/123/orders   # Get user's orders
-```
-</example>
-</examples>
-
 </resource-naming>
 
 <http-methods>
-
-<method-semantics>
-- `GET`: Retrieve resources (safe, idempotent)
+<method-usage>
+- `GET`: Retrieve resources (idempotent, cacheable)
 - `POST`: Create new resources (not idempotent)
-- `PUT`: Replace entire resource (idempotent)
-- `PATCH`: Partial update (idempotent)
+- `PUT`: Full update/replace resource (idempotent)
+- `PATCH`: Partial update resource (idempotent)
 - `DELETE`: Remove resource (idempotent)
-- `HEAD`: Get headers only (safe, idempotent)
-- `OPTIONS`: Get allowed methods (safe, idempotent)
-</method-semantics>
-
-<request-patterns>
-<pattern type="collection-operations">
-```
-GET    /products           # List with optional filters
-POST   /products           # Create with full resource in body
-DELETE /products           # Bulk delete (use carefully)
-```
-</pattern>
-
-<pattern type="item-operations">
-```
-GET    /products/123       # Retrieve single item
-PUT    /products/123       # Replace entire item
-PATCH  /products/123       # Update specific fields
-DELETE /products/123       # Remove single item
-```
-</pattern>
-</request-patterns>
-
+- `HEAD`: Get headers only (same as GET without body)
+- `OPTIONS`: Get allowed methods for resource
+</method-usage>
 </http-methods>
 
 <status-codes>
-
 <success-codes>
-- `200 OK`: Successful GET, PUT, PATCH, or DELETE
+- `200 OK`: Successful GET, PUT, PATCH, DELETE
 - `201 Created`: Successful POST with new resource
 - `202 Accepted`: Request accepted for async processing
-- `204 No Content`: Successful DELETE or action with no response body
+- `204 No Content`: Successful request with no response body
 </success-codes>
 
 <client-error-codes>
@@ -94,7 +44,6 @@ DELETE /products/123       # Remove single item
 - `404 Not Found`: Resource doesn't exist
 - `409 Conflict`: Request conflicts with current state
 - `422 Unprocessable Entity`: Valid syntax but semantic errors
-- `429 Too Many Requests`: Rate limit exceeded
 </client-error-codes>
 
 <server-error-codes>
@@ -103,12 +52,10 @@ DELETE /products/123       # Remove single item
 - `503 Service Unavailable`: Temporary unavailability
 - `504 Gateway Timeout`: Upstream timeout
 </server-error-codes>
-
 </status-codes>
 
 <error-response-format>
-
-<standard-structure>
+<structure>
 ```json
 {
   "error": {
@@ -127,164 +74,207 @@ DELETE /products/123       # Remove single item
   }
 }
 ```
-</standard-structure>
+</structure>
 
-<error-codes>
-- Machine-readable error codes in SCREAMING_SNAKE_CASE
-- Hierarchical structure: `RESOURCE_ACTION_ERROR`
-- Common codes: `VALIDATION_ERROR`, `NOT_FOUND`, `UNAUTHORIZED`
-- Include field-level errors for validation failures
-- Always include request ID for debugging
-</error-codes>
-
+<requirements>
+- Include machine-readable error codes
+- Provide human-readable messages
+- Add field-level details for validation errors
+- Include request tracking information
+- Use consistent error structure across all endpoints
+</requirements>
 </error-response-format>
 
 <pagination>
-
-<offset-pagination>
-<description>Simple pagination using offset and limit</description>
+<strategies>
+<strategy type="offset-based">
 ```
-GET /products?offset=20&limit=10
+GET /api/v1/products?offset=20&limit=10
 
-Response:
-{
-  "data": [...],
-  "pagination": {
-    "offset": 20,
-    "limit": 10,
-    "total": 150,
-    "hasNext": true,
-    "hasPrev": true
-  }
-}
+Response headers:
+X-Total-Count: 150
+Link: <.../products?offset=30&limit=10>; rel="next",
+      <.../products?offset=10&limit=10>; rel="prev"
 ```
-</offset-pagination>
+</strategy>
 
-<cursor-pagination>
-<description>Efficient pagination for large datasets</description>
+<strategy type="cursor-based">
 ```
-GET /products?cursor=eyJpZCI6MTAwfQ&limit=10
+GET /api/v1/products?cursor=eyJpZCI6MTAwfQ&limit=10
 
 Response:
 {
   "data": [...],
   "pagination": {
-    "cursor": "eyJpZCI6MTEwfQ",
-    "limit": 10,
-    "hasNext": true
+    "next_cursor": "eyJpZCI6MTEwfQ",
+    "has_more": true
   }
 }
 ```
-</cursor-pagination>
+</strategy>
 
-<page-pagination>
-<description>Traditional page-based pagination</description>
+<strategy type="page-based">
 ```
-GET /products?page=3&size=10
+GET /api/v1/products?page=3&per_page=10
 
 Response:
 {
   "data": [...],
   "pagination": {
     "page": 3,
-    "size": 10,
-    "totalPages": 15,
-    "totalElements": 150
+    "per_page": 10,
+    "total_pages": 15,
+    "total_items": 150
   }
 }
 ```
-</page-pagination>
+</strategy>
+</strategies>
 
-<link-headers>
-<description>Use Link headers for HATEOAS compliance</description>
-```
-Link: <https://api.example.com/products?page=2>; rel="prev",
-      <https://api.example.com/products?page=4>; rel="next",
-      <https://api.example.com/products?page=1>; rel="first",
-      <https://api.example.com/products?page=15>; rel="last"
-```
-</link-headers>
-
+<best-practices>
+- Default to cursor-based for large datasets
+- Include total count in headers to avoid extra queries
+- Support consistent limit parameter across endpoints
+- Set reasonable default and maximum limits
+- Return pagination metadata in consistent format
+</best-practices>
 </pagination>
 
 <versioning>
+<approaches>
+<approach type="uri-versioning">
+```
+GET /api/v1/users
+GET /api/v2/users
+```
+</approach>
 
-<uri-versioning>
-<description>Version in the URL path (most common)</description>
+<approach type="header-versioning">
 ```
-https://api.example.com/v1/products
-https://api.example.com/v2/products
+GET /api/users
+Accept: application/vnd.company.v2+json
 ```
-<benefits>
-- Clear and explicit
-- Easy to route
-- Cache-friendly
-</benefits>
-</uri-versioning>
+</approach>
 
-<header-versioning>
-<description>Version in custom header</description>
+<approach type="query-parameter">
 ```
-GET /products HTTP/1.1
-Host: api.example.com
-API-Version: 2.0
+GET /api/users?version=2
 ```
-<benefits>
-- Cleaner URLs
-- Easier to default to latest
-</benefits>
-</header-versioning>
+</approach>
+</approaches>
 
-<content-negotiation>
-<description>Version via Accept header</description>
-```
-GET /products HTTP/1.1
-Host: api.example.com
-Accept: application/vnd.example.v2+json
-```
-<benefits>
-- RESTful approach
-- Supports format negotiation
-</benefits>
-</content-negotiation>
-
-<versioning-strategy>
-- Start with v1 from day one
-- Only increment major version for breaking changes
+<recommendations>
+- Use URI versioning for clarity and simplicity
+- Version at the API level, not individual endpoints
 - Maintain at least one previous version
-- Deprecate with clear timelines (minimum 6 months)
-- Document migration paths
-- Use semantic versioning principles
-</versioning-strategy>
-
+- Document deprecation timeline clearly
+- Use semantic versioning for version numbers
+- Avoid breaking changes within major versions
+</recommendations>
 </versioning>
 
-<additional-practices>
-
-<filtering-sorting>
+<additional-patterns>
+<filtering>
 ```
-GET /products?category=electronics&price_min=100&price_max=500
-GET /products?sort=price,-created_at  # + ascending, - descending
-GET /products?fields=id,name,price    # Sparse fieldsets
+GET /api/v1/products?category=electronics&price_min=100&price_max=500
 ```
-</filtering-sorting>
+</filtering>
 
-<request-response-headers>
-- Always include `Content-Type: application/json`
-- Use `Accept` header for content negotiation
-- Include `X-Request-ID` for request tracking
-- Add `X-Rate-Limit-*` headers for rate limiting
-- Set proper `Cache-Control` directives
-</request-response-headers>
+<sorting>
+```
+GET /api/v1/products?sort=price,-created_at
+```
+</sorting>
 
-<security-headers>
-- `Authorization: Bearer {token}` for authentication
-- `X-API-Key` for simple API key auth
-- CORS headers for browser-based clients
-- `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: DENY`
-</security-headers>
+<field-selection>
+```
+GET /api/v1/users?fields=id,name,email
+```
+</field-selection>
 
-</additional-practices>
+<search>
+```
+GET /api/v1/products?q=laptop&category=electronics
+```
+</search>
+</additional-patterns>
+
+<examples>
+<example type="complete-api-flow">
+```http
+# Create a new user
+POST /api/v1/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com"
+}
+
+Response: 201 Created
+Location: /api/v1/users/123
+{
+  "id": "123",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+
+# Get user's orders with pagination
+GET /api/v1/users/123/orders?page=1&per_page=20
+
+Response: 200 OK
+{
+  "data": [
+    {
+      "id": "456",
+      "user_id": "123",
+      "total": 99.99,
+      "status": "completed"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "per_page": 20,
+    "total_pages": 3,
+    "total_items": 45
+  }
+}
+
+# Partial update
+PATCH /api/v1/users/123
+Content-Type: application/json
+
+{
+  "email": "newemail@example.com"
+}
+
+Response: 200 OK
+
+# Handle error
+POST /api/v1/users
+Content-Type: application/json
+
+{
+  "name": "Jane"
+}
+
+Response: 422 Unprocessable Entity
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Request validation failed",
+    "details": [
+      {
+        "field": "email",
+        "code": "REQUIRED_FIELD",
+        "message": "Email is required"
+      }
+    ]
+  }
+}
+```
+</example>
+</examples>
 
 </restful-api-design>

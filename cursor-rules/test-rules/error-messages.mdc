@@ -1,36 +1,29 @@
 ---
-description: Provide helpful error messages with context and suggested fixes
+description: Provide contextual error messages with user intent and suggested fixes
 globs:
 alwaysApply: false
 ---
-<error-messages-with-context>
+<error-message-context>
+
+<title>Error Messages with Context and Solutions</title>
 
 <rules>
-- Include what the user was trying to accomplish when the error occurred
-- Specify exactly what went wrong in clear, non-technical language
-- Always suggest at least one concrete fix or next step
-- Include relevant file paths, variable names, or commands in the error message
-- Avoid generic error messages like "Something went wrong" or "Invalid input"
-- If the error is due to missing dependencies, specify exactly what needs to be installed
-- For syntax errors, show the problematic line with context
-- For configuration errors, indicate which file and setting needs adjustment
+- Always include what the user was trying to accomplish when an error occurs
+- Provide the specific error details and what caused it
+- Suggest at least one actionable fix or workaround
+- Reference the exact location where the error occurred (file:line when applicable)
+- Keep error messages concise but informative
+- Avoid technical jargon unless necessary for the fix
 </rules>
 
 <examples>
 <example type="good">
 ```
 Error: Failed to connect to database while trying to fetch user profile.
-
-What went wrong: The PostgreSQL connection timed out after 30 seconds.
-
-Suggested fixes:
-1. Check if PostgreSQL is running: `sudo systemctl status postgresql`
-2. Verify your connection settings in `.env`:
-   - DATABASE_HOST should be 'localhost' or your server IP
-   - DATABASE_PORT should be 5432 (default)
-3. Test the connection manually: `psql -h localhost -U your_username -d your_database`
+Cause: Connection timeout after 30 seconds at db/connection.js:45
+Fix: Check if the database server is running and accessible on port 5432
 ```
 </example>
 </examples>
 
-</error-messages-with-context>
+</error-message-context>

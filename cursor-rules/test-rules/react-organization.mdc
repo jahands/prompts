@@ -1,61 +1,29 @@
 ---
-description: Guidelines for organizing React components - component size limits, hook extraction, and test colocation
+description: React component organization - size limits, hook extraction, test colocation
 globs:
 alwaysApply: false
 ---
 <react-component-organization>
 
+<title>React Component Organization</title>
+
 <rules>
-- Keep React components under 200 lines of code
-- Extract custom hooks to separate files in a `hooks/` directory
-- Colocate test files with their components using `.test.tsx` or `.spec.tsx` suffix
-- Split large components into smaller, focused sub-components
-- Place sub-components in the same directory as their parent component
-- Export hooks from individual files (e.g., `useAuth.ts`, `useForm.ts`)
-- Group related hooks in subdirectories when they share domain logic
+- Keep components under 200 lines
+- Extract custom hooks to separate files in same directory
+- Colocate test files with components using `.test.tsx` or `.spec.tsx` suffix
+- Place hook files alongside components with `.hooks.ts` suffix
+- Split large components into smaller sub-components
+- Keep component logic focused on single responsibility
 </rules>
 
 <examples>
 <example type="good">
-```typescript
-// src/components/UserProfile/UserProfile.tsx (150 lines)
-import { useUserData } from './hooks/useUserData';
-import { UserAvatar } from './UserAvatar';
-import { UserStats } from './UserStats';
-
-export function UserProfile({ userId }: UserProfileProps) {
-  const { user, loading, error } = useUserData(userId);
-  
-  if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorMessage error={error} />;
-  
-  return (
-    <div className="user-profile">
-      <UserAvatar user={user} />
-      <UserStats statistics={user.stats} />
-    </div>
-  );
-}
-
-// src/components/UserProfile/hooks/useUserData.ts
-export function useUserData(userId: string) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  
-  useEffect(() => {
-    // Hook implementation
-  }, [userId]);
-  
-  return { user, loading, error };
-}
-
-// src/components/UserProfile/UserProfile.test.tsx
-describe('UserProfile', () => {
-  it('renders user information when loaded', () => {
-    // Test implementation
-  });
-});
+```
+src/components/UserProfile/
+├── UserProfile.tsx          // Main component (< 200 lines)
+├── UserProfile.test.tsx     // Colocated tests
+├── UserProfile.hooks.ts     // Extracted custom hooks
+└── UserProfileAvatar.tsx    // Sub-component
 ```
 </example>
 </examples>

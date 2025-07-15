@@ -5,50 +5,35 @@ alwaysApply: false
 ---
 <async-error-handling>
 
-<title>Structured Error Handling for Async Operations</title>
+<title>Async Operations Error Handling</title>
 
 <rules>
-- Wrap all async operations in try-catch blocks
-- Never let async errors propagate unhandled
-- Log errors with structured format including timestamp, error type, and user context
-- Use consistent error logging format across the application
-- Include stack traces in development, sanitize in production
-- Log to appropriate channels based on severity
+- Always wrap async operations in try-catch blocks
+- Log errors with structured logging that includes:
+  - `timestamp`: ISO 8601 format timestamp
+  - `errorType`: Error constructor name or custom error type
+  - `userContext`: Relevant user information (userId, sessionId, etc.)
+- Never swallow errors silently
+- Re-throw errors after logging if they need to propagate
+- Use consistent error structure across the application
 </rules>
-
-<logging-format>
-- `timestamp`: ISO 8601 format (e.g., 2024-01-15T10:30:45.123Z)
-- `errorType`: Error class name or custom error type
-- `message`: Human-readable error description
-- `userId`: Current user identifier if available
-- `sessionId`: Current session identifier
-- `context`: Operation-specific data (request ID, endpoint, etc.)
-- `stack`: Stack trace (development only)
-</logging-format>
 
 <examples>
 <example type="good">
 ```typescript
-async function fetchUserData(userId: string): Promise<User> {
+async function fetchUserData(userId: string) {
   try {
-    const response = await api.get(`/users/${userId}`);
+    const response = await api.getUser(userId);
     return response.data;
   } catch (error) {
     logger.error({
       timestamp: new Date().toISOString(),
       errorType: error.constructor.name,
-      message: `Failed to fetch user data`,
-      userId,
-      sessionId: getCurrentSession().id,
-      context: {
-        endpoint: `/users/${userId}`,
-        method: 'GET',
-        requestId: getRequestId()
-      },
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      userContext: { userId },
+      message: error.message,
+      stack: error.stack
     });
-    
-    throw new UserFetchError(`Unable to retrieve user ${userId}`, error);
+    throw error;
   }
 }
 ```

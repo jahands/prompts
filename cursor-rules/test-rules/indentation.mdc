@@ -1,16 +1,17 @@
 ---
-description: JavaScript/TypeScript indentation standards - always use 2 spaces, never tabs
+description: Enforce 2-space indentation in JavaScript/TypeScript files
 globs:
 alwaysApply: false
 ---
 <indentation-standards>
 
+<title>JavaScript/TypeScript Indentation</title>
+
 <rules>
-- Always use 2 spaces for indentation in JavaScript and TypeScript files
-- Never use tabs for indentation
-- Configure your editor to insert spaces when pressing the tab key
-- Each nested level increases indentation by exactly 2 spaces
-- Maintain consistent indentation throughout the entire file
+- Always use 2 spaces for indentation
+- Never use tabs
+- Configure editors to insert spaces for tab key
+- Each nested level increases by 2 spaces
 </rules>
 
 <examples>
@@ -19,11 +20,9 @@ alwaysApply: false
 function processData(items: string[]) {
   if (items.length > 0) {
     return items.map(item => {
-      const processed = item.trim();
-      return processed.toUpperCase();
+      return item.trim();
     });
   }
-  return [];
 }
 ```
 </example>
