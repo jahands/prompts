@@ -1,5 +1,5 @@
 ---
-description: RESTful API design standards including resource naming, HTTP methods, status codes, error handling, pagination, and versioning
+description: RESTful API design patterns including resource naming, HTTP methods, status codes, error handling, pagination, and versioning
 globs:
 alwaysApply: false
 ---
@@ -7,284 +7,173 @@ alwaysApply: false
 
 <title>RESTful API Design Standards</title>
 
-<overview>Comprehensive guidelines for designing consistent, scalable RESTful APIs that follow industry best practices</overview>
+<overview>Comprehensive guidelines for designing RESTful APIs that are consistent, intuitive, and scalable, covering resource modeling, HTTP semantics, error handling, and evolution strategies</overview>
 
 <key-concepts>
 - Resource-oriented architecture
-- HTTP method semantics
+- HTTP method semantics and idempotency
 - Stateless communication
-- Uniform interface constraints
 - HATEOAS (Hypermedia as the Engine of Application State)
+- API versioning strategies
+- Consistent error responses
 </key-concepts>
 
-<resource-naming>
-
 <rules>
+<rule>
+<name>Resource Naming Conventions</name>
+<requirements>
 - Use plural nouns for collections: `/users`, `/products`, `/orders`
-- Use singular nouns for singletons: `/user/profile`, `/cart`
-- Use lowercase with hyphens for multi-word resources: `/shopping-carts`
-- Nest resources to show relationships: `/users/{id}/orders`
-- Avoid verbs in endpoints - let HTTP methods define actions
-- Keep nesting shallow (max 3 levels deep)
-- Use query parameters for filtering: `/products?category=electronics`
+- Use hierarchical relationships: `/users/{userId}/orders/{orderId}`
+- Use kebab-case for multi-word resources: `/shopping-carts`, `/user-profiles`
+- Avoid verbs in endpoints - resources represent nouns
+- Keep URLs lowercase
+- Use forward slashes to denote hierarchy
+- Never use trailing slashes
+- Use query parameters for filtering: `/products?category=electronics&inStock=true`
+</requirements>
+</rule>
+
+<rule>
+<name>HTTP Method Usage</name>
+<requirements>
+- `GET` - Retrieve resources (safe, idempotent)
+- `POST` - Create new resources (not idempotent)
+- `PUT` - Full update/replace resource (idempotent)
+- `PATCH` - Partial update resource (idempotent)
+- `DELETE` - Remove resources (idempotent)
+- `HEAD` - Retrieve headers only (same as GET without body)
+- `OPTIONS` - Discover allowed methods and CORS info
+- Never use GET for state changes
+- Use POST for complex operations that don't fit CRUD
+</requirements>
+</rule>
+
+<rule>
+<name>Status Code Standards</name>
+<requirements>
+- `200 OK` - Successful GET, PUT, PATCH
+- `201 Created` - Successful POST with Location header
+- `202 Accepted` - Request accepted for async processing
+- `204 No Content` - Successful DELETE or PUT with no response body
+- `400 Bad Request` - Client error, malformed request
+- `401 Unauthorized` - Missing or invalid authentication
+- `403 Forbidden` - Authenticated but not authorized
+- `404 Not Found` - Resource doesn't exist
+- `409 Conflict` - Request conflicts with current state
+- `422 Unprocessable Entity` - Validation errors
+- `429 Too Many Requests` - Rate limit exceeded
+- `500 Internal Server Error` - Server error
+- `503 Service Unavailable` - Temporary unavailability
+</requirements>
+</rule>
+
+<rule>
+<name>Error Response Format</name>
+<requirements>
+- Use consistent error structure across all endpoints
+- Include error code for programmatic handling
+- Provide human-readable message
+- Add details for debugging
+- Include request ID for tracing
+- Provide field-level errors for validation
+- Use RFC 7807 Problem Details format when applicable
+</requirements>
+</rule>
+
+<rule>
+<name>Pagination Strategies</name>
+<requirements>
+- Use limit/offset for simple pagination: `?limit=20&offset=40`
+- Use cursor-based for large datasets: `?cursor=eyJpZCI6MTAwfQ&limit=20`
+- Always include pagination metadata in response
+- Provide total count when feasible
+- Include next/previous links (HATEOAS)
+- Default to reasonable page size (e.g., 20-50 items)
+- Set maximum limit to prevent abuse
+- Sort consistently (usually by creation date or ID)
+</requirements>
+</rule>
+
+<rule>
+<name>Versioning Approaches</name>
+<requirements>
+- URI versioning: `/api/v1/users` (most visible)
+- Header versioning: `API-Version: 1` or `Accept: application/vnd.api+json;version=1`
+- Query parameter: `/users?version=1` (least recommended)
+- Use semantic versioning for version numbers
+- Maintain at least one previous version
+- Provide deprecation notices with timeline
+- Document breaking changes clearly
+- Never break backwards compatibility in minor versions
+</requirements>
+</rule>
 </rules>
 
 <examples>
-<example type="good">
-```
-GET    /users              # List all users
-GET    /users/123          # Get specific user
-POST   /users              # Create new user
-PUT    /users/123          # Update entire user
-PATCH  /users/123          # Update partial user
-DELETE /users/123          # Delete user
-GET    /users/123/orders   # Get user's orders
-```
-</example>
-</examples>
-
-</resource-naming>
-
-<http-methods>
-
-<method-semantics>
-- `GET`: Retrieve resources (safe, idempotent)
-- `POST`: Create new resources (not idempotent)
-- `PUT`: Replace entire resource (idempotent)
-- `PATCH`: Partial update (idempotent)
-- `DELETE`: Remove resource (idempotent)
-- `HEAD`: Get headers only (safe, idempotent)
-- `OPTIONS`: Get allowed methods (safe, idempotent)
-</method-semantics>
-
-<request-patterns>
-<pattern type="collection-operations">
-```
-GET    /products           # List with optional filters
-POST   /products           # Create with full resource in body
-DELETE /products           # Bulk delete (use carefully)
-```
-</pattern>
-
-<pattern type="item-operations">
-```
-GET    /products/123       # Retrieve single item
-PUT    /products/123       # Replace entire item
-PATCH  /products/123       # Update specific fields
-DELETE /products/123       # Remove single item
-```
-</pattern>
-</request-patterns>
-
-</http-methods>
-
-<status-codes>
-
-<success-codes>
-- `200 OK`: Successful GET, PUT, PATCH, or DELETE
-- `201 Created`: Successful POST with new resource
-- `202 Accepted`: Request accepted for async processing
-- `204 No Content`: Successful DELETE or action with no response body
-</success-codes>
-
-<client-error-codes>
-- `400 Bad Request`: Invalid request syntax or parameters
-- `401 Unauthorized`: Missing or invalid authentication
-- `403 Forbidden`: Authenticated but not authorized
-- `404 Not Found`: Resource doesn't exist
-- `409 Conflict`: Request conflicts with current state
-- `422 Unprocessable Entity`: Valid syntax but semantic errors
-- `429 Too Many Requests`: Rate limit exceeded
-</client-error-codes>
-
-<server-error-codes>
-- `500 Internal Server Error`: Generic server failure
-- `502 Bad Gateway`: Invalid response from upstream
-- `503 Service Unavailable`: Temporary unavailability
-- `504 Gateway Timeout`: Upstream timeout
-</server-error-codes>
-
-</status-codes>
-
-<error-response-format>
-
-<standard-structure>
+<example type="error-response">
 ```json
 {
   "error": {
     "code": "VALIDATION_ERROR",
-    "message": "Validation failed for the request",
+    "message": "The request contains invalid fields",
+    "requestId": "req_abc123def456",
+    "timestamp": "2024-01-15T10:30:00Z",
     "details": [
       {
         "field": "email",
         "code": "INVALID_FORMAT",
-        "message": "Email format is invalid"
+        "message": "Email must be a valid email address"
+      },
+      {
+        "field": "age",
+        "code": "OUT_OF_RANGE",
+        "message": "Age must be between 18 and 120"
       }
-    ],
-    "timestamp": "2024-01-15T10:30:00Z",
-    "path": "/api/v1/users",
-    "requestId": "550e8400-e29b-41d4-a716-446655440000"
+    ]
   }
 }
 ```
-</standard-structure>
+</example>
 
-<error-codes>
-- Machine-readable error codes in SCREAMING_SNAKE_CASE
-- Hierarchical structure: `RESOURCE_ACTION_ERROR`
-- Common codes: `VALIDATION_ERROR`, `NOT_FOUND`, `UNAUTHORIZED`
-- Include field-level errors for validation failures
-- Always include request ID for debugging
-</error-codes>
-
-</error-response-format>
-
-<pagination>
-
-<offset-pagination>
-<description>Simple pagination using offset and limit</description>
-```
-GET /products?offset=20&limit=10
-
-Response:
+<example type="pagination-response">
+```json
 {
-  "data": [...],
+  "data": [
+    { "id": 1, "name": "Product 1" },
+    { "id": 2, "name": "Product 2" }
+  ],
   "pagination": {
-    "offset": 20,
-    "limit": 10,
-    "total": 150,
+    "total": 156,
+    "limit": 20,
+    "offset": 40,
     "hasNext": true,
-    "hasPrev": true
+    "hasPrevious": true
+  },
+  "links": {
+    "self": "/api/v1/products?limit=20&offset=40",
+    "first": "/api/v1/products?limit=20&offset=0",
+    "previous": "/api/v1/products?limit=20&offset=20",
+    "next": "/api/v1/products?limit=20&offset=60",
+    "last": "/api/v1/products?limit=20&offset=140"
   }
 }
 ```
-</offset-pagination>
+</example>
 
-<cursor-pagination>
-<description>Efficient pagination for large datasets</description>
+<example type="resource-endpoints">
 ```
-GET /products?cursor=eyJpZCI6MTAwfQ&limit=10
+GET    /api/v1/users              # List users
+POST   /api/v1/users              # Create user
+GET    /api/v1/users/{id}         # Get specific user
+PUT    /api/v1/users/{id}         # Replace user
+PATCH  /api/v1/users/{id}         # Update user fields
+DELETE /api/v1/users/{id}         # Delete user
 
-Response:
-{
-  "data": [...],
-  "pagination": {
-    "cursor": "eyJpZCI6MTEwfQ",
-    "limit": 10,
-    "hasNext": true
-  }
-}
+GET    /api/v1/users/{id}/orders  # List user's orders
+POST   /api/v1/users/{id}/orders  # Create order for user
+GET    /api/v1/orders/{id}        # Get specific order
 ```
-</cursor-pagination>
-
-<page-pagination>
-<description>Traditional page-based pagination</description>
-```
-GET /products?page=3&size=10
-
-Response:
-{
-  "data": [...],
-  "pagination": {
-    "page": 3,
-    "size": 10,
-    "totalPages": 15,
-    "totalElements": 150
-  }
-}
-```
-</page-pagination>
-
-<link-headers>
-<description>Use Link headers for HATEOAS compliance</description>
-```
-Link: <https://api.example.com/products?page=2>; rel="prev",
-      <https://api.example.com/products?page=4>; rel="next",
-      <https://api.example.com/products?page=1>; rel="first",
-      <https://api.example.com/products?page=15>; rel="last"
-```
-</link-headers>
-
-</pagination>
-
-<versioning>
-
-<uri-versioning>
-<description>Version in the URL path (most common)</description>
-```
-https://api.example.com/v1/products
-https://api.example.com/v2/products
-```
-<benefits>
-- Clear and explicit
-- Easy to route
-- Cache-friendly
-</benefits>
-</uri-versioning>
-
-<header-versioning>
-<description>Version in custom header</description>
-```
-GET /products HTTP/1.1
-Host: api.example.com
-API-Version: 2.0
-```
-<benefits>
-- Cleaner URLs
-- Easier to default to latest
-</benefits>
-</header-versioning>
-
-<content-negotiation>
-<description>Version via Accept header</description>
-```
-GET /products HTTP/1.1
-Host: api.example.com
-Accept: application/vnd.example.v2+json
-```
-<benefits>
-- RESTful approach
-- Supports format negotiation
-</benefits>
-</content-negotiation>
-
-<versioning-strategy>
-- Start with v1 from day one
-- Only increment major version for breaking changes
-- Maintain at least one previous version
-- Deprecate with clear timelines (minimum 6 months)
-- Document migration paths
-- Use semantic versioning principles
-</versioning-strategy>
-
-</versioning>
-
-<additional-practices>
-
-<filtering-sorting>
-```
-GET /products?category=electronics&price_min=100&price_max=500
-GET /products?sort=price,-created_at  # + ascending, - descending
-GET /products?fields=id,name,price    # Sparse fieldsets
-```
-</filtering-sorting>
-
-<request-response-headers>
-- Always include `Content-Type: application/json`
-- Use `Accept` header for content negotiation
-- Include `X-Request-ID` for request tracking
-- Add `X-Rate-Limit-*` headers for rate limiting
-- Set proper `Cache-Control` directives
-</request-response-headers>
-
-<security-headers>
-- `Authorization: Bearer {token}` for authentication
-- `X-API-Key` for simple API key auth
-- CORS headers for browser-based clients
-- `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: DENY`
-</security-headers>
-
-</additional-practices>
+</example>
+</examples>
 
 </restful-api-design>

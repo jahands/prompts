@@ -5,50 +5,46 @@ alwaysApply: false
 ---
 <async-error-handling>
 
-<title>Structured Error Handling for Async Operations</title>
+<title>Async Operations Error Handling</title>
 
 <rules>
-- Wrap all async operations in try-catch blocks
-- Never let async errors propagate unhandled
-- Log errors with structured format including timestamp, error type, and user context
-- Use consistent error logging format across the application
-- Include stack traces in development, sanitize in production
-- Log to appropriate channels based on severity
+- Always wrap async operations in try-catch blocks
+- Never use unhandled promises or async functions without error handling
+- Log errors using structured logging format
+- Include timestamp, error type, and user context in all error logs
+- Use consistent error logging structure across the codebase
+- Propagate errors appropriately based on context
 </rules>
 
-<logging-format>
-- `timestamp`: ISO 8601 format (e.g., 2024-01-15T10:30:45.123Z)
-- `errorType`: Error class name or custom error type
-- `message`: Human-readable error description
-- `userId`: Current user identifier if available
-- `sessionId`: Current session identifier
-- `context`: Operation-specific data (request ID, endpoint, etc.)
-- `stack`: Stack trace (development only)
-</logging-format>
+<structured-logging-format>
+- `timestamp`: ISO 8601 format timestamp
+- `errorType`: Error constructor name or custom error type
+- `message`: Error message
+- `stack`: Error stack trace
+- `userContext`: User ID, session ID, or relevant user information
+- `operationContext`: What operation was being performed
+- `metadata`: Additional relevant data
+</structured-logging-format>
 
 <examples>
 <example type="good">
 ```typescript
-async function fetchUserData(userId: string): Promise<User> {
+async function fetchUserData(userId: string, sessionId: string) {
   try {
-    const response = await api.get(`/users/${userId}`);
-    return response.data;
+    const response = await fetch(`/api/users/${userId}`);
+    const data = await response.json();
+    return data;
   } catch (error) {
     logger.error({
       timestamp: new Date().toISOString(),
       errorType: error.constructor.name,
-      message: `Failed to fetch user data`,
-      userId,
-      sessionId: getCurrentSession().id,
-      context: {
-        endpoint: `/users/${userId}`,
-        method: 'GET',
-        requestId: getRequestId()
-      },
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      message: error.message,
+      stack: error.stack,
+      userContext: { userId, sessionId },
+      operationContext: 'fetchUserData',
+      metadata: { endpoint: `/api/users/${userId}` }
     });
-    
-    throw new UserFetchError(`Unable to retrieve user ${userId}`, error);
+    throw error; // Re-throw after logging
   }
 }
 ```

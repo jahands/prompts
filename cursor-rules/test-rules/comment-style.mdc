@@ -1,5 +1,5 @@
 ---
-description: Guidelines for writing meaningful comments that explain why, not what
+description: Guide for writing meaningful comments that explain why code exists, not what it does
 globs:
 alwaysApply: false
 ---
@@ -8,45 +8,33 @@ alwaysApply: false
 <title>Write Comments That Explain Why, Not What</title>
 
 <rules>
-- Avoid obvious comments that describe what the code does
-- Focus on explaining why decisions were made
-- Document business logic, constraints, and edge cases
-- Explain workarounds and their reasons
-- Clarify complex algorithms or non-obvious approaches
-- Remove comments that simply restate the code
+- Avoid comments that describe what the code does (the code already does that)
+- Write comments that explain why decisions were made
+- Document the business logic, edge cases, or non-obvious reasons
+- Skip obvious comments like `// increment counter` or `// return result`
+- Focus on intent, context, and reasoning behind the implementation
+- Document workarounds, limitations, or technical debt with explanations
 </rules>
 
 <examples>
 <example type="good">
 ```typescript
-// Bad: States the obvious
-counter++; // increment counter
+// Using a Map instead of object to preserve insertion order
+// which is critical for the report generation downstream
+const cache = new Map<string, CacheEntry>();
 
-// Good: Explains the why
-counter++; // Retry limit based on network latency studies showing 3 attempts optimal
+// Retry 3 times because the external API occasionally
+// returns 503 errors during their maintenance windows
+const MAX_RETRIES = 3;
 
-// Bad: Describes what the code does
-if (user.age < 18) { // check if user is under 18
-  return false;
-}
+// We need to clone the array here because the sorting
+// method in the legacy module modifies it in place
+const sortedItems = [...items].sort(compareFunction);
 
-// Good: Explains business logic
-if (user.age < 18) {
-  // COPPA compliance requires parental consent for users under 18
-  return false;
-}
-
-// Bad: Restates the function name
-// This function validates email
-function validateEmail(email: string) {
-  return emailRegex.test(email);
-}
-
-// Good: Explains the approach and limitations
-function validateEmail(email: string) {
-  // Using simplified regex that covers 99.9% of real-world emails
-  // Full RFC 5322 compliance would require 4KB regex
-  return emailRegex.test(email);
+// Checking for null AND undefined because the API 
+// inconsistently returns both for missing values
+if (response.data != null) {
+  processData(response.data);
 }
 ```
 </example>

@@ -1,18 +1,20 @@
 ---
-description: Organize imports with external packages first, internal modules second, relative imports last, with blank lines between groups
+description: Organize imports into three groups: external packages, internal modules, relative imports
 globs:
 alwaysApply: false
 ---
 <import-ordering>
 
+<title>Import Organization Rules</title>
+
 <rules>
-- External packages (from node_modules) must come first
-- Internal/absolute imports (from project root) come second
-- Relative imports (starting with . or ..) come last
-- Each group must be separated by a blank line
-- Within each group, maintain alphabetical order
-- No blank lines within groups
-- Remove unused imports
+- Group imports into three distinct sections
+- Order: external packages first, then internal modules, then relative imports
+- Add one blank line between each import group
+- Sort imports alphabetically within each group
+- External packages: installed via npm/yarn (e.g., `react`, `lodash`)
+- Internal modules: absolute imports from project (e.g., `@/components`, `src/utils`)
+- Relative imports: start with `.` or `..` (e.g., `./utils`, `../components`)
 </rules>
 
 <examples>
@@ -22,16 +24,17 @@ alwaysApply: false
 import React from 'react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import lodash from 'lodash';
 
-// Internal/absolute imports
-import { API_ENDPOINT } from '@/config/constants';
-import { UserService } from '@/services/UserService';
-import { formatDate } from '@/utils/date';
+// Internal modules
+import { Button } from '@/components/Button';
+import { useAuth } from '@/hooks/auth';
+import { apiClient } from 'src/services/api';
 
 // Relative imports
-import { Button } from './components/Button';
-import { Header } from './Header';
-import styles from './App.module.css';
+import { formatDate } from './utils';
+import { LOCAL_CONFIG } from './constants';
+import type { UserProfile } from '../types';
 ```
 </example>
 </examples>
