@@ -1,287 +1,345 @@
+#!/usr/bin/env python3
 """
 Simple Inventory Management System
+Python 3.11 compatible
 
-A basic inventory management system that can add items, search for them,
-and generate reports. Uses modern Python type annotations (PEP 585).
+Features:
+- Add items to inventory
+- Search for items
+- Generate reports
+- Update item quantities
+- Remove items
 """
 
-from dataclasses import dataclass
-from datetime import datetime
-from typing import Optional, Protocol, Any
 import json
+import os
+from datetime import datetime
+from typing import Dict, List, Optional, Any
+from dataclasses import dataclass, asdict
 
 
 @dataclass
 class Item:
-    """Represents an inventory item."""
-    id: int
+    """Represents an inventory item"""
+    id: str
     name: str
     description: str
     quantity: int
     price: float
     category: str
-    created_at: datetime
-    updated_at: datetime
+    date_added: str
+    last_updated: str
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert item to dictionary for JSON serialization."""
-        return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'quantity': self.quantity,
-            'price': self.price,
-            'category': self.category,
-            'created_at': self.created_at.isoformat(),
-            'updated_at': self.updated_at.isoformat()
-        }
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert item to dictionary"""
+        return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> 'Item':
-        """Create item from dictionary."""
-        return cls(
-            id=data['id'],
-            name=data['name'],
-            description=data['description'],
-            quantity=data['quantity'],
-            price=data['price'],
-            category=data['category'],
-            created_at=datetime.fromisoformat(data['created_at']),
-            updated_at=datetime.fromisoformat(data['updated_at'])
-        )
-
-
-class SearchCriteria(Protocol):
-    """Protocol for search criteria."""
-    def matches(self, item: Item) -> bool:
-        """Check if item matches the search criteria."""
-        ...
-
-
-@dataclass
-class NameSearch:
-    """Search by item name."""
-    name: str
-    case_sensitive: bool = False
-
-    def matches(self, item: Item) -> bool:
-        if self.case_sensitive:
-            return self.name in item.name
-        return self.name.lower() in item.name.lower()
-
-
-@dataclass
-class CategorySearch:
-    """Search by item category."""
-    category: str
-    case_sensitive: bool = False
-
-    def matches(self, item: Item) -> bool:
-        if self.case_sensitive:
-            return self.category == item.category
-        return self.category.lower() == item.category.lower()
-
-
-@dataclass
-class PriceRangeSearch:
-    """Search by price range."""
-    min_price: Optional[float] = None
-    max_price: Optional[float] = None
-
-    def matches(self, item: Item) -> bool:
-        if self.min_price is not None and item.price < self.min_price:
-            return False
-        if self.max_price is not None and item.price > self.max_price:
-            return False
-        return True
-
-
-@dataclass
-class QuantitySearch:
-    """Search by quantity threshold."""
-    min_quantity: Optional[int] = None
-    max_quantity: Optional[int] = None
-
-    def matches(self, item: Item) -> bool:
-        if self.min_quantity is not None and item.quantity < self.min_quantity:
-            return False
-        if self.max_quantity is not None and item.quantity > self.max_quantity:
-            return False
-        return True
+    def from_dict(cls, data: Dict[str, Any]) -> 'Item':
+        """Create item from dictionary"""
+        return cls(**data)
 
 
 class InventoryManager:
-    """Manages inventory items with add, search, and reporting capabilities."""
-
-    def __init__(self) -> None:
-        self.items: dict[int, Item] = {}
-        self.next_id: int = 1
-
+    """Main inventory management class"""
+    
+    def __init__(self, storage_file: str = "inventory.json"):
+        self.storage_file = storage_file
+        self.items: Dict[str, Item] = {}
+        self.load_inventory()
+    
+    def load_inventory(self) -> None:
+        """Load inventory from JSON file"""
+        if os.path.exists(self.storage_file):
+            try:
+                with open(self.storage_file, 'r') as f:
+                    data = json.load(f)
+                    self.items = {
+                        item_id: Item.from_dict(item_data)
+                        for item_id, item_data in data.items()
+                    }
+                print(f"Loaded {len(self.items)} items from {self.storage_file}")
+            except (json.JSONDecodeError, KeyError) as e:
+                print(f"Error loading inventory: {e}")
+                self.items = {}
+        else:
+            print("No existing inventory file found. Starting with empty inventory.")
+    
+    def save_inventory(self) -> None:
+        """Save inventory to JSON file"""
+        try:
+            data = {
+                item_id: item.to_dict()
+                for item_id, item in self.items.items()
+            }
+            with open(self.storage_file, 'w') as f:
+                json.dump(data, f, indent=2)
+            print(f"Inventory saved to {self.storage_file}")
+        except Exception as e:
+            print(f"Error saving inventory: {e}")
+    
     def add_item(self, name: str, description: str, quantity: int, 
-                 price: float, category: str) -> Item:
-        """Add a new item to inventory."""
-        now = datetime.now()
+                 price: float, category: str) -> str:
+        """Add a new item to inventory"""
+        # Generate unique ID
+        item_id = f"{name.lower().replace(' ', '_')}_{len(self.items) + 1}"
+        
+        # Ensure unique ID
+        while item_id in self.items:
+            item_id = f"{name.lower().replace(' ', '_')}_{len(self.items) + 1}"
+        
+        current_time = datetime.now().isoformat()
+        
         item = Item(
-            id=self.next_id,
+            id=item_id,
             name=name,
             description=description,
             quantity=quantity,
             price=price,
             category=category,
-            created_at=now,
-            updated_at=now
+            date_added=current_time,
+            last_updated=current_time
         )
-        self.items[self.next_id] = item
-        self.next_id += 1
-        return item
-
-    def update_item(self, item_id: int, **kwargs) -> Optional[Item]:
-        """Update an existing item."""
-        if item_id not in self.items:
-            return None
         
-        item = self.items[item_id]
-        for key, value in kwargs.items():
-            if hasattr(item, key):
-                setattr(item, key, value)
+        self.items[item_id] = item
+        self.save_inventory()
+        print(f"Added item: {name} (ID: {item_id})")
+        return item_id
+    
+    def search_items(self, query: str, search_by: str = "name") -> List[Item]:
+        """Search for items by name, description, or category"""
+        results = []
+        query_lower = query.lower()
         
-        item.updated_at = datetime.now()
-        return item
-
-    def remove_item(self, item_id: int) -> bool:
-        """Remove an item from inventory."""
-        if item_id in self.items:
-            del self.items[item_id]
-            return True
-        return False
-
-    def get_item(self, item_id: int) -> Optional[Item]:
-        """Get an item by ID."""
+        for item in self.items.values():
+            if search_by == "name" and query_lower in item.name.lower():
+                results.append(item)
+            elif search_by == "description" and query_lower in item.description.lower():
+                results.append(item)
+            elif search_by == "category" and query_lower in item.category.lower():
+                results.append(item)
+            elif search_by == "all":
+                if (query_lower in item.name.lower() or 
+                    query_lower in item.description.lower() or 
+                    query_lower in item.category.lower()):
+                    results.append(item)
+        
+        return results
+    
+    def get_item_by_id(self, item_id: str) -> Optional[Item]:
+        """Get item by ID"""
         return self.items.get(item_id)
-
-    def search_items(self, criteria: SearchCriteria) -> list[Item]:
-        """Search for items matching given criteria."""
-        return [item for item in self.items.values() if criteria.matches(item)]
-
-    def get_all_items(self) -> list[Item]:
-        """Get all items in inventory."""
-        return list(self.items.values())
-
-    def get_categories(self) -> set[str]:
-        """Get all unique categories."""
-        return {item.category for item in self.items.values()}
-
-    def get_low_stock_items(self, threshold: int = 10) -> list[Item]:
-        """Get items with quantity below threshold."""
-        return [item for item in self.items.values() if item.quantity < threshold]
-
-    def generate_inventory_report(self) -> dict[str, Any]:
-        """Generate a comprehensive inventory report."""
-        items = list(self.items.values())
+    
+    def update_quantity(self, item_id: str, new_quantity: int) -> bool:
+        """Update item quantity"""
+        if item_id in self.items:
+            self.items[item_id].quantity = new_quantity
+            self.items[item_id].last_updated = datetime.now().isoformat()
+            self.save_inventory()
+            print(f"Updated quantity for {self.items[item_id].name} to {new_quantity}")
+            return True
+        else:
+            print(f"Item with ID {item_id} not found")
+            return False
+    
+    def remove_item(self, item_id: str) -> bool:
+        """Remove item from inventory"""
+        if item_id in self.items:
+            item_name = self.items[item_id].name
+            del self.items[item_id]
+            self.save_inventory()
+            print(f"Removed item: {item_name} (ID: {item_id})")
+            return True
+        else:
+            print(f"Item with ID {item_id} not found")
+            return False
+    
+    def generate_inventory_report(self) -> str:
+        """Generate comprehensive inventory report"""
+        if not self.items:
+            return "No items in inventory"
         
-        if not items:
-            return {
-                'total_items': 0,
-                'total_value': 0.0,
-                'categories': {},
-                'low_stock_items': [],
-                'average_price': 0.0,
-                'generated_at': datetime.now().isoformat()
-            }
-
-        total_value = sum(item.price * item.quantity for item in items)
+        report = ["=" * 50]
+        report.append("INVENTORY REPORT")
+        report.append("=" * 50)
+        report.append(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        report.append(f"Total items: {len(self.items)}")
+        report.append("")
+        
+        # Summary by category
         categories = {}
+        total_value = 0
         
-        for item in items:
+        for item in self.items.values():
             if item.category not in categories:
-                categories[item.category] = {
-                    'count': 0,
-                    'total_quantity': 0,
-                    'total_value': 0.0
-                }
+                categories[item.category] = {"count": 0, "total_quantity": 0, "total_value": 0}
             
-            categories[item.category]['count'] += 1
-            categories[item.category]['total_quantity'] += item.quantity
-            categories[item.category]['total_value'] += item.price * item.quantity
-
-        return {
-            'total_items': len(items),
-            'total_value': total_value,
-            'categories': categories,
-            'low_stock_items': [item.to_dict() for item in self.get_low_stock_items()],
-            'average_price': sum(item.price for item in items) / len(items),
-            'generated_at': datetime.now().isoformat()
-        }
-
-    def export_to_json(self, filename: str) -> bool:
-        """Export inventory to JSON file."""
-        try:
-            data = {
-                'items': [item.to_dict() for item in self.items.values()],
-                'next_id': self.next_id,
-                'exported_at': datetime.now().isoformat()
-            }
-            with open(filename, 'w') as f:
-                json.dump(data, f, indent=2)
-            return True
-        except Exception:
-            return False
-
-    def import_from_json(self, filename: str) -> bool:
-        """Import inventory from JSON file."""
-        try:
-            with open(filename, 'r') as f:
-                data = json.load(f)
-            
-            self.items = {}
-            for item_data in data['items']:
-                item = Item.from_dict(item_data)
-                self.items[item.id] = item
-            
-            self.next_id = data['next_id']
-            return True
-        except Exception:
-            return False
+            categories[item.category]["count"] += 1
+            categories[item.category]["total_quantity"] += item.quantity
+            categories[item.category]["total_value"] += item.quantity * item.price
+            total_value += item.quantity * item.price
+        
+        report.append("SUMMARY BY CATEGORY:")
+        report.append("-" * 30)
+        for category, data in categories.items():
+            report.append(f"{category}:")
+            report.append(f"  Items: {data['count']}")
+            report.append(f"  Total Quantity: {data['total_quantity']}")
+            report.append(f"  Total Value: ${data['total_value']:.2f}")
+            report.append("")
+        
+        report.append(f"TOTAL INVENTORY VALUE: ${total_value:.2f}")
+        report.append("")
+        
+        # Detailed item list
+        report.append("DETAILED ITEM LIST:")
+        report.append("-" * 30)
+        
+        for item in sorted(self.items.values(), key=lambda x: x.name):
+            report.append(f"ID: {item.id}")
+            report.append(f"Name: {item.name}")
+            report.append(f"Description: {item.description}")
+            report.append(f"Category: {item.category}")
+            report.append(f"Quantity: {item.quantity}")
+            report.append(f"Price: ${item.price:.2f}")
+            report.append(f"Total Value: ${item.quantity * item.price:.2f}")
+            report.append(f"Date Added: {item.date_added}")
+            report.append(f"Last Updated: {item.last_updated}")
+            report.append("-" * 30)
+        
+        return "\n".join(report)
+    
+    def generate_low_stock_report(self, threshold: int = 10) -> str:
+        """Generate report of items with low stock"""
+        low_stock_items = [
+            item for item in self.items.values()
+            if item.quantity <= threshold
+        ]
+        
+        if not low_stock_items:
+            return f"No items with stock below {threshold}"
+        
+        report = ["=" * 50]
+        report.append("LOW STOCK REPORT")
+        report.append("=" * 50)
+        report.append(f"Items with stock <= {threshold}:")
+        report.append("")
+        
+        for item in sorted(low_stock_items, key=lambda x: x.quantity):
+            report.append(f"⚠️  {item.name} (ID: {item.id})")
+            report.append(f"    Current Stock: {item.quantity}")
+            report.append(f"    Category: {item.category}")
+            report.append(f"    Price: ${item.price:.2f}")
+            report.append("")
+        
+        return "\n".join(report)
 
 
 def main():
-    """Demo function showing inventory system usage."""
+    """Main function to demonstrate the inventory system"""
+    print("Simple Inventory Management System")
+    print("=" * 40)
+    
+    # Create inventory manager
     inventory = InventoryManager()
     
-    # Add sample items
-    inventory.add_item("Laptop", "Dell XPS 13", 10, 999.99, "Electronics")
-    inventory.add_item("Mouse", "Wireless optical mouse", 50, 29.99, "Electronics")
-    inventory.add_item("Desk", "Standing desk", 5, 299.99, "Furniture")
-    inventory.add_item("Chair", "Ergonomic office chair", 8, 199.99, "Furniture")
-    inventory.add_item("Notebook", "Spiral notebook", 100, 2.99, "Stationery")
-    
-    # Search examples
-    print("=== Search Examples ===")
-    
-    # Search by name
-    name_results = inventory.search_items(NameSearch("Laptop"))
-    print(f"Items with 'Laptop' in name: {len(name_results)}")
-    
-    # Search by category
-    electronics = inventory.search_items(CategorySearch("Electronics"))
-    print(f"Electronics items: {len(electronics)}")
-    
-    # Search by price range
-    expensive_items = inventory.search_items(PriceRangeSearch(min_price=100.0))
-    print(f"Items over $100: {len(expensive_items)}")
-    
-    # Search by low stock
-    low_stock = inventory.search_items(QuantitySearch(max_quantity=10))
-    print(f"Low stock items (≤10): {len(low_stock)}")
-    
-    # Generate report
-    print("\n=== Inventory Report ===")
-    report = inventory.generate_inventory_report()
-    print(f"Total items: {report['total_items']}")
-    print(f"Total value: ${report['total_value']:.2f}")
-    print(f"Average price: ${report['average_price']:.2f}")
-    print(f"Categories: {list(report['categories'].keys())}")
-    print(f"Low stock items: {len(report['low_stock_items'])}")
+    while True:
+        print("\nOptions:")
+        print("1. Add item")
+        print("2. Search items")
+        print("3. Update quantity")
+        print("4. Remove item")
+        print("5. Generate inventory report")
+        print("6. Generate low stock report")
+        print("7. List all items")
+        print("8. Exit")
+        
+        choice = input("\nEnter your choice (1-8): ").strip()
+        
+        if choice == "1":
+            # Add item
+            name = input("Item name: ").strip()
+            description = input("Description: ").strip()
+            try:
+                quantity = int(input("Quantity: "))
+                price = float(input("Price: "))
+            except ValueError:
+                print("Invalid quantity or price")
+                continue
+            category = input("Category: ").strip()
+            
+            inventory.add_item(name, description, quantity, price, category)
+        
+        elif choice == "2":
+            # Search items
+            query = input("Search query: ").strip()
+            search_by = input("Search by (name/description/category/all): ").strip().lower()
+            
+            if search_by not in ["name", "description", "category", "all"]:
+                search_by = "name"
+            
+            results = inventory.search_items(query, search_by)
+            
+            if results:
+                print(f"\nFound {len(results)} item(s):")
+                for item in results:
+                    print(f"- {item.name} (ID: {item.id}, Qty: {item.quantity})")
+            else:
+                print("No items found")
+        
+        elif choice == "3":
+            # Update quantity
+            item_id = input("Item ID: ").strip()
+            try:
+                new_quantity = int(input("New quantity: "))
+                inventory.update_quantity(item_id, new_quantity)
+            except ValueError:
+                print("Invalid quantity")
+        
+        elif choice == "4":
+            # Remove item
+            item_id = input("Item ID: ").strip()
+            inventory.remove_item(item_id)
+        
+        elif choice == "5":
+            # Generate inventory report
+            report = inventory.generate_inventory_report()
+            print("\n" + report)
+            
+            # Optionally save to file
+            save_file = input("\nSave report to file? (y/n): ").strip().lower()
+            if save_file == 'y':
+                filename = f"inventory_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+                with open(filename, 'w') as f:
+                    f.write(report)
+                print(f"Report saved to {filename}")
+        
+        elif choice == "6":
+            # Generate low stock report
+            try:
+                threshold = int(input("Low stock threshold (default 10): ") or "10")
+            except ValueError:
+                threshold = 10
+            
+            report = inventory.generate_low_stock_report(threshold)
+            print("\n" + report)
+        
+        elif choice == "7":
+            # List all items
+            if not inventory.items:
+                print("No items in inventory")
+            else:
+                print("\nAll items:")
+                for item in sorted(inventory.items.values(), key=lambda x: x.name):
+                    print(f"- {item.name} (ID: {item.id}, Qty: {item.quantity}, "
+                          f"Price: ${item.price:.2f}, Category: {item.category})")
+        
+        elif choice == "8":
+            print("Goodbye!")
+            break
+        
+        else:
+            print("Invalid choice. Please try again.")
 
 
 if __name__ == "__main__":

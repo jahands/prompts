@@ -8,12 +8,7 @@ alwaysApply: false
 <title>Modern Python Type Annotations (PEP 585)</title>
 
 <rules>
-- Use built-in generics directly: `list[int]`, `dict[str, float]`, `tuple[str, int]`, `set[bytes]`, `type[T]`
-- Never use deprecated typing aliases: `typing.List`, `typing.Dict`, `typing.Tuple`, `typing.Set`, `typing.Type`
-- Keep using typing objects without built-in equivalents: `Deque`, `DefaultDict`, `OrderedDict`, `Counter`, `TypedDict`, `Protocol`, `Any`, `Optional`, `Union`
-- Don't import built-in generics - they're already in global namespace
-- Only import from typing when the name genuinely lives there
-- Apply consistently unless user explicitly targets Python < 3.9
+- Assume Python ≥3.9 unless otherwise specified.
 </rules>
 
 </python-type-annotations>
