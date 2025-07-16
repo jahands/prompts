@@ -1,3 +1,8 @@
+---
+name: test-python-rule
+description: Test whether the Python type annotations cursor rule effectively guides modern PEP 585 usage
+---
+
 <test-python-type-annotations-rule>
 
 <title>Test Python Type Annotations Rule</title>
