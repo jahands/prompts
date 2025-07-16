@@ -1,0 +1,3 @@
+/.claude/commands/*.mdc
+/.cursor-rules/**/*.mdc
+/prompts/
