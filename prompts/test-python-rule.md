@@ -1,8 +1,14 @@
-You are testing a cursor rule for Python type annotations. You will:
-1. Create a sub-agent to write Python code
-2. Review the sub-agent's output for compliance with the rule
-3. Report on how well the rule guided the sub-agent
+<test-python-type-annotations-rule>
 
+<title>Test Python Type Annotations Rule</title>
+
+<instructions>
+You will test whether the Python type annotations cursor rule effectively guides LLMs to use modern PEP 585 type annotations. Follow these steps exactly:
+</instructions>
+
+<step-1>
+<description>Create sub-agent to write Python code</description>
+<action>
 Use the Task tool to create a sub-agent with this exact prompt:
 
 ```
@@ -19,14 +25,24 @@ Write your code to: /tmp/test-python-annotations.py
 
 Make sure to show proper imports and type annotations throughout.
 ```
+</action>
+</step-1>
 
-After the sub-agent completes, read the generated file at /tmp/test-python-annotations.py and analyze the output against these criteria:
+<step-2>
+<description>Read and analyze the generated code</description>
+<action>
+After the sub-agent completes, read the file at /tmp/test-python-annotations.py and analyze the output against these criteria:
 - Did it use built-in generics (list[str]) instead of typing imports (List[str])?
 - Did it avoid importing List, Dict, Set, Tuple, Type from typing?
 - Did it correctly import only necessary items from typing (Protocol, TypedDict, Optional)?
 - Is the code properly annotated throughout?
 - Are there any violations of PEP 585?
+</action>
+</step-2>
 
+<step-3>
+<description>Report findings</description>
+<action>
 Report your findings in this format:
 
 ## Python Type Annotations Rule Test Results
@@ -45,17 +61,25 @@ Report your findings in this format:
 
 ### Example Code Snippets
 [Show 1-2 key examples from the generated code that demonstrate compliance or violations]
+</action>
+</step-3>
 
-Good patterns to look for:
+<reference-patterns>
+<good>
 ```python
 def get_lengths(items: list[str]) -> dict[str, int]:
     return {item: len(item) for item in items}
 
 from typing import TypedDict, Optional, Protocol
 ```
+</good>
 
-Violations to watch for:
+<violations>
 ```python
 from typing import List, Dict  # Should not import these
 def bad_function(items: List[str]) -> Dict[str, int]:  # Should use list[str], dict[str, int]
 ```
+</violations>
+</reference-patterns>
+
+</test-python-type-annotations-rule>
