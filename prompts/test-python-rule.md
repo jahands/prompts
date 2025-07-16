@@ -12,18 +12,9 @@ You will test whether the Python type annotations cursor rule effectively guides
 Use the Task tool to create a sub-agent with this exact prompt:
 
 ```
-You are writing Python 3.9+ code. First, read the type annotation guidelines at /Users/jh/src/prompts/cursor-rules/python.mdc
+First read /Users/jh/src/prompts/cursor-rules/python.mdc
 
-Then create a Python module that demonstrates proper type annotations for:
-1. A function that takes a list of strings and returns a dictionary mapping strings to their lengths
-2. A function that processes optional user data and returns a set of unique IDs
-3. A class using TypedDict for user profiles with name, age, and optional email
-4. A function accepting multiple collection types (list, set, tuple) and returning their combined length
-5. A protocol defining a drawable interface with a draw() method
-
-Write your code to: /tmp/test-python-annotations.py
-
-Make sure to show proper imports and type annotations throughout.
+Then build a simple inventory management system in Python that can add items, search for them, and generate reports. Save it to ./test/python/inventory.py
 ```
 </action>
 </step-1>
@@ -31,7 +22,7 @@ Make sure to show proper imports and type annotations throughout.
 <step-2>
 <description>Read and analyze the generated code</description>
 <action>
-After the sub-agent completes, read the file at /tmp/test-python-annotations.py and analyze the output against these criteria:
+After the sub-agent completes, read the file at ./test/python/inventory.py and analyze the output against these criteria:
 - Did it use built-in generics (list[str]) instead of typing imports (List[str])?
 - Did it avoid importing List, Dict, Set, Tuple, Type from typing?
 - Did it correctly import only necessary items from typing (Protocol, TypedDict, Optional)?
