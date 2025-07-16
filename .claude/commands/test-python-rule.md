@@ -1,5 +1,4 @@
 ---
-name: test-python-rule
 description: Test whether the Python type annotations cursor rule effectively guides modern PEP 585 usage
 ---
 
