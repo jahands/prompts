@@ -12,7 +12,7 @@ You will test whether the Python type annotations cursor rule effectively guides
 Use the Task tool to create a sub-agent with this exact prompt:
 
 ```
-First read /Users/jh/src/prompts/cursor-rules/python.mdc
+First read ./cursor-rules/python.mdc
 
 Then build a simple inventory management system in Python that can add items, search for them, and generate reports. Save it to ./test/python/inventory.py
 ```
