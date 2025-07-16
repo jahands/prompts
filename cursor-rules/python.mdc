@@ -1,0 +1,30 @@
+---
+description: Modern Python type annotations using PEP 585 built-in generics for Python ≥ 3.9
+globs:
+alwaysApply: false
+---
+<python-type-annotations>
+
+<title>Modern Python Type Annotations (PEP 585)</title>
+
+<rules>
+- Use built-in generics directly: `list[int]`, `dict[str, float]`, `tuple[str, int]`, `set[bytes]`, `type[T]`
+- Never use deprecated typing aliases: `typing.List`, `typing.Dict`, `typing.Tuple`, `typing.Set`, `typing.Type`
+- Keep using typing objects without built-in equivalents: `Deque`, `DefaultDict`, `OrderedDict`, `Counter`, `TypedDict`, `Protocol`, `Any`, `Optional`, `Union`
+- Don't import built-in generics - they're already in global namespace
+- Only import from typing when the name genuinely lives there
+- Apply consistently unless user explicitly targets Python < 3.9
+</rules>
+
+<examples>
+<example type="comparison">
+| ✅ Correct | ❌ Avoid |
+| ---------- | -------- |
+| `def group(items: list[str]) -> dict[str, list[str]]:` | `from typing import List, Dict`<br>`def group(items: List[str]) -> Dict[str, List[str]]:` |
+| `numbers: tuple[int, int, int]` | `from typing import Tuple`<br>`numbers: Tuple[int, int, int]` |
+| `unique_ids: set[int]` | `from typing import Set`<br>`unique_ids: Set[int]` |
+| `from typing import Optional, Protocol` | `from typing import List, Dict, Set, Tuple, Type` |
+</example>
+</examples>
+
+</python-type-annotations>
