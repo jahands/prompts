@@ -16,15 +16,4 @@ alwaysApply: false
 - Apply consistently unless user explicitly targets Python < 3.9
 </rules>
 
-<examples>
-<example type="comparison">
-| ✅ Correct | ❌ Avoid |
-| ---------- | -------- |
-| `def group(items: list[str]) -> dict[str, list[str]]:` | `from typing import List, Dict`<br>`def group(items: List[str]) -> Dict[str, List[str]]:` |
-| `numbers: tuple[int, int, int]` | `from typing import Tuple`<br>`numbers: Tuple[int, int, int]` |
-| `unique_ids: set[int]` | `from typing import Set`<br>`unique_ids: Set[int]` |
-| `from typing import Optional, Protocol` | `from typing import List, Dict, Set, Tuple, Type` |
-</example>
-</examples>
-
 </python-type-annotations>
