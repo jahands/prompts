@@ -1,14 +1,12 @@
 ---
-description: Modern Python type annotations using PEP 585 built-in generics for Python ≥ 3.9
+description: Python guidelines (READ BEFORE USING PYTHON)
 globs:
 alwaysApply: false
 ---
-<python-type-annotations>
-
-<title>Modern Python Type Annotations (PEP 585)</title>
+<python-guidelines>
 
 <rules>
-- Assume Python ≥3.9 unless otherwise specified.
+- Assume Python ≥3.10, PEP585
 </rules>
 
-</python-type-annotations>
+</python-guidelines>
