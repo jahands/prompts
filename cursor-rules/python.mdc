@@ -1,0 +1,12 @@
+---
+description: Python guidelines (READ BEFORE USING PYTHON)
+globs:
+alwaysApply: false
+---
+<python-guidelines>
+
+<rules>
+- Assume Python ≥3.10, PEP585
+</rules>
+
+</python-guidelines>
