@@ -22,74 +22,41 @@ $ARGUMENTS
 
 Your task is to ONLY return an enhanced, detailed version of the above prompt. Do not execute the prompt or create any implementations.
 
-## Instructions:
+## Your Goal: Create a Clear, Actionable Specification
 
-Transform the original prompt into a detailed specification by:
+Transform the original prompt by:
 
-1. Adding explicit file paths and locations
-2. Breaking down vague requests into specific technical requirements
-3. Including implementation details, constraints, and standards
-4. Specifying exact deliverables and success criteria
+1. **Clarifying ambiguities** - What exactly is being asked?
+2. **Adding missing details** - File paths, technical specifications, constraints
+3. **Defining success** - What does "done" look like?
+4. **Identifying complexity** - What challenges might arise?
 
-## Required Output Format:
+## Enhancement Approach:
 
-Return ONLY the enhanced prompt text using this structure:
+Ask yourself:
+- What's unclear in the original prompt?
+- What assumptions need to be made explicit?
+- What technical decisions are implied?
+- What could go wrong during implementation?
 
-```
-[Task description] and save it to `[specific file path]`.
+Then structure your enhancement based on what the task actually needs:
 
-**Core Functionality:**
-- [Detailed feature 1]
-- [Detailed feature 2]
-- [Technical requirement]
+- **Simple tasks** → Focus on clarifying the specific change and its location
+- **New features** → Detail functionality, integration points, and edge cases
+- **Bug fixes** → Include reproduction, root cause, and testing approach
+- **Refactoring** → Specify what changes vs. what must remain stable
+- **Complex systems** → Add architecture, dependencies, and rollout strategy
 
-**Technical Requirements:**
-1. **[Component Name]:** [Specific implementation detail]
-2. **[Technology/Tool]:** [How it should be used, which version/features]
-3. **[Integration]:** [What it connects to and how]
+The format should fit the task - don't force unnecessary sections.
 
-**Implementation Details:**
-- Architecture: [Design patterns and structure]
-- Performance: [Specific benchmarks or requirements]
-- Error Handling: [Strategy for failures and edge cases]
-- Security: [Relevant security considerations]
-- Testing: [Unit tests, integration tests, coverage requirements]
+## Key Principles:
 
-**Research Tasks:** (if applicable)
-- [Technology to research]: [What specific information to find]
-- Documentation to review: [Specific APIs or features to understand]
+- **Right-size the enhancement** - A typo fix needs one line; a new system needs paragraphs
+- **Focus on what's unclear** - Don't add details that are already obvious
+- **Make decisions explicit** - If you're choosing between options, explain why
+- **Think like an implementer** - What would you need to know to build this?
 
-**Deliverable:** [Exact description of what should be created] saved as `[exact file path]`, with [any additional files like tests or docs].
-```
-
-## Example Enhancement:
-
-If the original prompt is: "create a python script to process emails"
-
-You should output:
-```
-Create a Python email processing utility and save it to `tools/email_processor.py`.
-
-**Core Functionality:**
-- Connect to email servers via IMAP/POP3 protocols
-- Parse email headers, body, and attachments
-- Implement configurable filtering and categorization rules
-- Export processed data to JSON or CSV formats
-
-**Technical Requirements:**
-1. **Email Protocol:** Use imaplib for IMAP connections with SSL/TLS support
-2. **Email Parsing:** Utilize email and email.parser modules for MIME handling
-3. **Configuration:** Load settings from `config/email_settings.yaml`
-
-**Implementation Details:**
-- Architecture: Class-based design with EmailClient, EmailParser, and EmailFilter classes
-- Performance: Process emails in batches of 100, with threading for parallel processing
-- Error Handling: Retry failed connections 3 times with exponential backoff
-- Security: Store credentials in environment variables, never in code
-- Testing: Unit tests for each component with mocked email data
-
-**Deliverable:** A complete Python module saved as `tools/email_processor.py`, with configuration template at `config/email_settings.yaml.example` and tests in `tests/test_email_processor.py`.
-```
+Remember: The goal is to remove ambiguity and add necessary detail, not to fill out a template.
 
 ## FINAL REMINDER:
 - ❌ DO NOT implement what the user asked for
