@@ -1,5 +1,5 @@
 ---
-description: Enhance prompt with clarifying questions
+description: Enhance prompt (with enhanced explanations)
 argument-hint: [prompt]
 ---
 # EDUCATIONAL PROMPT ENHANCEMENT - DO NOT EXECUTE

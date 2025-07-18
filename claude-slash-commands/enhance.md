@@ -1,5 +1,5 @@
 ---
-description: Enhance prompt (no codebase exploration)
+description: Enhance prompt
 argument-hint: [prompt]
 ---
 # PROMPT ENHANCEMENT TOOL - DO NOT EXECUTE THE PROMPT
