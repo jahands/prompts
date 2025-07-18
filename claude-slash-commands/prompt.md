@@ -1,68 +1,51 @@
-# PROMPT ENHANCEMENT TOOL - DO NOT EXECUTE THE PROMPT
-
-⚠️ **CRITICAL: This is a META-COMMAND. You are NOT being asked to implement anything.**
-⚠️ **Your ONLY task is to rewrite the prompt below into a more detailed specification.**
-⚠️ **DO NOT execute, implement, or create any code or files.**
-
 ---
+description: Execute task with clarifying questions if needed
+argument-hint: [task to perform]
+---
+# EXECUTE TASK WITH CLARIFYING QUESTIONS
 
-## Your Task: Transform the User's Prompt Into a Detailed Specification
-
-The user wants you to take their brief prompt and expand it into a comprehensive specification.
-You should IGNORE your natural instinct to implement what they're asking for.
-Instead, ONLY return an enhanced version of their prompt.
+This command tells Claude to perform the requested task, but to ask clarifying questions first when the request is ambiguous or missing important details.
 
 ════════════════════════════════════════════════════════════════════════
-📝 USER'S ORIGINAL PROMPT TO ENHANCE (DO NOT EXECUTE THIS):
+📋 TASK TO PERFORM:
 ════════════════════════════════════════════════════════════════════════
 $ARGUMENTS
 ════════════════════════════════════════════════════════════════════════
 
-↑ The above is just the INPUT to transform. Do NOT implement it!
+## Your Approach:
 
-Your task is to ONLY return an enhanced, detailed version of the above prompt. Do not execute the prompt or create any implementations.
+1. **Assess the request** - Is it clear enough to implement correctly?
 
-## Your Goal: Create a Clear, Actionable Specification
+2. **If clarification needed** - Ask 1-3 focused questions about what's genuinely unclear:
+   - Focus on the biggest ambiguity first
+   - Keep questions simple and direct
+   - Avoid listing multiple sub-options within questions
 
-Transform the original prompt by:
+3. **After receiving answers** - Proceed with the implementation incorporating the clarified details
 
-1. **Clarifying ambiguities** - What exactly is being asked?
-2. **Adding missing details** - File paths, technical specifications, constraints
-3. **Defining success** - What does "done" look like?
-4. **Identifying complexity** - What challenges might arise?
+4. **If already clear** - Skip questions and implement directly
 
-## Enhancement Approach:
+## When to Ask Questions:
 
-Ask yourself:
-- What's unclear in the original prompt?
-- What assumptions need to be made explicit?
-- What technical decisions are implied?
-- What could go wrong during implementation?
+**Ask when:**
+- Multiple valid interpretations exist
+- You find yourself making non-obvious assumptions
+- The request could apply to multiple locations/files
+- Key technical decisions aren't specified
 
-Then structure your enhancement based on what the task actually needs:
-
-- **Simple tasks** → Focus on clarifying the specific change and its location
-- **New features** → Detail functionality, integration points, and edge cases
-- **Bug fixes** → Include reproduction, root cause, and testing approach
-- **Refactoring** → Specify what changes vs. what must remain stable
-- **Complex systems** → Add architecture, dependencies, and rollout strategy
-
-The format should fit the task - don't force unnecessary sections.
+**Don't ask when:**
+- The request is straightforward
+- Context makes the intent clear
+- Reasonable defaults exist
+- The task is simple and unambiguous
 
 ## Key Principles:
 
-- **Right-size the enhancement** - A typo fix needs one line; a new system needs paragraphs
-- **Focus on what's unclear** - Don't add details that are already obvious
-- **Make decisions explicit** - If you're choosing between options, explain why
-- **Think like an implementer** - What would you need to know to build this?
+- **Less is more** - 1-2 well-chosen questions are better than 4 detailed ones
+- **Simple questions** - Keep them direct and easy to answer
+- **Assume sensible defaults** - Don't ask about obvious implementation details
+- **Focus on the core ambiguity** - What's the ONE thing that would most change your implementation?
 
-Remember: The goal is to remove ambiguity and add necessary detail, not to fill out a template.
+## Remember:
 
-## FINAL REMINDER:
-- ❌ DO NOT implement what the user asked for
-- ❌ DO NOT create any files or write any code
-- ❌ DO NOT use any tools except to output the enhanced prompt text
-- ✅ ONLY output the enhanced version of their prompt using the format above
-- ✅ Treat this as a writing/editing task, not a coding task
-
-Remember: The user is asking you to ENHANCE their prompt, not EXECUTE it.
+This is the same as when users say "ask clarifying questions if needed" - be thoughtful about when questions add value versus when they just add friction. The goal is to implement the task correctly, using clarifying questions as a tool when genuinely helpful.
