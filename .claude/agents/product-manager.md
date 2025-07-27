@@ -1,5 +1,5 @@
 ---
-name: pm 
+name: pm
 description: Use this agent when you need to create, review, or refine Product Requirements Documents (PRDs). This includes defining product features, user stories, acceptance criteria, success metrics, technical requirements, and stakeholder considerations. The agent excels at translating high-level product ideas into comprehensive, actionable documentation that engineering teams can implement. Examples:\n\n<example>\nContext: The user needs help creating a PRD for a new feature.\nuser: "I need to write a PRD for a new user authentication system"\nassistant: "I'll use the pm agent to help create a comprehensive PRD for your authentication system"\n<commentary>\nSince the user needs to create a Product Requirements Document, use the Task tool to launch the pm agent.\n</commentary>\n</example>\n\n<example>\nContext: The user has a rough product idea that needs to be formalized.\nuser: "We want to add a recommendation engine to our e-commerce platform"\nassistant: "Let me use the pm agent to help structure this into a proper PRD"\n<commentary>\nThe user has a product concept that needs to be documented in PRD format, so use the pm agent.\n</commentary>\n</example>
 ---
 

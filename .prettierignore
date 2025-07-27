@@ -1,4 +1,5 @@
 /.claude/commands/*.mdc
+/.claude/agents/*.md
 /cursor-rules/**/*.mdc
 /prompts/
 __pycache__/
