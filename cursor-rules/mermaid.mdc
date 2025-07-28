@@ -1,0 +1,32 @@
+---
+description: Formatting requirements for Mermaid diagrams to ensure compatibility and avoid parsing errors. ALWAYS read when creating/updating mermaid diagrams.
+globs:
+alwaysApply: false
+---
+<mermaid-diagram-formatting>
+
+<rules>
+- Always wrap node content in double quotes when it contains special characters, multiline text, or complex syntax
+- Use `<br/>` for line breaks within quoted node labels, never `\n`
+- Avoid unquoted special characters: parentheses `()`, curly braces `{}`, angle brackets `<>`, single quotes `'`, colons `:`
+- Database/cylinder nodes require special syntax: `NodeName[("Label text<br/>Additional info")]`
+- Complex syntax (function calls, JSON objects, code snippets) is allowed if properly quoted
+- Use markdown code blocks with `mermaid` language identifier
+- Sequence diagrams can handle some unquoted text differently than graph diagrams
+</rules>
+
+<example>
+```mermaid
+graph TB
+    User[User] --> API["External API<br/>Service Layer"]
+    API --> DB[("Database<br/>Storage")]
+    API --> Worker["Background Worker<br/>processJob()<br/>Async execution"]
+    
+    subgraph "Processing Layer"
+        Client["typed client<br/>interface"]
+        Methods["Method calls:<br/>client.getData({id: string})<br/>client.process({data: object})"]
+    end
+```
+</example>
+
+</mermaid-diagram-formatting>
