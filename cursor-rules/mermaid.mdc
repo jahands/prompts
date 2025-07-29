@@ -3,6 +3,7 @@ description: Formatting requirements for Mermaid diagrams to ensure compatibilit
 globs:
 alwaysApply: false
 ---
+
 <mermaid-diagram-formatting>
 
 <rules>
@@ -13,6 +14,7 @@ alwaysApply: false
 - Complex syntax (function calls, JSON objects, code snippets) is allowed if properly quoted
 - Use markdown code blocks with `mermaid` language identifier
 - Sequence diagrams can handle some unquoted text differently than graph diagrams
+- Always style with dark mode canvas in mind
 </rules>
 
 <example>
