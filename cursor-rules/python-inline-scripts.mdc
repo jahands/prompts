@@ -20,8 +20,8 @@ uv run --no-project -q --script - < <(cat <<'EOF'
 # requires-python = ">=3.12"
 # ///
 
-import httpx
-print(httpx.get("https://api.github.com/zen").text)
+import httpx, json
+print(json.loads(httpx.get("https://uuid.rocks/json").text)['uuid'])
 EOF
 )
 </example>
