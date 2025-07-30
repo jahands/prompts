@@ -15,6 +15,7 @@ alwaysApply: false
 - Use markdown code blocks with `mermaid` language identifier
 - Sequence diagrams can handle some unquoted text differently than graph diagrams
 - Wrap edge labels starting with "number. " in HTML tags (e.g., `<b>1. Step</b>`) to prevent markdown list parsing
+- Style commands only work on node IDs, not subgraph names
 - Always style with dark mode canvas in mind
 </rules>
 
