@@ -1,0 +1,29 @@
+---
+description: How to run python inline scripts with uv (ALWAYS read before running inline python scripts)
+globs:
+alwaysApply: false
+---
+<python-inline-scripts>
+
+<title>Python Inline Scripts with uv</title>
+
+<rules>
+- ALWAYS assume Python 3.12+, PEP 585
+</rules>
+
+<example>
+uv run --no-project --script - < <(cat <<'EOF'
+# /// script
+# dependencies = [
+#   "httpx"
+# ]
+# requires-python = ">=3.12"
+# ///
+
+import httpx
+print(httpx.get("https://api.github.com/zen").text)
+EOF
+)
+</example>
+
+</python-inline-scripts>
