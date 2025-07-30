@@ -1,5 +1,5 @@
 ---
-description: How to run python inline scripts with uv (ALWAYS read before running inline python scripts)
+description: ALWAYS read this guide when running inline python scripts. This should be used when the user says "use inline python" or "run inline python"
 globs:
 alwaysApply: false
 ---
