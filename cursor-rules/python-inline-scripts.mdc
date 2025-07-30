@@ -9,6 +9,7 @@ alwaysApply: false
 
 <rules>
 - ALWAYS assume Python 3.12+, PEP 585
+- ONLY add pypi packages to dependencies array, not stdlib
 </rules>
 
 <example>
@@ -20,8 +21,8 @@ uv run --no-project -q --script - < <(cat <<'EOF'
 # requires-python = ">=3.12"
 # ///
 
-import httpx, json
-print(json.loads(httpx.get("https://uuid.rocks/json").text)['uuid'])
+import httpx
+print(httpx.get("https://api.github.com/zen").text)
 EOF
 )
 </example>
