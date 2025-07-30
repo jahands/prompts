@@ -7,18 +7,13 @@ alwaysApply: false
 
 <title>Python Inline Scripts with uv</title>
 
-<rules>
-- ALWAYS assume Python 3.12+, PEP 585
-- ONLY add pypi packages to dependencies array, not stdlib
-</rules>
-
 <example>
 uv run --no-project -q --script - < <(cat <<'EOF'
 # /// script
 # dependencies = [
-#   "httpx"
+#   "httpx" # Only PyPI packages - NOT stdlib modules like json, os, re
 # ]
-# requires-python = ">=3.12"
+# requires-python = ">=3.12" # ALWAYS assume Python 3.12+, PEP 585
 # ///
 
 import httpx
