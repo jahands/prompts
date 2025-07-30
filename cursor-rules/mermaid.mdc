@@ -8,13 +8,17 @@ alwaysApply: false
 <rules>
 - Always wrap content with special characters, multiline text, or complex syntax in both double quotes and <p> tags: `["<p>content</p>"]`
 - Use `<br/>` for line breaks within quoted node labels, never `\n`
-- Avoid unquoted special characters: parentheses `()`, curly braces `{}`, angle brackets `<>`, single quotes `'`, colons `:`
+- NEVER use unquoted special characters: parentheses `()`, curly braces `{}`, angle brackets `<>`, single quotes `'`, colons `:`
 - Database/cylinder nodes require special syntax: `NodeName[("Label text<br/>Additional info")]`
-- Complex syntax (function calls, JSON objects, code snippets) is allowed if properly quoted
+- Complex syntax (function calls, code snippets) is allowed if properly quoted, but NEVER use JSON
 - Use markdown code blocks with `mermaid` language identifier
 - Sequence diagrams can handle some unquoted text differently than graph diagrams
 - Wrap edge labels starting with "number. " in HTML tags (e.g., `<p>1. Step</p>`) to prevent markdown list parsing
-- Style commands only work on node IDs, not subgraph names
+- NEVER use style commands on subgraph names - only on node IDs
+- NEVER use JSON syntax - use plain text descriptions instead
+- NEVER use Mermaid keywords (graph, subgraph, node, edge, etc.) as class names or node IDs
+- Use proper class syntax: `classDef name styles;` then `class nodes name;`
+- NEVER use unsupported HTML tags like `<pre>`, `<code>` - only use: `<p>`, `<b>`, `<i>`, `<u>`, `<br/>`
 - Always style with dark mode canvas in mind
 </rules>
 
