@@ -21,7 +21,7 @@ alwaysApply: false
 <example>
 ```mermaid
 graph TB
-    User[User] --> API["External API<br/>Service Layer"]
+    User -- "<b>1. Submit request</b>" --> API["External API<br/>Service Layer"]
     API --> DB[("Database<br/>Storage")]
     API --> Worker["Background Worker<br/>processJob()<br/>Async execution"]
     
