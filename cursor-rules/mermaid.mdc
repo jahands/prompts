@@ -6,33 +6,48 @@ alwaysApply: false
 <mermaid-diagram-formatting>
 
 <rules>
-- Always wrap content with special characters, multiline text, or complex syntax in both double quotes and <p> tags: `["<p>content</p>"]`
-- Use `<br/>` for line breaks within quoted node labels, never `\n`
+- Wrap node labels containing special characters, multiline text, or complex syntax in double quotes and <p> tags: `["<p>content</p>"]`
+- Use `<br/>` for line breaks within node labels, never `\n`
+- Escape special characters in content: angle brackets `<` → `&lt;`, `>` → `&gt;`, ampersand `&` → `&amp;`
 - NEVER use unquoted special characters: parentheses `()`, curly braces `{}`, angle brackets `<>`, single quotes `'`, colons `:`
-- Database/cylinder nodes require special syntax: `NodeName[("Label text<br/>Additional info")]`
-- Complex syntax (function calls, code snippets) is allowed if properly quoted, but NEVER use JSON
+- Database/cylinder nodes use special shape syntax: `NodeName[(content)]` where `[(` and `)]` define the shape
+  - For simple labels: `DB[(PostgreSQL)]`
+  - For multiline/special chars: `DB[("<p>PostgreSQL<br/>via Hyperdrive</p>")]`
+- Regular nodes with special content: `Node["<p>content with spaces/special chars</p>"]`
 - Use markdown code blocks with `mermaid` language identifier
-- Sequence diagrams can handle some unquoted text differently than graph diagrams
-- Wrap edge labels starting with "number. " in HTML tags (e.g., `<p>1. Step</p>`) to prevent markdown list parsing
+- Edge labels with special characters should use quotes: `-- "label text" -->`
+- Edge labels starting with numbers should be wrapped: `-- "<p>1. Step name</p>" -->`
+- Subgraph names should be plain text without special characters or emojis
 - NEVER use style commands on subgraph names - only on node IDs
-- NEVER use JSON syntax - use plain text descriptions instead
 - NEVER use Mermaid keywords (graph, subgraph, node, edge, etc.) as class names or node IDs
-- Use proper class syntax: `classDef name styles;` then `class nodes name;`
-- NEVER use unsupported HTML tags like `<pre>`, `<code>` - only use: `<p>`, `<b>`, `<i>`, `<u>`, `<br/>`
-- Always style with dark mode canvas in mind
+- Use proper class syntax: `classDef className styles;` then `class nodeId1,nodeId2 className;`
+- Only use supported HTML tags: `<p>`, `<b>`, `<i>`, `<u>`, `<br/>`
+- Sequence diagram participants can use simpler syntax but messages with special chars still need escaping
 </rules>
+
+<important-notes>
+- The `<p>` tags are a compatibility workaround for certain parsers - not standard Mermaid syntax
+- Database syntax `[(` and `)]` are shape delimiters, not content delimiters
+- When in doubt, over-escape and over-quote to ensure parsing succeeds
+</important-notes>
 
 <example>
 ```mermaid
 graph TB
-    User -- "<p>1. Submit request</p>" --> API["<p>External API<br/>Service Layer</p>"]
-    API --> DB[("Database<br/>Storage")]
-    API --> Worker["Background Worker<br/>processJob()<br/>Async execution"]
+    User["<p>👤 User in Dashboard</p>"] -- "<p>1. Submit request</p>" --> API["<p>External API<br/>Service Layer</p>"]
+    API --> DB[("<p>PostgreSQL<br/>Storage Layer</p>")]
+    API --> Worker["<p>Background Worker<br/>processJob()<br/>Async execution</p>"]
     
-    subgraph "Processing Layer"
-        Client["typed client<br/>interface"]
-        Methods["Method calls:<br/>client.getData({id: string})<br/>client.process({data: object})"]
+    subgraph Processing Layer
+        Client["<p>typed client<br/>interface</p>"]
+        Methods["<p>Method calls:<br/>client.getData({id: string})<br/>client.process({data: object})</p>"]
     end
+    
+    classDef userNode fill:#4a90e2,stroke:#357abd,color:#ffffff
+    classDef dbNode fill:#50c878,stroke:#3da35d,color:#ffffff
+    
+    class User userNode
+    class DB dbNode
 ```
 </example>
 
