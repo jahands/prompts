@@ -8,7 +8,6 @@ alwaysApply: false
 <rules>
 - Wrap node labels containing special characters, multiline text, or complex syntax in double quotes and <p> tags: `["<p>content</p>"]`
 - Use `<br/>` for line breaks within node labels, never `\n`
-- Escape special characters in content: angle brackets `<` → `&lt;`, `>` → `&gt;`, ampersand `&` → `&amp;`
 - NEVER use unquoted special characters: parentheses `()`, curly braces `{}`, angle brackets `<>`, single quotes `'`, colons `:`
 - Database/cylinder nodes use special shape syntax: `NodeName[(content)]` where `[(` and `)]` define the shape
   - For simple labels: `DB[(PostgreSQL)]`
@@ -17,7 +16,7 @@ alwaysApply: false
 - Use markdown code blocks with `mermaid` language identifier
 - Edge labels with special characters should use quotes: `-- "label text" -->`
 - Edge labels starting with numbers should be wrapped: `-- "<p>1. Step name</p>" -->`
-- Subgraph names should be plain text without special characters or emojis
+- Subgraph names should be plain text without special characters (but emoji is allowed)
 - NEVER use style commands on subgraph names - only on node IDs
 - NEVER use Mermaid keywords (graph, subgraph, node, edge, etc.) as class names or node IDs
 - Use proper class syntax: `classDef className styles;` then `class nodeId1,nodeId2 className;`
@@ -28,13 +27,12 @@ alwaysApply: false
 <important-notes>
 - The `<p>` tags are a compatibility workaround for certain parsers - not standard Mermaid syntax
 - Database syntax `[(` and `)]` are shape delimiters, not content delimiters
-- When in doubt, over-escape and over-quote to ensure parsing succeeds
 </important-notes>
 
 <example>
 ```mermaid
 graph TB
-    User["<p>👤 User in Dashboard</p>"] -- "<p>1. Submit request</p>" --> API["<p>External API<br/>Service Layer</p>"]
+    User[👤 User in Dashboard] -- "<p>1. Submit request</p>" --> API["<p>External API<br/>Service Layer</p>"]
     API --> DB[("<p>PostgreSQL<br/>Storage Layer</p>")]
     API --> Worker["<p>Background Worker<br/>processJob()<br/>Async execution</p>"]
     
