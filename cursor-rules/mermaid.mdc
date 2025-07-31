@@ -16,7 +16,6 @@ alwaysApply: false
 - Use markdown code blocks with `mermaid` language identifier
 - Edge labels with special characters should use quotes: `-- "label text" -->`
 - Edge labels starting with numbers should be wrapped: `-- "<p>1. Step name</p>" -->`
-- Subgraph names should be plain text without special characters (but emoji is allowed)
 - NEVER use style commands on subgraph names - only on node IDs
 - NEVER use Mermaid keywords (graph, subgraph, node, edge, etc.) as class names or node IDs
 - Use proper class syntax: `classDef className styles;` then `class nodeId1,nodeId2 className;`
