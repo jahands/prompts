@@ -12,7 +12,7 @@ alwaysApply: false
 - Database/cylinder nodes use special shape syntax: `NodeName[(content)]` where `[(` and `)]` define the shape
   - For simple labels: `DB[(PostgreSQL)]`
   - For multiline/special chars: `DB[("<p>PostgreSQL<br/>via Hyperdrive</p>")]`
-- Regular nodes with special content: `Node["<p>content with spaces/special chars</p>"]`
+- Regular nodes with special content: `Node["<p>content with special chars</p>"]`
 - Use markdown code blocks with `mermaid` language identifier
 - Edge labels with special characters should use quotes: `-- "label text" -->`
 - Edge labels starting with numbers should be wrapped: `-- "<p>1. Step name</p>" -->`
