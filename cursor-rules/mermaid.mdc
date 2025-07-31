@@ -16,7 +16,11 @@ alwaysApply: false
 - Use markdown code blocks with `mermaid` language identifier
 - Edge labels with special characters should use quotes: `-- "label text" -->`
 - Edge labels starting with numbers should be wrapped: `-- "<p>1. Step name</p>" -->`
-- NEVER use style commands on subgraph names - only on node IDs
+- NEVER apply style properties or classes to subgraph names - only to node IDs
+  - ❌ WRONG: `style MySubgraph fill:#f9f,stroke:#333` 
+  - ❌ WRONG: `class MySubgraph className`
+  - ✅ RIGHT: `subgraph MySubgraph ["Display Label"]` (labels are allowed!)
+  - ✅ RIGHT: `style NodeA fill:#f9f` (styling nodes is fine)
 - NEVER use Mermaid keywords (graph, subgraph, node, edge, etc.) as class names or node IDs
 - Use proper class syntax: `classDef className styles;` then `class nodeId1,nodeId2 className;`
 - Only use supported HTML tags: `<p>`, `<b>`, `<i>`, `<u>`, `<br/>`
@@ -35,7 +39,7 @@ graph TB
     API --> DB[("<p>PostgreSQL<br/>Storage Layer</p>")]
     API --> Worker["<p>Background Worker<br/>processJob()<br/>Async execution</p>"]
     
-    subgraph Processing Layer
+    subgraph ProcessingLayer ["📊 Processing Layer"]
         Client["<p>typed client<br/>interface</p>"]
         Methods["<p>Method calls:<br/>client.getData({id: string})<br/>client.process({data: object})</p>"]
     end
