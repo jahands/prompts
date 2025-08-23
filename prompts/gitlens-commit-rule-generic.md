@@ -12,7 +12,7 @@ Before writing the commit message, examine the diff and answer:
 <format>
 - Basic format: `<type>: <summary>`
 - With scope (optional): `<type>(<scope>): <summary>`
-- Types: feat, fix, docs, style, refactor, test, chore
+- Types: feat, fix, docs, refactor, test, chore
 - Keep summary under 72 characters
 - Use lowercase for everything (e.g., `fix: correct parsing logic`)
 </format>
@@ -28,12 +28,11 @@ Examples: `fix(auth): ...`, `feat(api): ...`, `docs(cli): ...`
 
 <type-selection>
 - **feat**: Adding new functionality/capability
-- **fix**: Fixing broken behavior 
-- **docs**: Only documentation changes (*.md, comments, docstrings)
-- **style**: Code formatting only (no logic changes)
-- **refactor**: Restructuring code without changing behavior
+- **fix**: Fixing broken behavior or bugs
+- **docs**: Documentation changes (*.md, comments, docstrings)
+- **refactor**: Significant code restructuring (extract modules, reorganize architecture, change patterns)
 - **test**: Adding or modifying tests
-- **chore**: Dependencies, configs, build process, maintenance
+- **chore**: Maintenance and minor updates (dependencies, configs, formatting, method updates, small cleanups, renames)
 </type-selection>
 
 <commit-patterns-by-type>
@@ -115,11 +114,19 @@ Why good: Uses scope to clarify the module affected
 # When diff shows: New test cases for edge conditions
 ✅ `test: add edge cases for date parsing logic`
 Why good: Specific about what tests were added
+
+# When diff shows: Renaming variables or updating method names
+✅ `chore: rename getUserId to getCurrentUserId for clarity`
+Why good: Small improvements and updates are maintenance
+
+# When diff shows: Major reorganization of authentication module
+✅ `refactor: split auth module into separate token and session handlers`
+Why good: Significant architectural change, not just maintenance
 </good-examples>
 
 <bad-examples>
 # When diff shows: Multiple validation improvements
-❌ `fix: improve validation` 
+❌ `fix: improve validation`
 Better: `fix: validate required fields in user registration`
 
 # When diff shows: New API endpoint
@@ -148,27 +155,27 @@ Better: `chore: increase API timeout to 30 seconds`
 <when-body-helps>
 feat: add user import command
 
-Bulk imports users from CSV files with validation and 
+Bulk imports users from CSV files with validation and
 duplicate detection (supports up to 10,000 users per file)
 </when-body-helps>
 
 <breaking-change>
 feat: replace REST API with GraphQL
 
-BREAKING: All API endpoints changed. Update client code to use 
+BREAKING: All API endpoints changed. Update client code to use
 GraphQL queries. See migration guide in docs/api-migration.md
 </breaking-change>
 
 <non-obvious-fix>
 fix: prevent memory leak in background workers
 
-Workers were accumulating event listeners without cleanup, 
+Workers were accumulating event listeners without cleanup,
 causing memory usage to grow over time
 </non-obvious-fix>
 
 <stay-title-only>
 feat: add dark mode to dashboard
-fix: correct typo in validation message  
+fix: correct typo in validation message
 chore: upgrade react to 18.2.0
 docs: add API examples to README
 test: add edge cases for email validation
@@ -188,6 +195,8 @@ Before finalizing, ask yourself:
 Read your commit message and imagine you're searching the git log in 6 months.
 Would you be able to find this change? Would you know what it did?
 If not, add more specific details.
+
+STOP, think harder. Read through the guidelines again and then think about your commit message before you output it.
 </final-check>
 
 </commit-message-format>
