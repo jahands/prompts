@@ -10,6 +10,7 @@ alwaysApply: false
 <IMPORTANT>
 - ALWAYS assume Bun runtime with modern typescript features
 - Imported npm packages will be automatically installed by bun
+- ALWAYS prefer Bun APIs where possible.
 </IMPORTANT>
 
 <example>
