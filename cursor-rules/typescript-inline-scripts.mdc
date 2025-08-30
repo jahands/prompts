@@ -1,0 +1,24 @@
+---
+description: ALWAYS read this guide when running inline typescript. This should be used when the user says "use inline typescript" or "run inline typescript"
+globs:
+alwaysApply: false
+---
+<typescript-inline-scripts>
+
+<title>Typescript Inline Scripts with Bun</title>
+
+<IMPORTANT>
+- ALWAYS assume Bun runtime with modern typescript features
+- Imported npm packages will be automatically installed by bun
+</IMPORTANT>
+
+<example>
+bun run --install=fallback - < <(cat <<'EOF'
+import { z } from 'zod'
+
+console.log(z.coerce.number().parse('5'))
+EOF
+)
+</example>
+
+</typescript-inline-scripts>
