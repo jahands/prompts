@@ -1,6 +1,6 @@
 ---
 name: python-inline-scripts
-description: Guide for running inline Python scripts with uv. Use when user says "use inline python" or "run inline python"
+description: Guide for running inline Python scripts with uv
 ---
 
 ## Python Inline Scripts with uv
