@@ -1,6 +1,6 @@
 ---
 name: typescript-inline-scripts
-description: Guide for running inline TypeScript scripts with Bun
+description: Guide for running inline TypeScript scripts with Bun. This should be used when the user says "use inline typescript"
 ---
 
 ## TypeScript Inline Scripts with Bun
