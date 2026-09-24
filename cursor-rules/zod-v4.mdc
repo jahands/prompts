@@ -8,6 +8,16 @@ alwaysApply: false
 <core-rules>
 
 <rule>
+<name>Imports</name>
+<requirement>ALWAYS import Zod as a namespace. NEVER use `import { z } from 'zod'` or a default import</requirement>
+<example type="good">
+```typescript
+import * as z from 'zod'
+```
+</example>
+</rule>
+
+<rule>
 <name>Type Inference</name>
 <requirement>Every schema MUST have inferred type above it</requirement>
 <example type="good">
