@@ -33,7 +33,7 @@ Is it derived from other state?
   → Calculate it during render (useMemo if expensive)
 
 Does it need to sync with external systems?
-  → Use useEffect (this is the ONLY valid use case)
+  → Use useEffect (the one case where an effect is the right tool)
 </decision-tree>
 </when-to-use-what>
 
@@ -41,7 +41,7 @@ Does it need to sync with external systems?
 - Routes are the primary unit of code organization
 - Each route is a mini-application with its own data requirements
 - Loaders run isomorphically (server on first load, client on navigation)
-- File naming: `$param.tsx` for dynamics, `_layout.tsx` for layouts
+- File naming: `$param.tsx` for dynamic segments, `route.tsx` for a directory's layout route, `_name.tsx` for a pathless layout
 - Search params are first-class citizens with full TypeScript support
 </routing-principles>
 

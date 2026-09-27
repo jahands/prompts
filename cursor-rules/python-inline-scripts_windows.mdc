@@ -1,5 +1,5 @@
 ---
-description: ALWAYS read this guide when running inline python scripts. This should be used when the user says "use inline python" or "run inline python"
+description: Guide for running inline Python scripts with uv. Use when the user says "use inline python" or "run inline python"
 globs:
 alwaysApply: false
 ---
@@ -7,15 +7,15 @@ alwaysApply: false
 
 <title>Python Inline Scripts with uv</title>
 
-<IMPORTANT>
-- NEVER add stdlib modules like json, os, re, etc. to dependencies OR THE SCRIPT WILL FAIL
-- ALWAYS assume Python 3.12+
-</IMPORTANT>
+<rules>
+- List only PyPI packages in `dependencies`. Stdlib modules (`json`, `os`, `re`) are not on PyPI, so uv fails to resolve the script.
+- Target Python 3.12+.
+</rules>
 
 <example>
 @'
 # /// script
-# # ONLY add dependencies array if you need PyPi packages
+# # omit dependencies when the script only uses the stdlib
 # dependencies = [
 #   "httpx"
 # ]

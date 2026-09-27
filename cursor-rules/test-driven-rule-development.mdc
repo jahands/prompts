@@ -24,7 +24,7 @@ alwaysApply: false
 - Delete ALL existing test files to prevent contamination
 - Sub-agents must not see rules from previous test runs
 - Create fresh empty test directory
-- This step is CRITICAL - existing rules will taint results
+- Skipping this taints results: sub-agents read the old rules
 </requirements>
 <example>
 ```bash
