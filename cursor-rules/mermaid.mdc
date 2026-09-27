@@ -1,5 +1,5 @@
 ---
-description: Formatting requirements for Mermaid diagrams to ensure compatibility and avoid parsing errors. ALWAYS read when creating/updating mermaid diagrams.
+description: Formatting requirements for Mermaid diagrams that avoid parser errors. Read when creating or updating Mermaid diagrams.
 globs:
 alwaysApply: false
 ---
@@ -8,7 +8,7 @@ alwaysApply: false
 <rules>
 - Wrap node labels containing special characters, multiline text, or complex syntax in double quotes and <p> tags: `["<p>content</p>"]`
 - Use `<br/>` for line breaks within node labels, never `\n`
-- NEVER use unquoted special characters: parentheses `()`, curly braces `{}`, angle brackets `<>`, single quotes `'`, colons `:`
+- Quote labels that contain special characters (parentheses `()`, curly braces `{}`, angle brackets `<>`, single quotes `'`, colons `:`); unquoted, they break the Mermaid parser
 - Database/cylinder nodes use special shape syntax: `NodeName[(content)]` where `[(` and `)]` define the shape
   - For simple labels: `DB[(PostgreSQL)]`
   - For multiline/special chars: `DB[("<p>PostgreSQL<br/>via Hyperdrive</p>")]`
@@ -16,12 +16,12 @@ alwaysApply: false
 - Use markdown code blocks with `mermaid` language identifier
 - Edge labels with special characters should use quotes: `-- "label text" -->`
 - Edge labels starting with numbers should be wrapped: `-- "<p>1. Step name</p>" -->`
-- NEVER apply style properties or classes to subgraph names - only to node IDs
+- Apply style properties and classes to node IDs only, not to subgraph names
   - ❌ WRONG: `style MySubgraph fill:#f9f,stroke:#333` 
   - ❌ WRONG: `class MySubgraph className`
   - ✅ RIGHT: `subgraph MySubgraph ["Display Label"]` (labels are allowed!)
   - ✅ RIGHT: `style NodeA fill:#f9f` (styling nodes is fine)
-- NEVER use Mermaid keywords (graph, subgraph, node, edge, etc.) as class names or node IDs
+- Do not use Mermaid keywords (graph, subgraph, node, edge, etc.) as class names or node IDs
 - Use proper class syntax: `classDef className styles;` then `class nodeId1,nodeId2 className;`
 - Only use supported HTML tags: `<p>`, `<b>`, `<i>`, `<u>`, `<br/>`
 - Sequence diagram participants can use simpler syntax but messages with special chars still need escaping

@@ -12,7 +12,7 @@ alwaysApply: false
 - Use `git mv` when extracting existing code to new files to preserve history
 - Commit file moves before making content modifications
 - Verify history preservation with `git log --follow filename`
-- For new code that doesn't exist yet, `create_file` is appropriate
+- For new code that doesn't exist yet, creating a new file is appropriate
 - Content extraction tools (`sed`, manual copy-paste) break git history tracking
 - Heavy content modification in the same commit as `git mv` can confuse git's rename detection
 </rules>
@@ -43,7 +43,7 @@ alwaysApply: false
 <common-mistakes>
 - Using content extraction tools without `git mv` first
 - Modifying file content heavily in the same commit as the move
-- Assuming `create_file` is wrong when creating genuinely new code
+- Assuming a new file is wrong when creating genuinely new code
 - Not verifying that git can follow the history after refactoring
 </common-mistakes>
 

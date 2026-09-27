@@ -1,12 +1,12 @@
 ---
-description: Python guidelines (READ BEFORE USING PYTHON)
+description: Python version and typing guidelines. Read before writing Python.
 globs:
 alwaysApply: false
 ---
 <python-guidelines>
 
 <rules>
-- Assume Python ≥3.10, PEP585
+- Target Python 3.12+ and use PEP 585 built-in generics (`list[int]`, not `typing.List[int]`)
 </rules>
 
 </python-guidelines>

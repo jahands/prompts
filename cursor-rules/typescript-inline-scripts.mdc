@@ -1,5 +1,5 @@
 ---
-description: ALWAYS read this guide when running inline typescript. This should be used when the user says "use inline typescript" or "run inline typescript"
+description: Guide for running inline TypeScript scripts with Bun. Use when the user says "use inline typescript" or "run inline typescript"
 globs:
 alwaysApply: false
 ---
@@ -7,11 +7,11 @@ alwaysApply: false
 
 <title>Typescript Inline Scripts with Bun</title>
 
-<IMPORTANT>
-- ALWAYS assume Bun runtime with modern typescript features
-- Imported npm packages will be automatically installed by bun
-- ALWAYS prefer Bun APIs where possible.
-</IMPORTANT>
+<rules>
+- Scripts run on Bun with modern TypeScript.
+- `--install=fallback` installs imported npm packages automatically.
+- Prefer Bun APIs over Node equivalents.
+</rules>
 
 <example>
 bun run --install=fallback - < <(cat <<'EOF'
@@ -27,8 +27,8 @@ EOF
 - Bun.spawn() - Process spawning and management
 - Bun.file() - File system operations and reading
 - Bun.write() - File writing operations
-- fetch()` - HTTP requests (Web API standard)
-- `Bun.preconnect()` - URL preconnection for performance
+- `fetch()` - HTTP requests (Web API standard)
+- `fetch.preconnect()` - URL preconnection for performance
 
 ## File System
 - Bun.file(path) - Create file handle for reading/writing

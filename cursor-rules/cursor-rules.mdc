@@ -1,5 +1,5 @@
 ---
-description: Cursor rule guidelines (ALWAYS read before adding/updating rules)
+description: Cursor rule guidelines. Read before adding or updating rules.
 globs:
 alwaysApply: false
 ---
@@ -38,7 +38,7 @@ alwaysApply: false
 </file-naming>
 
 <frontmatter-requirement>
-<critical>EVERY .mdc file MUST start with frontmatter - files without it won't work</critical>
+<requirement>Every .mdc file starts with frontmatter; Cursor does not load files without it.</requirement>
 
 <template>
 ```yaml
@@ -60,21 +60,18 @@ alwaysApply: false
 <rule-format>
 <description>Rules must be written for LLM optimization. Prioritize machine readability over human readability.</description>
 
-<critical>START WITH THE SIMPLEST STRUCTURE THAT CLEARLY CONVEYS YOUR RULE</critical>
-
 <decision-tree>
 Ask yourself:
 1. Can I express this rule as a simple list of do's and don'ts? → Use simple template
 2. Does this rule involve multiple interconnected concepts? → Consider complex template
 3. Am I adding sections just because the template has them? → Remove those sections
-4. Am I about to add a second example? → Stop. One is usually enough.
+4. Am I about to add a second example? → Only if it shows a fundamentally different pattern.
 
 Remember: Empty sections add tokens but no value. Less structure often communicates more clearly.
 </decision-tree>
 
 <simplicity-first>
 <principle>Start with the absolute minimum. You can always add more if truly needed.</principle>
-<warning>If you're thinking "maybe I should add..." - DON'T. Only add what's essential.</warning>
 <rule-of-thumb>If your simple rule exceeds 50 lines, you're probably over-structuring it.</rule-of-thumb>
 </simplicity-first>
 
@@ -122,18 +119,17 @@ alwaysApply: false
 <stop-here>For most rules, you're done. Only add more sections if the rule is genuinely complex.</stop-here>
 
 <example-guidelines>
-<critical>ONE EXAMPLE IS USUALLY ENOUGH - Don't add more unless each shows a fundamentally different pattern</critical>
+<principle>One example is usually enough; add more only when each shows a fundamentally different pattern.</principle>
 - Simple formatting rules: ONE concise example (<15 lines)
-- If you're thinking "I should also show..." - DON'T
 - Only add bad examples if the mistake is non-obvious
 - Never show variations of the same concept
 - Trust the LLM to generalize from one clear example
-- Multiple examples are ONLY for rules with distinct subcategories
+- Multiple examples are only for rules with distinct subcategories
 </example-guidelines>
 </simple-template>
 
 <complex-template>
-<description>ONLY use this template for complex architectural patterns, multi-faceted systems, or rules requiring extensive context</description>
+<description>Use this template only for complex architectural patterns, multi-faceted systems, or rules requiring extensive context</description>
 ```yaml
 ---
 description: Brief description for LLM rule selection
@@ -333,12 +329,12 @@ alwaysApply: false
 
 <when-to-add-sections>
 <section-guidelines>
-- <context>: ONLY if scope is ambiguous or needs clarification
-- <overview>: ONLY for complex multi-part systems
-- <key-concepts>: ONLY if introducing new technical concepts
-- <categories>: ONLY if organizing 10+ related items
-- Multiple <rule> blocks: ONLY if rules have different contexts
-- Multiple examples: ONLY if showing fundamentally different patterns
+- <context>: only if scope is ambiguous or needs clarification
+- <overview>: only for complex multi-part systems
+- <key-concepts>: only if introducing new technical concepts
+- <categories>: only if organizing 10+ related items
+- Multiple <rule> blocks: only if rules have different contexts
+- Multiple examples: only if showing fundamentally different patterns
 </section-guidelines>
 
 <examples-of-overuse>
