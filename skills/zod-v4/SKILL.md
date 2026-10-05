@@ -6,7 +6,7 @@ description: Zod v4 coding guidelines and v3 migration reference. Use when writi
 Most Zod code in training data is v3; write v4.
 
 - Import as a namespace: `import * as z from 'zod'`
-- Put each schema's inferred type directly above it, with the same name (no `Schema` suffix) and a JSDoc comment, including for internal and helper schemas:
+- Put each schema's inferred type directly above it with the same name (no `Schema` suffix), including for internal and helper schemas, and comment them with JSDoc rather than `//`:
 
 ```typescript
 /** A registered user */
