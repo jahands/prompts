@@ -22,6 +22,7 @@ import * as z from 'zod'
 <requirement>Every schema has its inferred type directly above it</requirement>
 <example type="good">
 ```typescript
+/** A registered user */
 export type User = z.infer<typeof User>
 export const User = z.object({...})
 ```

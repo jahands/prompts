@@ -18,6 +18,7 @@ Import Zod as a namespace, not `import { z } from 'zod'` or a default import.
 Every schema has its inferred type directly above it:
 
 ```typescript
+/** A registered user */
 export type User = z.infer<typeof User>
 export const User = z.object({...})
 ```
